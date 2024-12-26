@@ -11,7 +11,7 @@ export interface IBoard extends Document {
     project: Types.ObjectId
 }
 
-export const BoardSchema : Schema = new Schema({
+export const BoardSchema: Schema = new Schema({
     boardType: {
         type: String,
         required: true,
@@ -42,7 +42,7 @@ export const BoardSchema : Schema = new Schema({
         type: Types.ObjectId,
         ref: 'Project'
     }
-}, { timestamps : true })
+}, { timestamps: true })
 
 const Board = mongoose.model<IBoard>('Board', BoardSchema)
 export default Board

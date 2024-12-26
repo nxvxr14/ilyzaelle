@@ -77,6 +77,7 @@ router.get('/:projectId/boards',
 // el middleware se empiezaa poner donde se empieza a necesitar, por ejemplo aca lo necesito por boardId
 // no se pueden ejecutar dos funciones en una instancia de param
 router.param('boardId', boardExist)
+
 router.param('boardId', boardBelongsToProject)
 
 router.get('/:projectId/boards/:boardId',
@@ -101,17 +102,17 @@ router.put('/:projectId/boards/:boardId',
     BoardController.updateBoard
 )
 
-router.delete('/:projectId/boards/:boardId',
-    param('boardId').isMongoId().withMessage('ID no valido'),
-    handleInputErrors,
-    BoardController.deleteBoard
-)
-
 router.post('/:projectId/status',
     param('projectId').isMongoId().withMessage('ID no valido'),
     body('status').notEmpty().withMessage('El estado es obligatorio.'),
     handleInputErrors,
     ProjectController.updateStatus
+)
+
+router.delete('/:projectId/boards/:boardId',
+    param('boardId').isMongoId().withMessage('ID no valido'),
+    handleInputErrors,
+    BoardController.deleteBoard
 )
 
 export default router
