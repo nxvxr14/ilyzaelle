@@ -1,0 +1,19 @@
+{
+  "name": "backend_local",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node ./src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "firmata": "^2.3.0",
+    "johnny-five": "^2.1.0",
+    "udp-serial": "^0.2.0"
+  }
+}
