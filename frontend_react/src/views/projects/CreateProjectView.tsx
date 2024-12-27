@@ -6,7 +6,7 @@ import ProjectForm from "@/components/ProjectForm";
 import { ProjectFormData } from "types";
 import { createProject } from "@/api/ProjectApi";
 
-function CreateProjectView() {
+export default function CreateProjectView() {
     // react queri es una libreria para obtener datos del servidor
     // obtiene datos de forma rapida, cachea las consultas, se puede usar con fetch api o axios
     // queries: se utilizan para obtener datos de un servidor o api (get) useQuery
@@ -79,5 +79,3 @@ function CreateProjectView() {
         </>
     );
 }
-
-export default CreateProjectView

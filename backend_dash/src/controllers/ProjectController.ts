@@ -23,7 +23,7 @@ export class ProjectController {
             await project.save()
             // Esta es otra forma de guardar pero no tengo acceso mas adelante a algunos metodos, por eso es mejor instanciar la clase, la forma de abajo es un metodo estatico
             // await Project.create(req.body)
-            res.send('[devMessage] Project created successfully.')
+            res.send('proyecto creado')
         } catch (e) {
             const error = new Error("nombre duplicado")
             return res.status(404).json({
