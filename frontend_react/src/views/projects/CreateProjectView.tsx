@@ -1,12 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from 'react-hook-form';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from "react-toastify";
 import ProjectForm from "@/components/ProjectForm";
 import { ProjectFormData } from "types";
 import { createProject } from "@/api/ProjectApi";
 
 function CreateProjectView() {
+    // react queri es una libreria para obtener datos del servidor
+    // obtiene datos de forma rapida, cachea las consultas, se puede usar con fetch api o axios
+    // queries: se utilizan para obtener datos de un servidor o api (get) useQuery
+    // mutatios: se utilizan para cambiar datos en el servidor (post, put, patch delete:5) useMutation
 
-    const initialValues : ProjectFormData = {
+    const navigate = useNavigate()
+
+    const initialValues: ProjectFormData = {
         projectName: "",
         description: ""
     }
@@ -15,10 +23,28 @@ function CreateProjectView() {
         defaultValues: initialValues
     })
 
-    const handleForm = (data : ProjectFormData) => {
-        createProject(data);
+    const { mutate } = useMutation({
+        mutationFn: createProject,
+        onError: (error) => {
+        toast.error(error.message)
+        },
+        onSuccess: (data) => {
+            toast.success(data)
+            navigate('/')
+        }
+    })
 
+    const handleForm = (formData: ProjectFormData) => mutate(formData)
+    
+
+    // ejemplo de peticion con axios sin querys
+    /*
+    const handleForm = async (formData: ProjectFormData) => {
+        const data = await createProject(formData);
+        toast.success(data)
+        navigate('/')
     }
+    */
 
     return (
         <>

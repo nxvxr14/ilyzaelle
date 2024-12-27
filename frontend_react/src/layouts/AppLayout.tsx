@@ -1,4 +1,6 @@
 import { Outlet } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Logo from "../components/Logo";
 import NavMenu from "@/components/NavMenu";
 
@@ -22,8 +24,11 @@ function AppLayout() {
             </section>
 
             <footer className='py-5'>
-<p className='text-center'> Ilyzaelle {new Date().getFullYear()}</p>
+                <p className='text-center'> Ilyzaelle {new Date().getFullYear()}</p>
             </footer>
+
+            <ToastContainer
+            />
         </>
     );
 }
