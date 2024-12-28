@@ -1,6 +1,6 @@
 import { FieldErrors, UseFormRegister } from "react-hook-form";
-import ErrorMessage from "./ErrorMessage";
-import { ProjectFormData } from "types";
+import ErrorMessage from "../ErrorMessage";
+import { ProjectFormData } from "@/types/index.ts";
 
 // los generics (lo que va dentro de ls objetos) este type los obtuve copiando&pegando los ofrecidos por react en el useForm
 type ProjectFormProps = {

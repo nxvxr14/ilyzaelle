@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from "react-toastify";
-import ProjectForm from "@/components/ProjectForm";
+import ProjectForm from "@/components/projects/ProjectForm";
 import { ProjectFormData } from "types";
 import { createProject } from "@/api/ProjectApi";
 

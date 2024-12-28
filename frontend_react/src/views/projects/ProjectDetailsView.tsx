@@ -1,8 +1,8 @@
 import { getProjectById } from "@/api/ProjectApi";
-import EditProjectForm from "@/components/projects/EditProjectForm";
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AddBoardModal from "@/components/boards/AddBoardModal";
+import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 
 function ProjectDetailsView() {
     const navigate = useNavigate()
@@ -34,14 +34,29 @@ function ProjectDetailsView() {
             <nav className='my-5 flex gap-3'>
                 <button
                     className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors'
-                    onClick={() => navigate('?newBoard=true')}
+                    onClick={() => navigate(location.pathname + '?newBoard=true')}
                 >
-                    agregar board
+                    agregar controlador 
+                </button>
+
+            </nav>
+
+            <h1 className='text-5xl font-black'>
+            snippets
+            </h1>
+
+            <nav className='my-5 flex gap-3'>
+                <button
+                    className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors'
+                    onClick={() => navigate(location.pathname + '?newSnippet=true')}
+                >
+                   agregar snippet 
                 </button>
 
             </nav>
 
             <AddBoardModal />
+            <AddSnippetModal />
         </>
     )
 }

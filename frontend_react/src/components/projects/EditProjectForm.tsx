@@ -1,10 +1,10 @@
-import ProjectForm from "../ProjectForm";
 import { Link, useNavigate } from "react-router-dom";
 import { ProjectFormData } from "@/types/index";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProjectById } from "@/api/ProjectApi";
 import { toast } from "react-toastify";
+import ProjectForm from "./ProjectForm";
 
 // useQuerryClienta sirve para escribir o ejecutar, reiniciar o invalidar datos previos para tener actualizado los datos del frontend
 

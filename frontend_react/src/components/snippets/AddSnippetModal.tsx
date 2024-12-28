@@ -3,12 +3,13 @@ import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { BoardFormData } from '@/types/index';
-import { createboard } from '@/api/BoardApi';
+import { SnippetFormData } from '@/types/index';
+import SnippetForm from './SnippetForm';
+import { createSnippet } from '@/api/SnippetApi';
 import { toast } from 'react-toastify';
-import BoardForm from './BoardForm';
 
-export default function AddBoardModal() {
+
+export default function AddSnippetModal() {
 
     // para quitar el parametro de la url 
     const navigate = useNavigate()
@@ -16,53 +17,44 @@ export default function AddBoardModal() {
     // con todo este codigo puedo leer los datos que se envian por medio de la url
     const location = useLocation()
     const queryParams = new URLSearchParams(location.search)
-    const modalBoard = queryParams.get('newBoard')
-    const show = modalBoard ? true : false
-    // console.log(modalBoard);
+    const modalSnippet = queryParams.get('newSnippet')
+    const show = modalSnippet ? true : false
 
+    //para obtener el projectid del url por si lo necesito
     const params = useParams()
     const projectId = params.projectId!
     // console.log(projectId);
 
     //boardForm exige que le pasemos datos, asi que le enviamos los valores iniciales por medio de useForm
-    const initialValues: BoardFormData = {
-        boardType: '',
-        boardName: '',
-        boardConnect: 0,
-        boardInfo: {
-            port: '',
-        },
-        modeLocal: false
+    const initialValues: SnippetFormData = {
+        snippetName: '',
+        description: '',
+        version: 0,
     };
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: initialValues
     });
 
     // despues de crear snippetapi vengo aca y uso usemutation
     const { mutate } = useMutation({
         // aca va la funcion de la api
-        mutationFn: createboard,
+        mutationFn: createSnippet,
         onError: (error) => {
             toast.error(error.message)
 
         },
         onSuccess: (data) => {
-            toast.success(data),
-            // con esto reinicio el formulario
-            // reset()
+            toast.success(data)
             navigate(location.pathname, { replace: true })
         }
     })
 
-    const handleCreateBoard = (formData: BoardFormData) => {
-        const data = {
-            formData,
-            projectId
-        }
-        mutate(data)
+    const handleCreateBoard = (formData: SnippetFormData) => {
         // console.log(formData);
+        mutate(formData)
     }
+
 
     return (
         <>
@@ -96,7 +88,7 @@ export default function AddBoardModal() {
                                         as="h3"
                                         className="font-black text-4xl  my-5"
                                     >
-                                        nuevo controlador
+                                        nuevo snippet
                                     </Dialog.Title>
 
                                     <p className="text-xl font-bold">Llena el formulario y crea  {''}
@@ -107,7 +99,7 @@ export default function AddBoardModal() {
                                         onSubmit={handleSubmit(handleCreateBoard)}
                                         noValidate
                                     >
-                                        <BoardForm
+                                        <SnippetForm
                                             register={register}
                                             errors={errors}
 
