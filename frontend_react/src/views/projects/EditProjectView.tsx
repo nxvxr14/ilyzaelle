@@ -12,13 +12,13 @@ function EditProjectView() {
         // se usa projectid en querykey para que sean unicos, no quede cacheado y no haya problemas mas adelante
         queryKey: ['editProject', projectId],
         //cuando tengo una funcion que toma un parametro debo tener un callback
-        queryFn: () => getProjectById(projectId) 
+        queryFn: () => getProjectById(projectId)
     })
 
-    if(isLoading) return 'cargando'
-    if(isError) return <Navigate to='/404' />
-    
-    if(data) return <EditProjectForm  data={data} projectId={projectId}/>
+    if (isLoading) return 'cargando'
+    if (isError) return <Navigate to='/404' />
+
+    if (data) return <EditProjectForm data={data} projectId={projectId} />
 }
 
 export default EditProjectView; 
