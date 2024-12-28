@@ -5,17 +5,6 @@ import Project from "../models/Project";
 
 export class ProjectController {
     //CRUD
-    static getAllProjects = async (req: Request, res: Response) => {
-        // Este caso no necesita validador porque solo es para mostrar, no para escribir en base de datos 
-        try {
-            const projects = await Project.find({})
-            res.json(projects)
-            // res.send('[devMessage] All projects')
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
     static createProject = async (req: Request, res: Response) => {
         console.log(req.body);
         const project = new Project(req.body)
@@ -32,6 +21,17 @@ export class ProjectController {
         }
     }
 
+    static getAllProjects = async (req: Request, res: Response) => {
+        // Este caso no necesita validador porque solo es para mostrar, no para escribir en base de datos 
+        try {
+            const projects = await Project.find({})
+            res.json(projects)
+            // res.send('[devMessage] All projects')
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     static getProjectById = async (req: Request, res: Response) => {
         // el id se recupera con los params
         // Este caso no necesita validador porque solo es para mostrar, no para escribir en base de datos 
@@ -40,8 +40,10 @@ export class ProjectController {
             // se pone en populate el nombre de la referencia el schema
             const project = await Project.findById(projectId).populate('boards')
             if (!project) {
-                const error = new Error('Project not found')
-                return res.status(404).json({ error: error.message })
+                const error = new Error("proyecto no existe")
+                return res.status(404).json({
+                    error: error.message
+                })
             }
             res.json(project)
             // res.send('[devMessage] All projects')
@@ -62,10 +64,12 @@ export class ProjectController {
             }
             project.set({ ...req.body })
             await project.save()
-            res.json(project)
-            // res.send('[devMessage] All projects')
-        } catch (error) {
-            console.log(error);
+            res.send('proyecto actualizado')
+        } catch (e) {
+            const error = new Error("error")
+            return res.status(404).json({
+                error: error.message
+            })
         }
     }
 
@@ -78,10 +82,12 @@ export class ProjectController {
                 const error = new Error('Project not found')
                 return res.status(404).json({ error: error.message })
             }
-            res.json(project)
-            // res.send('[devMessage] All projects')
-        } catch (error) {
-            console.log(error);
+            res.send('eliminado')
+        } catch (e) {
+            const error = new Error("error")
+            return res.status(404).json({
+                error: error.message
+            })
         }
     }
 

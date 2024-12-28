@@ -2,8 +2,9 @@ import { Fragment } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { getProjects } from "@/api/ProjectApi";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteProjectById, getProjects } from "@/api/ProjectApi";
+import { toast } from 'react-toastify';
 
 export default function DashboardView() {
 
@@ -12,9 +13,25 @@ export default function DashboardView() {
         queryFn: getProjects
     })
 
+    const queryClient = useQueryClient()
+
+    const { mutate } = useMutation({
+        mutationFn: deleteProjectById,
+        onError: (error) => {
+            toast.error(error.message)
+        },
+        onSuccess: (data) => {
+            // despues de que actualiza un proyecto vuelve a consultar la base de datos para actualizar el frontend
+            // como el key del componente de proyectos es projects'', esa vista es la que queremos recargar
+            // puedo hacer multiples
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+            toast.success(data)
+        }
+    })
+
     if (data) return (
         <>
-            <h1 className='text-5xl font-black'>mis proyectos</h1>
+            <h1 className='text-5xl font-black'>proyectos/</h1>
             <p className='text-1xl font-light text-gray-500 mt-5'>maneja y administra tus proyectos</p>
 
             <nav className="my-5">
@@ -61,7 +78,9 @@ export default function DashboardView() {
                                                 </Link>
                                             </Menu.Item>
                                             <Menu.Item>
-                                                <Link to={``}
+                                                {/* con esto obtenemos el valor de la id */}
+                                                {/* se lee de la url  */}
+                                                <Link to={`/projects/${project._id}/edit`}
                                                     className='block px-3 py-1 text-sm leading-6 text-gray-900'>
                                                     editar
                                                 </Link>
@@ -70,7 +89,7 @@ export default function DashboardView() {
                                                 <button
                                                     type='button'
                                                     className='block px-3 py-1 text-sm leading-6 text-red-500'
-                                                    onClick={() => { }}
+                                                    onClick={() => mutate(project._id)}
                                                 >
                                                     eliminar
                                                 </button>
