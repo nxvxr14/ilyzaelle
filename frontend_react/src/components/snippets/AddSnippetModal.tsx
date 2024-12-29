@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { SnippetFormData } from '@/types/index';
 import SnippetForm from './SnippetForm';
@@ -25,6 +25,9 @@ export default function AddSnippetModal() {
     // const projectId = params.projectId!
     // console.log(projectId);
 
+    // elimia informacion cacheada para realizar otra consulta
+    const queryClient = useQueryClient()
+
     //boardForm exige que le pasemos datos, asi que le enviamos los valores iniciales por medio de useForm
     const initialValues: SnippetFormData = {
         snippetName: '',
@@ -46,6 +49,8 @@ export default function AddSnippetModal() {
         },
         onSuccess: (data) => {
             toast.success(data)
+            // revisar esto bien
+            queryClient.invalidateQueries({ queryKey: ['snippet'] })
             navigate(location.pathname, { replace: true })
         }
     })
