@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { BoardFormData } from '@/types/index';
 import { createboard } from '@/api/BoardApi';
@@ -20,6 +20,9 @@ export default function AddBoardModal() {
     const show = modalBoard ? true : false
     // console.log(modalBoard);
 
+    // elimia informacion cacheada para realizar otra consulta
+    const queryClient = useQueryClient()
+
     const params = useParams()
     const projectId = params.projectId!
     // console.log(projectId);
@@ -28,14 +31,14 @@ export default function AddBoardModal() {
     const initialValues: BoardFormData = {
         boardType: '',
         boardName: '',
-        boardConnect: 0,
+        boardConnect: 1,
         boardInfo: {
             port: '',
         },
         modeLocal: false
     };
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: initialValues
     });
 
@@ -49,9 +52,10 @@ export default function AddBoardModal() {
         },
         onSuccess: (data) => {
             toast.success(data),
-            // con esto reinicio el formulario
-            // reset()
-            navigate(location.pathname, { replace: true })
+                // con esto reinicio el formulario
+                // reset()
+                queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+                navigate(location.pathname, { replace: true })
         }
     })
 

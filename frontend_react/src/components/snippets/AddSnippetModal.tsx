@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { SnippetFormData } from '@/types/index';
 import SnippetForm from './SnippetForm';
 import { createSnippet } from '@/api/SnippetApi';
@@ -21,8 +21,8 @@ export default function AddSnippetModal() {
     const show = modalSnippet ? true : false
 
     //para obtener el projectid del url por si lo necesito
-    const params = useParams()
-    const projectId = params.projectId!
+    // const params = useParams()
+    // const projectId = params.projectId!
     // console.log(projectId);
 
     //boardForm exige que le pasemos datos, asi que le enviamos los valores iniciales por medio de useForm

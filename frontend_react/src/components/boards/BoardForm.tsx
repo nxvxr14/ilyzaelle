@@ -59,7 +59,6 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                         required: "La conexión es obligatoria",
                     })}
                 >
-                    <option value="">-- abrir --</option> {/* Opción para no seleccionar nada */}
                     <option value="1">usb</option>
                     <option value="2">wifi</option>
                     <option value="3">ethernet</option>
@@ -122,9 +121,9 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                             {...register("boardInfo.type", {
                             })}
                         />
-                        {errors.boardInfo?.type && (
+                        {/* {errors.boardInfo?.type && (
                             <ErrorMessage>{errors.boardInfo.type.message}</ErrorMessage>
-                        )}
+                        )} */}
                     </div>
                 </div>
             </div>
@@ -140,7 +139,6 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                         // required: "Este campo es obligatorio",
                     })}
                 >
-                    <option value="">-- abrir --</option>
                     <option value="true">Sí</option>
                     <option value="false">No</option>
                 </select>
