@@ -61,6 +61,16 @@ function BoardsList({ boards }: BoardsListProps) {
                                                     {board.boardName}
                                                 </Link>
                                                 <p className="text-sm text-gray-400">{board.boardType}</p>
+                                                {/* Estado del proyecto */}
+                                                <p className="flex items-center space-x-2">
+                                                    <div
+                                                        className={`w-4 h-4 rounded-full ${board.active ? 'bg-green-500' : 'bg-red-500'}`}
+                                                    />
+                                                    {/* <span className="text-lg font-bold">
+                                                        {board.active ? 'activo' : 'inactivo'}
+                                                    </span> */}
+                                                </p>
+
                                             </div>
                                         </div>
 

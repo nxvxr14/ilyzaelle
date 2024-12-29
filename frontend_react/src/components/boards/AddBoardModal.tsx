@@ -34,11 +34,10 @@ export default function AddBoardModal() {
         boardConnect: 1,
         boardInfo: {
             port: '',
-        },
-        modeLocal: false
+        }
     };
 
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const { register, handleSubmit, reset, formState: { errors } } = useForm({
         defaultValues: initialValues
     });
 
@@ -55,6 +54,7 @@ export default function AddBoardModal() {
                 // con esto reinicio el formulario
                 // reset()
                 queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+            reset()
             navigate(location.pathname, { replace: true })
         }
     })

@@ -8,10 +8,14 @@ import { boardBelongsToProject, boardExist } from "../middleware/board";
 
 const router = Router()
 
+// en la url se manda el projecto al cual se esta agregando la tarea
+router.param('projectId', projectExists)
+
 // Express validator permite poner un validador en el controllador, en el router o en un middleware.
 // Lo agregamos en la ruta para dejar en controlador sin tanto codigo y solo haga una accion
 // con la funcion body que importamos leemos parametros que leemos desde body
 
+/* PROYECTOS */
 router.post('/',
     body('projectName').
         notEmpty().withMessage('El nombre del proyecto es obligatorio.'),
@@ -45,15 +49,24 @@ router.put('/:projectId',
     ProjectController.updateProject,
 )
 
+router.post('/:projectId/status',
+    param('projectId').isMongoId().withMessage('ID no valido'),
+    body('status').notEmpty().withMessage('El estado es obligatorio.'),
+    handleInputErrors,
+    ProjectController.updateStatus
+)
+
 router.delete('/:projectId',
     param('projectId').isMongoId().withMessage('ID no valido'),
     handleInputErrors,
     ProjectController.deleteProject
 )
 
-// Routes para boards
-// en la url se manda el projecto al cual se esta agregando la tarea
-router.param('projectId', projectExists)
+/* CONTROLADORES */
+// el middleware se empiezaa poner donde se empieza a necesitar, por ejemplo aca lo necesito por boardId
+// no se pueden ejecutar dos funciones en una instancia de param
+router.param('boardId', boardExist)
+router.param('boardId', boardBelongsToProject)
 
 router.post('/:projectId/boards',
     body('boardType').
@@ -64,8 +77,6 @@ router.post('/:projectId/boards',
         notEmpty().withMessage('El metodo de conexion es obligatorio.'),
     body('boardInfo').
         notEmpty().withMessage('La informacion del controlador es obligatoria.'),
-    body('modeLocal').
-        notEmpty().withMessage('El modo de programacion es obligatorio.'),
     handleInputErrors,
     BoardController.createBoard
 )
@@ -73,12 +84,6 @@ router.post('/:projectId/boards',
 router.get('/:projectId/boards',
     BoardController.getProjectBoards
 )
-
-// el middleware se empiezaa poner donde se empieza a necesitar, por ejemplo aca lo necesito por boardId
-// no se pueden ejecutar dos funciones en una instancia de param
-router.param('boardId', boardExist)
-
-router.param('boardId', boardBelongsToProject)
 
 router.get('/:projectId/boards/:boardId',
     param('boardId').isMongoId().withMessage('ID no valido'),
@@ -96,17 +101,22 @@ router.put('/:projectId/boards/:boardId',
         notEmpty().withMessage('El metodo de conexion es obligatorio.'),
     body('boardInfo').
         notEmpty().withMessage('La informacion del controlador es obligatoria.'),
-    body('modeLocal').
-        notEmpty().withMessage('El modo de programacion es obligatorio.'),
     handleInputErrors,
     BoardController.updateBoard
 )
 
-router.post('/:projectId/status',
-    param('projectId').isMongoId().withMessage('ID no valido'),
-    body('status').notEmpty().withMessage('El estado es obligatorio.'),
+router.post('/:projectId/boards/:boardId/active',
+    param('boardId').isMongoId().withMessage('ID no valido'),
+    body('active').notEmpty().withMessage('El estado es obligatorio.'),
     handleInputErrors,
-    ProjectController.updateStatus
+    BoardController.updateActive
+)
+
+router.post('/:projectId/boards/:boardId/code',
+    param('boardId').isMongoId().withMessage('ID no valido'),
+    body('boardCode').notEmpty().withMessage('El estado es obligatorio.'),
+    handleInputErrors,
+    BoardController.updateCode
 )
 
 router.delete('/:projectId/boards/:boardId',

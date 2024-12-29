@@ -15,7 +15,8 @@ export const boardSchema = z.object({
     boardName: z.string(),
     boardConnect: z.number(),
     boardInfo: boardInfoSchema,  // Usamos el schema para boardInfo    
-    modeLocal: z.boolean(),
+    active: z.boolean().optional(),
+    boardCode: z.string().optional(),
     project: z.string(),
 })
 
@@ -68,5 +69,5 @@ export type Snippet = z.infer<typeof SnippetSchema>
 //se utiliza el utility type de pick porque si utiliza omit tendria que volver a cambiar el codigo, como el formulario solo necesita estos campos y si llegara a requerir mas no deberia cambiar
 // si uso omit y agrego cosas a mi schema me toca cambiar codigo, con pick esto no sucede
 export type ProjectFormData = Pick<Project, 'projectName' | 'description'>
-export type BoardFormData = Pick<Board, 'boardType' | 'boardName' | 'boardConnect' | 'boardInfo' | 'modeLocal'>
+export type BoardFormData = Pick<Board, 'boardType' | 'boardName' | 'boardConnect' | 'boardInfo'>
 export type SnippetFormData = Pick<Snippet, 'snippetName' | 'description' | 'version'>

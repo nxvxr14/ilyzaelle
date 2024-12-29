@@ -127,27 +127,6 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                     </div>
                 </div>
             </div>
-
-            <div className="flex flex-col gap-5">
-                <label className="font-normal text-2xl" htmlFor="modeLocal">
-                    ¿snippet local?
-                </label>
-                <select
-                    id="modeLocal"
-                    className="w-full p-3 border-gray-300 border rounded-2xl"
-                    {...register("modeLocal", {
-                        // required: "Este campo es obligatorio",
-                    })}
-                >
-                    <option value="true">Sí</option>
-                    <option value="false">No</option>
-                </select>
-                {errors.modeLocal && (
-                    <ErrorMessage>{errors.modeLocal.message}</ErrorMessage>
-                )}
-            </div>
-
-
         </>
     )
 }

@@ -68,6 +68,54 @@ export class BoardController {
         }
     }
 
+    static updateActive = async (req: Request, res: Response) => {
+        try {
+            if (req.board.project.toString() !== req.project.id.toString()) {
+                const error = new Error('Board not found.')
+                return res.status(404).json({ error: 'There was an error.' })
+            }
+            const { active } = req.body
+            req.board.active = active 
+            await req.board.save()
+            res.send('[devMessage] Project created successfully.')
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    static updateCode = async (req: Request, res: Response) => {
+        try {
+            if (req.board.project.toString() !== req.project.id.toString()) {
+                const error = new Error('Board not found.')
+                return res.status(404).json({ error: 'There was an error.' })
+            }
+            const { boardCode } = req.body
+            req.board.boardCode = boardCode
+            await req.board.save()
+            res.send('[devMessage] Project created successfully.')
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+
+    // static updateCode = async (req: Request, res: Response) => {
+    //     try {
+    //         const { projectId } = req.params
+    //         const project = await Project.findById(projectId)
+    //         if (!project) {
+    //             const error = new Error('Project not found')
+    //             return res.status(404).json({ error: error.message })
+    //         }
+    //         const { status } = req.body
+    //         project.status = status
+    //         await project.save()
+    //         res.send('[devMessage] Project created successfully.')
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // }
+
     static deleteBoard = async (req: Request, res: Response) => {
         try {
             //    console.log(board.project);

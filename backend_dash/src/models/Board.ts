@@ -7,7 +7,8 @@ export interface IBoard extends Document {
     boardName: string
     boardConnect: number
     boardInfo: object
-    modeLocal: boolean,
+    active: boolean,
+    boardCode: string,
     project: Types.ObjectId
 }
 
@@ -31,9 +32,14 @@ export const BoardSchema: Schema = new Schema({
         type: Schema.Types.Mixed,
         required: true,
     },
-    modeLocal: {
+    active: {
         type: Boolean,
-        required: true,
+        default: false
+    },
+    boardCode: {
+        type: String,
+        trim: true,
+        default: ''
     },
     project: {
         // Aca se almacena la referencia del project.Id

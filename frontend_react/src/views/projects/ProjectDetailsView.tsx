@@ -35,7 +35,7 @@ function ProjectDetailsView() {
             </div>
             <div className="mt-10">
                 <h1 className='text-5xl font-black'>
-                {data.projectName}/controladores
+                user/controladores
                 </h1>
                 <nav className='my-5 flex gap-3'>
                     <button
