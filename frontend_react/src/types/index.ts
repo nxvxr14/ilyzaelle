@@ -23,11 +23,22 @@ export const boardSchema = z.object({
 export const SnippetSchema = z.object({
     _id: z.string(),
     snippetName: z.string(),
-    payload: z.string(),
+    payload: z.string().optional(),
     description: z.string(),
     version: z.number(),
-    modbusyeLocal: z.boolean(),
+    busy: z.boolean(),
 })
+
+export const dashboardSnippetSchema = z.array(
+    SnippetSchema.pick({
+        _id: true,
+        snippetName: true,
+        payload: true,
+        description: true,
+        version: true,
+        busy: true
+    })
+)
 
 /* Proyectos */
 export const projectSchema = z.object({
@@ -45,6 +56,9 @@ export const dashboardProjectSchema = z.array(
         status: true
     })
 )
+
+
+
 
 // cuando creo un proyecto no requiero el id, este se genera hasta que tengo la respuesta de la api, para no generar diferentes Schemas se hace lo siguiente
 export type Project = z.infer<typeof projectSchema>

@@ -1,6 +1,6 @@
 import api from "@/lib/axios";
 import { isAxiosError } from "axios";
-import { SnippetFormData } from "@/types/index";
+import { SnippetFormData, dashboardSnippetSchema } from "@/types/index";
 
 // type general
 type SnippetAPIType = {
@@ -21,5 +21,16 @@ export async function createSnippet(formData: SnippetFormData) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error);
     }
+  }
+}
+
+export async function getSnippets() {
+  try {
+    const { data } = await api.get("/snippets");
+    const response = dashboardSnippetSchema.safeParse(data);
+    if (response.success) return response.data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
   }
 }

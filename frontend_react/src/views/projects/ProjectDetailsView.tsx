@@ -4,6 +4,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AddBoardModal from "@/components/boards/AddBoardModal";
 import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 import BoardsList from "@/components/boards/BoardsList";
+import SnippetsList from "@/components/snippets/SnippetsList";
 
 function ProjectDetailsView() {
     const navigate = useNavigate()
@@ -62,6 +63,7 @@ function ProjectDetailsView() {
                     </button>
                 </nav>
             </div>
+            <SnippetsList />
             <AddSnippetModal />
         </>
     )

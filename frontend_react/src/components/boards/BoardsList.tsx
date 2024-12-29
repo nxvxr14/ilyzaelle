@@ -9,9 +9,9 @@ type BoardsListProps = {
 }
 
 const groupNames: { [key: string]: string } = {
-    1: "usb/",
-    2: "wifi/",
-    3: "ethernet/"
+    1: "usb",
+    2: "wifi",
+    3: "ethernet"
 };
 
 // esto es para que el groupBoards no se genere error por typescript dado que no sabe que valores va a tenerº
@@ -33,9 +33,6 @@ function BoardsList({ boards }: BoardsListProps) {
         return { ...acc, [board.boardConnect]: currentGroup };
     }, initialValues); // Cambié [] por {} El acumulador debe ser un objeto y no un arreglo vacío. Como estás agrupando los elementos por el valor 
 
-    console.log(groupedBoards);
-
-
     return (
         <>
             {boards.length ? (
@@ -45,7 +42,7 @@ function BoardsList({ boards }: BoardsListProps) {
                         {/* Iteramos sobre los grupos */}
                         {Object.keys(groupedBoards).map((groupKey) => (
                             <div key={groupKey} className="space-y-4">
-                                <h2 className="text-2xl font-semibold text-gray-700 mb-4"> {`${groupNames[groupKey] || groupKey}`}</h2>
+                                <h2 className="text-2xl font-semibold text-gray-700 mb-4"> /{`${groupNames[groupKey] || groupKey}`}</h2>
 
                                 {/* Iteramos sobre los tableros de este grupo */}
                                 {groupedBoards[groupKey].map((board) => (
