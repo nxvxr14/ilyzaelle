@@ -18,7 +18,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                 <input
                     id="boardName"
                     placeholder="ej. arduino laboratorio"
-                    className="w-full p-3  border-gray-300 border"
+                    className="w-full p-3  border-gray-300 border rounded-2xl"
                     {...register("boardName", {
                         required: "el nombre del controlador es obligatorio"
                     })}
@@ -37,7 +37,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                     id="boardType"
                     type="text"
                     placeholder="ej. arduino"
-                    className="w-full p-3  border-gray-300 border"
+                    className="w-full p-3  border-gray-300 border rounded-2xl"
                     {...register("boardType", {
                         required: "el tipo de controlador es obligatorio",
                     })}
@@ -54,7 +54,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                 </label>
                 <select
                     id="boardConnect"
-                    className="w-full p-3 border-gray-300 border"
+                    className="w-full p-3 border-gray-300 border rounded-2xl"
                     {...register("boardConnect", {
                         required: "La conexión es obligatoria",
                     })}
@@ -80,7 +80,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                             id="host"
                             type="text"
                             placeholder=""
-                            className="w-full p-3 border-gray-300 border"
+                            className="w-full p-3 border-gray-300 border rounded-2xl"
                             {...register("boardInfo.host", {
                             })}
                         />
@@ -98,7 +98,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                             id="port"
                             type="text"
                             placeholder="Ingrese el puerto"
-                            className="w-full p-3 border-gray-300 border"
+                            className="w-full p-3 border-gray-300 border rounded-2xl"
                             {...register("boardInfo.port", {
                                 required: "El campo 'port' es obligatorio",
                             })}
@@ -117,7 +117,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                             id="type"
                             type="text"
                             placeholder="Ingrese el tipo"
-                            className="w-full p-3 border-gray-300 border"
+                            className="w-full p-3 border-gray-300 border rounded-2xl"
                             {...register("boardInfo.type", {
                             })}
                         />
@@ -134,7 +134,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                 </label>
                 <select
                     id="modeLocal"
-                    className="w-full p-3 border-gray-300 border"
+                    className="w-full p-3 border-gray-300 border rounded-2xl"
                     {...register("modeLocal", {
                         // required: "Este campo es obligatorio",
                     })}

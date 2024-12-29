@@ -35,14 +35,14 @@ export default function DashboardView() {
             <p className='text-1xl font-light text-gray-500 mt-5'>maneja y administra tus proyectos</p>
 
             <nav className="my-5">
-                <Link className='bg-black hover:bg-[#FFFF44] text-white hover:text-black px-10 py-3 text-xl font-bold cursor-pointer transition-colors rounded-md'
+                <Link className='bg-black hover:bg-[#FFFF44] text-white hover:text-black px-10 py-3 text-xl font-bold cursor-pointer transition-colors rounded-2xl'
                     to='/projects/create'
                 >
                     nuevo proyecto
                 </Link>
             </nav>
             {data.length ? (
-                <ul role="list" className="divide-y divide-gray-100 border border-gray-100 mt-10 bg-white shadow-lg rounded-lg">
+                <ul role="list" className="divide-y divide-gray-100 border border-gray-100 mt-10 bg-white shadow-lg rounded-2xl" style={{ borderTopColor: '#FFFF44', borderTopWidth: '8px' }}>
                     {data.map((project) => (
                         <li key={project._id} className="flex justify-between gap-x-6 px-5 py-10">
                             <div className="flex min-w-0 gap-x-4">

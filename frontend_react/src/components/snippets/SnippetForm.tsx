@@ -18,7 +18,7 @@ export default function SnippetForm({ errors, register }: SnippetFormProps) {
                 <input
                     id="snippetName"
                     placeholder="ej. arduino laboratorio"
-                    className="w-full p-3  border-gray-300 border"
+                    className="w-full p-3  border-gray-300 border rounded-2xl"
                     {...register("snippetName", {
                         required: "el nombre del controlador es obligatorio"
                     })}
@@ -36,7 +36,7 @@ export default function SnippetForm({ errors, register }: SnippetFormProps) {
                 <textarea
                     id="description"
                     placeholder="ej. arduino"
-                    className="w-full p-3  border-gray-300 border"
+                    className="w-full p-3  border-gray-300 border rounded-2xl"
                     {...register("description", {
                         required: "el tipo de controlador es obligatorio",
                     })}
@@ -55,7 +55,7 @@ export default function SnippetForm({ errors, register }: SnippetFormProps) {
                     id="version"
                     type="number"
                     placeholder="ej. 12345"
-                    className="w-full p-3 border-gray-300 border"
+                    className="w-full p-3 border-gray-300 border rounded-2xl"
                     {...register("version", {
                         required: "El número es obligatorio",
                         valueAsNumber: true,  // Asegura que el valor sea tratado como número

@@ -107,7 +107,7 @@ export default function AddSnippetModal() {
                                         <input
                                             type="submit"
                                             value='agregar'
-                                            className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3  font-bold cursor-pointer transition-color'
+                                            className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3  font-bold cursor-pointer transition-color rounded-2xl'
                                         />
                                     </form>
 

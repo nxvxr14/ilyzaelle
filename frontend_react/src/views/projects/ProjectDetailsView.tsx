@@ -26,7 +26,7 @@ function ProjectDetailsView() {
         <>
             <div className="py-10">
                 <h1 className='text-5xl font-black'>
-                    proyectos/{data.projectName}
+                    proyecto/{data.projectName}
                 </h1>
                 <p className='text-2xl font-light text-gray-500 mt-5'>
                     {data.description}
@@ -34,11 +34,11 @@ function ProjectDetailsView() {
             </div>
             <div className="mt-10">
                 <h1 className='text-5xl font-black'>
-                ./controladores/
+                {data.projectName}/controladores
                 </h1>
                 <nav className='my-5 flex gap-3'>
                     <button
-                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors'
+                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
                         onClick={() => navigate(location.pathname + '?newBoard=true')}
                     >
                        nuevo controlador 
@@ -51,11 +51,11 @@ function ProjectDetailsView() {
             <AddBoardModal />
             <div className="py-20">
                 <h1 className='text-5xl font-black'>
-                    ./snippets/
+                    user/snippets
                 </h1>
                 <nav className='my-5 flex gap-3'>
                     <button
-                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors'
+                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
                         onClick={() => navigate(location.pathname + '?newSnippet=true')}
                     >
                        nuevo snippet 

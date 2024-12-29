@@ -16,10 +16,10 @@ const groupNames: { [key: string]: string } = {
 
 // esto es para que el groupBoards no se genere error por typescript dado que no sabe que valores va a tenerº
 type groupBoards = {
-    [key:string] : Board[]
+    [key: string]: Board[]
 }
 
-const initialValues : groupBoards = {
+const initialValues: groupBoards = {
     1: [],
     2: [],
     3: []
@@ -51,7 +51,8 @@ function BoardsList({ boards }: BoardsListProps) {
                                 {groupedBoards[groupKey].map((board) => (
                                     <div
                                         key={board._id}
-                                        className="flex justify-between gap-x-6 p-5 border border-gray-100 bg-white shadow-lg"
+                                        className="flex justify-between gap-x-6 p-5 border border-gray-100 bg-white shadow-lg rounded-2xl"
+                                        style={{ borderTopColor: '#FFFF44', borderTopWidth: '8px' }} // Estableciendo color y grosor del borde superior
                                     >
                                         <div className="flex min-w-0 gap-x-4">
                                             <div className="min-w-0 flex-auto space-y-2">

@@ -55,7 +55,7 @@ export default function AddBoardModal() {
                 // con esto reinicio el formulario
                 // reset()
                 queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-                navigate(location.pathname, { replace: true })
+            navigate(location.pathname, { replace: true })
         }
     })
 
@@ -119,7 +119,7 @@ export default function AddBoardModal() {
                                         <input
                                             type="submit"
                                             value='agregar'
-                                            className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3  font-bold cursor-pointer transition-color'
+                                            className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3  font-bold cursor-pointer transition-color rounded-2xl'
                                         />
                                     </form>
 
