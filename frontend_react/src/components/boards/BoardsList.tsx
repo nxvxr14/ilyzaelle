@@ -62,18 +62,16 @@ function BoardsList({ boards }: BoardsListProps) {
                                                 </Link>
                                                 <p className="text-sm text-gray-400">{board.boardType}</p>
                                                 {/* Estado del proyecto */}
-                                                <p className="flex items-center space-x-2">
+                                                <div className="flex items-center space-x-2">
                                                     <div
                                                         className={`w-4 h-4 rounded-full ${board.active ? 'bg-green-500' : 'bg-red-500'}`}
                                                     />
-                                                    {/* <span className="text-lg font-bold">
+                                                </div>
+                                                {/* <span className="text-lg font-bold">
                                                         {board.active ? 'activo' : 'inactivo'}
                                                     </span> */}
-                                                </p>
-
                                             </div>
                                         </div>
-
                                         <div className="flex shrink-0 items-center gap-x-6">
                                             <Menu as="div" className="relative flex-none">
                                                 <Menu.Button className="-m-2.5 block p-2.5 text-gray-500 hover:text-gray-900">
@@ -92,12 +90,12 @@ function BoardsList({ boards }: BoardsListProps) {
                                                     <Menu.Items className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                                                         <Menu.Item>
                                                             <Link to={`/board/${board._id}`} className="block px-3 py-1 text-sm leading-6 text-gray-900">
-                                                                Ver Proyecto
+                                                                ver
                                                             </Link>
                                                         </Menu.Item>
                                                         <Menu.Item>
-                                                            <Link to={`/board/${board._id}/edit`} className="block px-3 py-1 text-sm leading-6 text-gray-900">
-                                                                Editar Proyecto
+                                                            <Link to={location.pathname + `?editBoard=${board._id}`} className="block px-3 py-1 text-sm leading-6 text-gray-900">
+                                                                configurar
                                                             </Link>
                                                         </Menu.Item>
                                                         <Menu.Item>
@@ -106,7 +104,7 @@ function BoardsList({ boards }: BoardsListProps) {
                                                                 className="block px-3 py-1 text-sm leading-6 text-red-500"
                                                                 onClick={() => { }}
                                                             >
-                                                                Eliminar Proyecto
+                                                                eliminar
                                                             </button>
                                                         </Menu.Item>
                                                     </Menu.Items>

@@ -1,15 +1,51 @@
 import api from "@/lib/axios";
 import { isAxiosError } from "axios";
-import { BoardFormData, Project } from "../types";
+import { Board, BoardFormData, Project } from "../types";
 
 type BoardAPIType = {
-  formData: BoardFormData;
   projectId: Project["_id"];
+  boardId: Board["_id"];
+  formData: BoardFormData;
 };
 
-export async function createboard({ formData, projectId }: BoardAPIType) {
+export async function createboard({
+  formData,
+  projectId,
+}: Pick<BoardAPIType, "formData" | "projectId">) {
   try {
     const { data } = await api.post(`/projects/${projectId}/boards`, formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
+}
+
+// se usa para obtener la data y enviarla al formulario
+export async function getBoardById({
+  projectId,
+  boardId,
+}: Pick<BoardAPIType, "projectId" | "boardId">) {
+  try {
+    const url = `/projects/${projectId}/boards/${boardId}/`;
+    const { data } = await api.get(url);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
+}
+
+export async function updateBoardById({
+  projectId,
+  boardId,
+  formData,
+}: Pick<BoardAPIType, "projectId" | "boardId" | "formData">) {
+  try {
+    const url = `/projects/${projectId}/boards/${boardId}/`;
+    const { data } = await api.put<string>(url, formData);
     return data;
   } catch (error) {
     if (isAxiosError(error) && error.response) {

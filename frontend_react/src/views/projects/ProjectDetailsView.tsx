@@ -5,10 +5,11 @@ import AddBoardModal from "@/components/boards/AddBoardModal";
 import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 import BoardsList from "@/components/boards/BoardsList";
 import SnippetsList from "@/components/snippets/SnippetsList";
+import EditBoardData from "@/components/boards/EditBoardData";
 
 function ProjectDetailsView() {
-    const navigate = useNavigate()
 
+    const navigate = useNavigate()
     const params = useParams()
     // con ! le decimos a ts que ese valor siempre va a venir en el param
     const projectId = params.projectId!
@@ -46,11 +47,13 @@ function ProjectDetailsView() {
                     </button>
                 </nav>
             </div>
+            {/* no se realizo una funcion de lectura en boardApi porque cuando leimos ejecutamos la funcion de getProjectsbyid viene con la informacionde las boards anidadas porque las colecciones estan relacioandas */}
             <BoardsList
                 boards={data.boards}
             />
             <AddBoardModal />
-            <div className="py-20">
+            <EditBoardData />
+            {/* <div className="py-20">
                 <h1 className='text-5xl font-black'>
                     user/snippets
                 </h1>
@@ -64,7 +67,7 @@ function ProjectDetailsView() {
                 </nav>
             </div>
             <SnippetsList />
-            <AddSnippetModal />
+            <AddSnippetModal /> */}
         </>
     )
 }

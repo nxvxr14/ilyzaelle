@@ -62,7 +62,7 @@ export class BoardController {
             // board.modeLocal = req.body.modeLocal
             req.board.set({ ...req.body });
             await req.board.save()
-            res.json(req.board)
+            res.send('[devMessage] Project created successfully.')
         } catch (error) {
             res.status(500).json({ error: 'There was an error.' })
         }
