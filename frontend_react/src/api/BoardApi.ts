@@ -53,3 +53,19 @@ export async function updateBoardById({
     }
   }
 }
+
+export async function deleteBoardById({
+  projectId,
+  boardId,
+}: Pick<BoardAPIType, "projectId" | "boardId">) {
+  try {
+    const url = `/projects/${projectId}/boards/${boardId}/`;
+    // se pone el string para que cuando retorne data ts no lo tome como un any
+    const { data } = await api.delete<string>(url);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
+}

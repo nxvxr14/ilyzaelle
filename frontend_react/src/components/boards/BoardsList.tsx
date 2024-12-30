@@ -1,8 +1,11 @@
 import { Fragment } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Board } from "@/types/index";
+import { toast } from 'react-toastify';
+import { deleteBoardById } from '@/api/BoardApi';
 
 type BoardsListProps = {
     boards: Board[]
@@ -32,6 +35,25 @@ function BoardsList({ boards }: BoardsListProps) {
         currentGroup = [...currentGroup, board];
         return { ...acc, [board.boardConnect]: currentGroup };
     }, initialValues); // Cambié [] por {} El acumulador debe ser un objeto y no un arreglo vacío. Como estás agrupando los elementos por el valor 
+
+    const params = useParams()
+    const projectId = params.projectId!
+    // elimia informacion cacheada para realizar otra consulta
+    const queryClient = useQueryClient()
+
+    const { mutate } = useMutation({
+        mutationFn: deleteBoardById,
+        onError: (error) => {
+            toast.error(error.message)
+
+        },
+        onSuccess: (data) => {
+            toast.success(data),
+                // con esto reinicio el formulario
+                // reset()
+                queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+        }
+    })
 
     return (
         <>
@@ -102,7 +124,10 @@ function BoardsList({ boards }: BoardsListProps) {
                                                             <button
                                                                 type="button"
                                                                 className="block px-3 py-1 text-sm leading-6 text-red-500"
-                                                                onClick={() => { }}
+                                                                onClick={() => mutate({
+                                                                    projectId
+                                                                    , boardId: board._id
+                                                                })}
                                                             >
                                                                 eliminar
                                                             </button>
