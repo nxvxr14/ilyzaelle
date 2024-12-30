@@ -1,7 +1,7 @@
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
-import { getBoardById } from "@/api/BoardApi";
 import EditBoardModal from './EditBoardModal';
+import { getBoardById } from "@/api/BoardApi";
 
 function EditBoardData() {
 
@@ -20,7 +20,7 @@ function EditBoardData() {
     // console.log(queryParams);
 
     const { data, isError } = useQuery({
-        queryKey: ['board', boardId],
+        queryKey: ['editBoard', boardId],
         // cuando la funcion toma parametros ponemos un callback
         // no puede tomar multiples parametros, si son varios se envian como objeto por medio de llaves
         queryFn: () => getBoardById({ projectId, boardId }),

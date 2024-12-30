@@ -46,6 +46,7 @@ export default function EditTaskModal({ data, boardId }: EditBoardModalProps) {
                 // con esto reinicio el formulario
                 // reset()
                 queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+                queryClient.invalidateQueries({ queryKey: ['editBoard', boardId] })
             reset()
             navigate(location.pathname, { replace: true })
         }

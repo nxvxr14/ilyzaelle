@@ -36,14 +36,14 @@ function ProjectDetailsView() {
             </div>
             <div className="mt-10">
                 <h1 className='text-5xl font-black'>
-                user/controladores
+                    user/controladores
                 </h1>
                 <nav className='my-5 flex gap-3'>
                     <button
                         className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
                         onClick={() => navigate(location.pathname + '?newBoard=true')}
                     >
-                       nuevo controlador 
+                        nuevo controlador
                     </button>
                 </nav>
             </div>
@@ -53,6 +53,7 @@ function ProjectDetailsView() {
             />
             <AddBoardModal />
             <EditBoardData />
+            {/* <CodeEditorBoardData /> */}
             {/* <div className="py-20">
                 <h1 className='text-5xl font-black'>
                     user/snippets

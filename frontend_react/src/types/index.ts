@@ -70,4 +70,5 @@ export type Snippet = z.infer<typeof SnippetSchema>
 // si uso omit y agrego cosas a mi schema me toca cambiar codigo, con pick esto no sucede
 export type ProjectFormData = Pick<Project, 'projectName' | 'description'>
 export type BoardFormData = Pick<Board, 'boardType' | 'boardName' | 'boardConnect' | 'boardInfo'>
+export type CodeEditorFormData = Pick<Board, 'boardCode'>
 export type SnippetFormData = Pick<Snippet, 'snippetName' | 'description' | 'version'>

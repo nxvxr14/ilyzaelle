@@ -4,6 +4,7 @@ import DashboardView from "./views/DashboardView";
 import CreateProjectView from "./views/projects/CreateProjectView";
 import EditProjectView from "./views/projects/EditProjectView";
 import ProjectDetailsView from "./views/projects/ProjectDetailsView";
+import CodeEditorBoardView from "./views/boards/CodeEditorBoardView";
 
 const router = () => {
 
@@ -22,6 +23,7 @@ const router = () => {
                     <Route path="/projects/create" element={<CreateProjectView/>} />
                     <Route path="/projects/:projectId/edit" element={<EditProjectView/>} />
                     <Route path="/projects/:projectId/" element={<ProjectDetailsView/>} />
+                    <Route path="/projects/:projectId/boards/:boardId/editor" element={<CodeEditorBoardView/>} />
                 </Route>
 
             </Routes>

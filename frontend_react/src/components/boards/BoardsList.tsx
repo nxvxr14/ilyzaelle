@@ -55,6 +55,12 @@ function BoardsList({ boards }: BoardsListProps) {
         }
     })
 
+    const handleConfigurarClick = (boardId: string) => {
+        // Invalidar la query asociada al boardId
+        queryClient.invalidateQueries({ queryKey: ['project', boardId] });
+    }
+
+
     return (
         <>
             {boards.length ? (
@@ -111,12 +117,14 @@ function BoardsList({ boards }: BoardsListProps) {
                                                 >
                                                     <Menu.Items className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                                                         <Menu.Item>
-                                                            <Link to={`/board/${board._id}`} className="block px-3 py-1 text-sm leading-6 text-gray-900">
-                                                                ver
+                                                            <Link to={location.pathname + `/boards/${board._id}/editor`} className="block px-3 py-1 text-sm leading-6 text-gray-900">
+                                                                programar
                                                             </Link>
                                                         </Menu.Item>
                                                         <Menu.Item>
-                                                            <Link to={location.pathname + `?editBoard=${board._id}`} className="block px-3 py-1 text-sm leading-6 text-gray-900">
+                                                            <Link to={location.pathname + `?editBoard=${board._id}`} className="block px-3 py-1 text-sm leading-6 text-gray-900"
+                                                                onClick={() => handleConfigurarClick(board._id)}  // Llamada a la función de invalidación
+                                                            >
                                                                 configurar
                                                             </Link>
                                                         </Menu.Item>
