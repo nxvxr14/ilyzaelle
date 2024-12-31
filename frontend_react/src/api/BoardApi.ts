@@ -6,6 +6,7 @@ type BoardAPIType = {
   projectId: Project["_id"];
   boardId: Board["_id"];
   formData: BoardFormData;
+  boardCode: string;
 };
 
 export async function createboard({
@@ -46,6 +47,24 @@ export async function updateBoardById({
   try {
     const url = `/projects/${projectId}/boards/${boardId}/`;
     const { data } = await api.put<string>(url, formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
+}
+
+export async function updateCodeBoardById({
+  projectId,
+  boardId,
+  boardCode,
+}: Pick<BoardAPIType, "projectId" | "boardId" | "boardCode">) {
+  try {
+    const url = `/projects/${projectId}/boards/${boardId}/code`;
+    // como envio un solo string lo debo enviar como objeto
+    // esto pasa porque unicamente envio un string, entonces la api no conoce la clave de ese string, por eso se envia como objeto
+    const { data } = await api.post(url, {boardCode});
     return data;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
