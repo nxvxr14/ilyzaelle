@@ -1,0 +1,1 @@
+// cada vez que se crea una carpeta toca regisrarla en tsonfig.json para tener el alias

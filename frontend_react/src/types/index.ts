@@ -18,6 +18,8 @@ export const boardSchema = z.object({
   active: z.boolean().optional(),
   boardCode: z.string().optional(),
   project: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string()
 });
 
 /* Snippets */
@@ -59,6 +61,7 @@ export const dashboardProjectSchema = z.array(
 );
 
 // cuando creo un proyecto no requiero el id, este se genera hasta que tengo la respuesta de la api, para no generar diferentes Schemas se hace lo siguiente
+// al usar tyeof pero la consulta y una vez que se conecte a internet ya no puede inferir correctamente la informacion
 export type Project = z.infer<typeof projectSchema>;
 export type Board = z.infer<typeof boardSchema>;
 export type Snippet = z.infer<typeof SnippetSchema>;

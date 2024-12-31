@@ -83,7 +83,7 @@ function BoardsList({ boards }: BoardsListProps) {
                                             <div className="min-w-0 flex-auto space-y-2">
                                                 {/* Mostramos boardName y boardType */}
                                                 <Link
-                                                    to={`/board/${board._id}`}
+                                                    to={location.pathname + `?viewBoard=${board._id}`}
                                                     className="text-gray-600 cursor-pointer hover:underline text-3xl font-bold"
                                                 >
                                                     {board.boardName}

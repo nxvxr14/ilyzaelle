@@ -6,6 +6,7 @@ import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 import BoardsList from "@/components/boards/BoardsList";
 import SnippetsList from "@/components/snippets/SnippetsList";
 import EditBoardData from "@/components/boards/EditBoardData";
+import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
 
 function ProjectDetailsView() {
 
@@ -53,6 +54,7 @@ function ProjectDetailsView() {
             />
             <AddBoardModal />
             <EditBoardData />
+            <BoardDetailsModal />
             {/* <CodeEditorBoardData /> */}
             {/* <div className="py-20">
                 <h1 className='text-5xl font-black'>
