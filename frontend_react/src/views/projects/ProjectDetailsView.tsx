@@ -7,6 +7,7 @@ import BoardsList from "@/components/boards/BoardsList";
 import SnippetsList from "@/components/snippets/SnippetsList";
 import EditBoardData from "@/components/boards/EditBoardData";
 import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
+import { getStatusLocal } from "@/api/ProjectApi";
 
 function ProjectDetailsView() {
 
@@ -21,6 +22,17 @@ function ProjectDetailsView() {
         //cuando tengo una funcion que toma un parametro debo tener un callback
         queryFn: () => getProjectById(projectId)
     })
+
+    // const queryResult = useQuery({
+    //     // se usa projectid en querykey para que sean unicos, no quede cacheado y no haya problemas mas adelante
+    //     queryKey: ['statusLocal'],
+    //     //cuando tengo una funcion que toma un parametro debo tener un callback
+    //     queryFn: () => getStatusLocal,
+    //     refetchInterval: 3000,  // Esto refetchea cada 5000 milisegundos (5 segundos),
+    //     refetchIntervalInBackground: true, // Esto refetchea en background
+    // })
+
+    // console.log(queryResult.isError)
 
     if (isLoading) return 'cargando'
     if (isError) return <Navigate to='/404' />

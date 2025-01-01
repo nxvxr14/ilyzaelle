@@ -19,7 +19,7 @@ export const boardSchema = z.object({
   boardCode: z.string().optional(),
   project: z.string(),
   createdAt: z.string(),
-  updatedAt: z.string()
+  updatedAt: z.string(),
 });
 
 /* Snippets */
@@ -72,6 +72,10 @@ export type ProjectFormData = Pick<Project, "projectName" | "description">;
 export type BoardFormData = Pick<
   Board,
   "boardType" | "boardName" | "boardConnect" | "boardInfo"
+>;
+export type PollingBoardFormData = Pick<
+  Board,
+  "_id" | "boardType" | "boardName" | "boardConnect" | "boardInfo" | "active"
 >;
 export type CodeEditorFormData = Pick<Board, "boardCode">;
 export type SnippetFormData = Pick<

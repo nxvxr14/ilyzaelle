@@ -1,10 +1,10 @@
-import api from "@/lib/axios";
+import { api } from "@/lib/axios";
 import { isAxiosError } from "axios";
 import { SnippetFormData, dashboardSnippetSchema } from "@/types/index";
 
 // type general
 type SnippetAPIType = {
-  formData: SnippetFormData,
+  formData: SnippetFormData;
   // si tuviera id de relacion con otra coleccion
   //   projectId: Project['_id']
 };

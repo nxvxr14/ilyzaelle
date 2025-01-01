@@ -1,11 +1,24 @@
-import { boardSerial, boardWifi } from './controller.js';
-import getBoardById from "./api.js";
+import { boardSerial, boardWifi } from "../config/generate.js";
 
-let globalVar = {
-    contador : 10,
-    estado : false
-}
+export const generateBoardController = async ({
+  _id,
+  boardType,
+  boardName,
+  boardConnect,
+  boardInfo,
+  active,
+  closing
+}) => {
+  let globalVar = {
+    contador: 10,
+    estado: false,
+  };
 
+  boardConnect === 1 &&
+    (await boardSerial(_id, boardType, boardName, boardInfo.port, active, closing));
+  boardConnect === 2 &&
+    (await boardWifi(_id, boardType, boardName, boardInfo, active, closing));
+};
 // let boardCode = {
 //     source : `
 //     const board = boards[name]
@@ -50,33 +63,13 @@ let globalVar = {
 //     }
 // ]
 
-let boards = []
-
-// de esta manera dejamos el await en api.js y podemos publicar la respuesta cuando la tengamos
-getBoardById()
-  .then((boards) => {
-
-    boards.forEach(
-      ({ boardType, boardName, boardConnect, boardInfo, boardCode }) => {
-        boardConnect === 1 &&
-          boardSerial(
-            boardType,
-            boardName,
-            boardInfo.port,
-            boardCode,
-            globalVar
-          );
-        boardConnect === 2 &&
-          boardWifi(
-            boardType,
-            boardName,
-            boardInfo,
-            boardCode,
-            globalVar
-          );
-      }
-    );
-  })
-  .catch((error) => {
-    console.error("Error:", error);
-  });
+// boards.forEach(
+//   ({ boardType, boardName, boardConnect, boardInfo, active, boardCode }) => {
+//     boardConnect === 1 &&
+//       active &&
+//       boardSerial(boardType, boardName, boardInfo.port, boardCode, globalVar);
+//     boardConnect === 2 &&
+//       active &&
+//       boardWifi(boardType, boardName, boardInfo, boardCode, globalVar);
+//   }
+// );

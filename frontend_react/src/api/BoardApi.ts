@@ -1,13 +1,21 @@
-import api from "@/lib/axios";
+import { apiLocal, api } from "@/lib/axios";
 import { isAxiosError } from "axios";
-import { Board, BoardFormData, Project, boardSchema } from "../types";
+import {
+  Board,
+  BoardFormData,
+  PollingBoardFormData,
+  Project,
+  boardSchema,
+} from "../types";
 
 type BoardAPIType = {
   projectId: Project["_id"];
   boardId: Board["_id"];
   formData: BoardFormData;
+  pollingData: PollingBoardFormData;
   boardCode: string;
   active: Board["active"];
+  closing: boolean;
 };
 
 export async function createboard({
@@ -107,5 +115,23 @@ export async function deleteBoardById({
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error);
     }
+  }
+}
+
+/* backend local */
+export async function pollingBoards({
+  pollingData,
+}: Pick<BoardAPIType, "pollingData">) {
+  try {
+    const url = `/polling/boards`;
+    // como envio un solo string lo debo enviar como objeto
+    // esto pasa porque unicamente envio un string, entonces la api no conoce la clave de ese string, por eso se envia como objeto
+    const { data } = await apiLocal.post(url, pollingData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+    return error;
   }
 }

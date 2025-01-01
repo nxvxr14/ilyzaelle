@@ -1,4 +1,4 @@
-import api from "@/lib/axios";
+import { api, apiLocal } from "@/lib/axios";
 import { isAxiosError } from "axios";
 import { Project, ProjectFormData, dashboardProjectSchema } from "../types";
 
@@ -59,5 +59,20 @@ export async function deleteProjectById(id: Project["_id"]) {
   } catch (error) {
     if (isAxiosError(error) && error.response)
       throw new Error(error.response.data.error);
+  }
+}
+
+export async function getStatusLocal() {
+  try {
+    const url = `/polling/statusLocal`;
+    // como envio un solo string lo debo enviar como objeto
+    // esto pasa porque unicamente envio un string, entonces la api no conoce la clave de ese string, por eso se envia como objeto
+    await apiLocal.get(url);
+    return "localhost con conexion";
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+    return error;
   }
 }

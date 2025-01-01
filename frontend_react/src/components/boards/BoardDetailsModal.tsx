@@ -2,9 +2,10 @@ import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBoardById, updateActiveBoardById } from '@/api/BoardApi';
+import { getBoardById, pollingBoards, updateActiveBoardById } from '@/api/BoardApi';
 import { toast } from 'react-toastify';
 import formatDateTime from '@/utils/utils.ts';
+import { isAxiosError } from 'axios';
 
 export default function TaskModalDetails() {
 
@@ -30,7 +31,9 @@ export default function TaskModalDetails() {
         queryFn: () => getBoardById({ projectId, boardId }),
         // con esto nos aseguramos que solo se realice la consulta si existe el boardId
         enabled: show,
-        retry: false
+        retry: false,
+        // refetchInterval: 1000,  // Esto refetchea cada 5000 milisegundos (5 segundos),
+        // refetchIntervalInBackground: true, // Esto refetchea en background
     })
 
     const { mutate } = useMutation({
@@ -47,7 +50,7 @@ export default function TaskModalDetails() {
         }
     })
 
-    const handleClick = () => {
+    const handleClick = async () => {
         // se usa if porque data puede ser null, el usuario le podria dar click al boton antes que la api de los valores de data y podria mandar undefined
         if (data) {
             const updatedData = {
@@ -55,6 +58,21 @@ export default function TaskModalDetails() {
                 boardId,
                 active: !data.active
             };
+
+            const pollingData = {
+                _id: data._id,
+                boardType: data.boardType,
+                boardName: data.boardName,
+                boardConnect: data.boardConnect,
+                boardInfo: data.boardInfo,
+                active: !data.active,
+                closing: data.active
+            }
+            // pollingboards sirve para verificar si hay conexion con el backend local antes de hacer una escritura a la base de datos
+            const response = await pollingBoards({ pollingData })
+            if (isAxiosError(response)) {
+                return toast.error("localhost sin conexion");
+            }
             mutate(updatedData);
         }
     }
@@ -132,7 +150,3 @@ export default function TaskModalDetails() {
         </>
     )
 }
-function updateStatusBoardById(variables: void): Promise<unknown> {
-    throw new Error('Function not implemented.');
-}
-
