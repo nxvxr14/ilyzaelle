@@ -7,22 +7,27 @@ export class PollingController {
     try {
       // para hacer aca la consulta a la base de datos
       // const data = await getBoards();
-      console.log(req.body)
+      console.log(req.body);
       const generate = await generateBoardController(req.body);
       res.status(200).json({ message: "Boards data polled successfully." });
-      return req.body
+      return req.body;
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "An error occurred while polling boards data." });
+      res
+        .status(500)
+        .json({ error: "An error occurred while polling boards data." });
     }
   };
 
-  static getStatusLocal = async (req , res) => {
+  static getStatusLocal = async (req, res) => {
     try {
-        res.status(200).json({ message: "Boards data polled successfully." });
-        console.log('polling')
+      res.status(200).json({
+        message: "localhost is online",
+        online: true,
+      });
+
     } catch (error) {
-        res.status(500).json({ error: 'There was an error.' })
+      res.status(500).json({ error: "There was an error." });
     }
-}
+  };
 }

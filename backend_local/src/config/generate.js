@@ -55,8 +55,7 @@ export const boardSerial = (_id, type, name, port, active, closing) => {
 export const boardWifi = (_id, type, name, boardInfo, active, closing) => {
   return new Promise((resolve, reject) => {
     virtualBridges[_id] = new SerialPort(boardInfo);
-
-    boards[_id] = new firmata.Board(virtualBridges[_id], (err) => {
+    if (active) boards[_id] = new firmata.Board(virtualBridges[_id], (err) => {
       if (err) {
         reject(
           `[${_id}] Error connecting to ${boardInfo.host}:${boardInfo.port} via WIFI: ${err}`
@@ -68,5 +67,15 @@ export const boardWifi = (_id, type, name, boardInfo, active, closing) => {
         resolve(); // Resolvemos la promesa cuando la conexión se establece
       }
     });
+    if(!active) resolve()
+    if(closing) {
+      // si resuelvo la promesa antes y hay una funcion asincrona pendiente, no se ejecutara bien por eso el console log se ejecuta antes del board close y no despues 
+      console.log("Closed!");
+      boards[_id].transport.close(); 
+      boards[_id].on("close", () => {
+        // Unplug the board to see this event!
+      })
+      resolve()
+    }
   });
 };

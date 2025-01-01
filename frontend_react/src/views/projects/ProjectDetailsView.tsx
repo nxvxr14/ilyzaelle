@@ -7,7 +7,7 @@ import BoardsList from "@/components/boards/BoardsList";
 import SnippetsList from "@/components/snippets/SnippetsList";
 import EditBoardData from "@/components/boards/EditBoardData";
 import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
-import { getStatusLocal } from "@/api/ProjectApi";
+import StatusLocalModal from "@/components/projects/StatusLocalModal";
 
 function ProjectDetailsView() {
 
@@ -23,27 +23,17 @@ function ProjectDetailsView() {
         queryFn: () => getProjectById(projectId)
     })
 
-    // const queryResult = useQuery({
-    //     // se usa projectid en querykey para que sean unicos, no quede cacheado y no haya problemas mas adelante
-    //     queryKey: ['statusLocal'],
-    //     //cuando tengo una funcion que toma un parametro debo tener un callback
-    //     queryFn: () => getStatusLocal,
-    //     refetchInterval: 3000,  // Esto refetchea cada 5000 milisegundos (5 segundos),
-    //     refetchIntervalInBackground: true, // Esto refetchea en background
-    // })
-
-    // console.log(queryResult.isError)
-
     if (isLoading) return 'cargando'
     if (isError) return <Navigate to='/404' />
 
     if (data) return (
         <>
             <div className="py-10">
-                <h1 className='text-5xl font-black'>
+                <StatusLocalModal boards={data.boards} />
+                <h1 className='text-5xl font-black mt-2'>
                     proyecto/{data.projectName}
                 </h1>
-                <p className='text-2xl font-light text-gray-500 mt-5'>
+                <p className='text-2xl font-light text-gray-500 mt-2'>
                     {data.description}
                 </p>
             </div>
