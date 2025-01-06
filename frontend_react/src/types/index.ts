@@ -49,6 +49,7 @@ export const projectSchema = z.object({
   projectName: z.string(),
   description: z.string(),
   status: z.boolean(),
+  server: z.string()
 });
 
 export const dashboardProjectSchema = z.array(
@@ -57,6 +58,7 @@ export const dashboardProjectSchema = z.array(
     projectName: true,
     description: true,
     status: true,
+    server: true
   })
 );
 
@@ -68,7 +70,7 @@ export type Snippet = z.infer<typeof SnippetSchema>;
 // para el formulario del proyecto requerimos un type, NO UN SCHEMA
 //se utiliza el utility type de pick porque si utiliza omit tendria que volver a cambiar el codigo, como el formulario solo necesita estos campos y si llegara a requerir mas no deberia cambiar
 // si uso omit y agrego cosas a mi schema me toca cambiar codigo, con pick esto no sucede
-export type ProjectFormData = Pick<Project, "projectName" | "description">;
+export type ProjectFormData = Pick<Project, "projectName" | "description" | "server">;
 export type BoardFormData = Pick<
   Board,
   "boardType" | "boardName" | "boardConnect" | "boardInfo"

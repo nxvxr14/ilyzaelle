@@ -28,7 +28,7 @@ export const generateBoardController = async ({
       boardCode
     ));
   boardConnect === 2 &&
-    (await boardWifi(_id, boardType, boardName, boardInfo, active, closing));
+    (await boardWifi(_id, boardType, boardName, boardInfo, active, closing, project, boardCode));
 };
 // let boardCode = {
 //     source : `

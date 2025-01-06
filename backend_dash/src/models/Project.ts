@@ -18,6 +18,7 @@ export interface IProject extends Document {
     projectName: string,
     description: string,
     status: boolean,
+    server: string
     // las boards de cada project
     // en boards solo se almacena el objectid del projecto al que pertecene cada board, pero en projects se hace un subdocumento con toda la informacion de las boards que pertenecen a cada projecto
     boards: PopulatedDoc<IBoard & Document>[]
@@ -31,7 +32,6 @@ const ProjectSchema: Schema = new Schema({
         unique: true,
         trim: true,
     },
-
     description: {
         type: String,
         trim: true,
@@ -40,6 +40,10 @@ const ProjectSchema: Schema = new Schema({
     status: {
         type: Boolean,
         default: false
+    },
+    server: {
+        type: String,
+        default: "localhost:4040"
     },
     boards: [
         {

@@ -49,6 +49,9 @@ export default function DashboardView() {
                                 <div className="min-w-0 flex-auto space-y-2">
                                     <Link to={`/projects/${project._id}`} className="text-gray-600 cursor-pointer hover:underline text-3xl font-bold"
                                     >{project.projectName}</Link>
+                                    <p className="text-sm text-gray-400 italic">
+                                        {project.server}
+                                    </p>
                                     <p className={`text-lg font-bold ${project.status ? 'text-green-500' : 'text-red-500'}`}>
                                         {project.status ? 'activo' : 'inactivo'}
                                     </p>

@@ -20,7 +20,8 @@ function EditProjectForm({ data, projectId }: EditProjectFormProps) {
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
             projectName: data.projectName,
-            description: data.description
+            description: data.description,
+            server: data.server
         }
     })
 

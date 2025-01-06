@@ -7,7 +7,11 @@ import { toast } from 'react-toastify';
 import formatDateTime from '@/utils/utils.ts';
 import { isAxiosError } from 'axios';
 
-export default function TaskModalDetails() {
+type ServerType = {
+    server: string
+}
+
+export default function BoardDetailsModal({ server }: ServerType) {
 
     const params = useParams()
     const projectId = params.projectId!
@@ -71,7 +75,7 @@ export default function TaskModalDetails() {
                 closing: data.active
             }
             // pollingboards sirve para verificar si hay conexion con el backend local antes de hacer una escritura a la base de datos
-            const response = await pollingBoards({ pollingData })
+            const response = await pollingBoards({ pollingData }, { server })
             if (isAxiosError(response)) {
                 return toast.error("localhost sin conexion");
             }

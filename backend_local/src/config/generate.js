@@ -1,7 +1,14 @@
 import { SerialPort, firmata } from "./index.js";
-import { updateCodeBoardController } from "../controllers/UpdateCodeBoardController.js";
+import {
+  clearTimersById,
+  updateCodeBoardController,
+} from "../controllers/UpdateCodeBoardController.js";
 export const boards = {};
 export const virtualBridges = {};
+
+/*
+FALTA PONER LA FUNCION PARA CERRAR LA PLACA Y DETENER TODOS LOS PINES ANTES DE CERRAR LA CONEXION
+*/
 
 export const boardSerial = (
   _id,
@@ -38,6 +45,8 @@ export const boardSerial = (
     if (closing) {
       // si resuelvo la promesa antes y hay una funcion asincrona pendiente, no se ejecutara bien por eso el console log se ejecuta antes del board close y no despues
       console.log("Closed!");
+      // **URGENTE** poner una promesa aca mas adelante para el clearTimersById
+      clearTimersById(_id);
       boards[_id].transport.close();
       boards[_id].on("close", () => {
         // Unplug the board to see this event!
@@ -49,7 +58,16 @@ export const boardSerial = (
   });
 };
 
-export const boardWifi = (_id, type, name, boardInfo, active, closing) => {
+export const boardWifi = (
+  _id,
+  type,
+  name,
+  boardInfo,
+  active,
+  closing,
+  project,
+  boardCode
+) => {
   return new Promise((resolve, reject) => {
     virtualBridges[_id] = new SerialPort(boardInfo);
     if (active)
@@ -72,12 +90,12 @@ export const boardWifi = (_id, type, name, boardInfo, active, closing) => {
     if (closing) {
       // si resuelvo la promesa antes y hay una funcion asincrona pendiente, no se ejecutara bien por eso el console log se ejecuta antes del board close y no despues
       console.log("Closed!");
+      // poner una promesa aca mas adelante
+      clearTimersById(_id);
       boards[_id].transport.close();
-      boards[_id].on("close", () => {
-        // Unplug the board to see this event!
-        boards[_id].isReady = false;
-        console.log(boards[_id].isReady);
-      });
+      boards[_id].isReady = false;
+      console.log(boards[_id].isReady);
+      boards[_id].on("close", () => {});
       resolve();
     }
   });

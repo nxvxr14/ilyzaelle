@@ -2,12 +2,12 @@ import { getProjectById } from "@/api/ProjectApi";
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import AddBoardModal from "@/components/boards/AddBoardModal";
-import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 import BoardsList from "@/components/boards/BoardsList";
-import SnippetsList from "@/components/snippets/SnippetsList";
 import EditBoardData from "@/components/boards/EditBoardData";
-import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
 import StatusLocalModal from "@/components/projects/StatusLocalModal";
+import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
+// import AddSnippetModal from "@/components/snippets/AddSnippetModal";
+// import SnippetsList from "@/components/snippets/SnippetsList";
 
 function ProjectDetailsView() {
 
@@ -30,7 +30,10 @@ function ProjectDetailsView() {
         <>
             <div className="py-10">
                 <StatusLocalModal boards={data.boards} />
-                <h1 className='text-5xl font-black mt-2'>
+                <p className="text-sm text-gray-400 italic mt-5">
+                    {data.server}
+                </p>
+                <h1 className='text-5xl font-black'>
                     proyecto/{data.projectName}
                 </h1>
                 <p className='text-2xl font-light text-gray-500 mt-2'>
@@ -56,7 +59,9 @@ function ProjectDetailsView() {
             />
             <AddBoardModal />
             <EditBoardData />
-            <BoardDetailsModal />
+            <BoardDetailsModal
+                server={data.server}
+            />
             {/* <CodeEditorBoardData /> */}
             {/* <div className="py-20">
                 <h1 className='text-5xl font-black'>

@@ -129,7 +129,7 @@ import { SerialPort, firmata } from "../config/index.js";
 const timerIds = new Map();
 
 // Función para limpiar los temporizadores asociados a un _id específico
-const clearTimersById = (_id) => {
+export const clearTimersById = (_id) => {
     if (!timerIds.has(_id)) return;
 
     const timers = timerIds.get(_id);

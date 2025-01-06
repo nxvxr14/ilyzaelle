@@ -37,10 +37,23 @@ export default function ProjectForm({ register, errors }: ProjectFormProps) {
                         required: "titulo obligatorio",
                     })}
                 />
-
                 {errors.projectName && (
                     <ErrorMessage>{errors.projectName.message}</ErrorMessage>
                 )}
+            </div>
+
+            <div className="mb-5 space-y-3">
+                <label htmlFor="server" className="text-lg font-bold">
+                server
+                </label>
+                <textarea
+                    id="server"
+                    className="w-full p-3  border border-gray-200"
+                    placeholder="server"
+                    {...register("server", {
+                        required: "server obligatoria"
+                    })}
+                />
             </div>
 
             <div className="mb-5 space-y-3">
