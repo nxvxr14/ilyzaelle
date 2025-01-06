@@ -7,7 +7,9 @@ export const generateBoardController = async ({
   boardConnect,
   boardInfo,
   active,
-  closing
+  project,
+  boardCode,
+  closing,
 }) => {
   let globalVar = {
     contador: 10,
@@ -15,7 +17,16 @@ export const generateBoardController = async ({
   };
 
   boardConnect === 1 &&
-    (await boardSerial(_id, boardType, boardName, boardInfo.port, active, closing));
+    (await boardSerial(
+      _id,
+      boardType,
+      boardName,
+      boardInfo.port,
+      active,
+      closing,
+      project,
+      boardCode
+    ));
   boardConnect === 2 &&
     (await boardWifi(_id, boardType, boardName, boardInfo, active, closing));
 };

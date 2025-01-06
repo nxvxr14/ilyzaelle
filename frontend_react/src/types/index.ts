@@ -75,8 +75,9 @@ export type BoardFormData = Pick<
 >;
 export type PollingBoardFormData = Pick<
   Board,
-  "_id" | "boardType" | "boardName" | "boardConnect" | "boardInfo" | "active"
+  "_id" | "boardType" | "boardName" | "boardConnect" | "boardInfo" | "active" | "project" | "boardCode"
 >;
+export type PollingCodesFormData = Pick<Board, "project" | "_id" | "boardCode">;
 export type CodeEditorFormData = Pick<Board, "boardCode">;
 export type SnippetFormData = Pick<
   Snippet,

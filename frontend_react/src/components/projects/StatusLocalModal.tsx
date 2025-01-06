@@ -98,8 +98,6 @@ function StatusLocalModal({ boards }: BoardsListProps) {
         retry: false
     });
 
-    
-
     const { mutate } = useMutation({
         mutationFn: updateActiveBoardById,
         onError: (error) => {

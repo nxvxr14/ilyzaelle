@@ -66,6 +66,8 @@ export default function TaskModalDetails() {
                 boardConnect: data.boardConnect,
                 boardInfo: data.boardInfo,
                 active: !data.active,
+                project: data.project,
+                boardCode: data.boardCode,
                 closing: data.active
             }
             // pollingboards sirve para verificar si hay conexion con el backend local antes de hacer una escritura a la base de datos

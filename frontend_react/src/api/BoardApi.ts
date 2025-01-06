@@ -4,6 +4,7 @@ import {
   Board,
   BoardFormData,
   PollingBoardFormData,
+  PollingCodesFormData,
   Project,
   boardSchema,
 } from "../types";
@@ -13,6 +14,7 @@ type BoardAPIType = {
   boardId: Board["_id"];
   formData: BoardFormData;
   pollingData: PollingBoardFormData;
+  pollingDataCodes: PollingCodesFormData;
   boardCode: string;
   active: Board["active"];
   closing: boolean;
@@ -133,5 +135,35 @@ export async function pollingBoards({
       throw new Error(error.response.data.error);
     }
     return error;
+  }
+}
+
+export async function pollingCodes({
+  pollingDataCodes,
+}: Pick<BoardAPIType, "pollingDataCodes">) {
+  try {
+    const url = `/polling/codes`;
+    // como envio un solo string lo debo enviar como objeto
+    // esto pasa porque unicamente envio un string, entonces la api no conoce la clave de ese string, por eso se envia como objeto
+    const { data } = await apiLocal.post(url, pollingDataCodes);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+    return error;
+  }
+}
+
+export async function getBoardsStatus(id: Board["_id"]) {
+  try {
+    // como envio un solo string lo debo enviar como objeto
+    // esto pasa porque unicamente envio un string, entonces la api no conoce la clave de ese string, por eso se envia como objeto
+    const { data } = await apiLocal.get(`/polling/boardStatus/${id}`);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
   }
 }

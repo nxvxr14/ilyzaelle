@@ -62,6 +62,7 @@ export async function deleteProjectById(id: Project["_id"]) {
   }
 }
 
+/* backend local */
 export async function getStatusLocal() {
   try {
     const url = `/polling/statusLocal`;

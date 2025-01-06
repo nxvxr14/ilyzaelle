@@ -2,7 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Board, Project } from '@/types/index';
 import { toast } from 'react-toastify';
-import { updateCodeBoardById } from '@/api/BoardApi';
+import { pollingCodes, updateCodeBoardById } from '@/api/BoardApi';
+import { isAxiosError } from 'axios';
 
 type CodeEditorModalProps = {
     projectId: Project['_id'],
@@ -26,16 +27,28 @@ function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps
         onSuccess: (data) => {
             toast.success(data),
                 queryClient.invalidateQueries({ queryKey: ['CodeEditorBoard', boardId] })
-            navigate(`/projects/${projectId}`, { replace: true })
+            // para navegar hacia atras
+            // navigate(`/projects/${projectId}`, { replace: true })
         }
 
     })
 
-    const handleCodeEditorBoard = () => {
+    const handleCodeEditorBoard = async () => {
         const data = {
             projectId,
             boardId,
             boardCode
+        }
+
+        const pollingDataCodes = {
+            project: projectId,
+            _id: boardId,
+            boardCode: boardCode
+        }
+
+        const response = await pollingCodes({ pollingDataCodes })
+        if (isAxiosError(response)) {
+            return toast.error("localhost sin conexion");
         }
 
         mutate(data)
