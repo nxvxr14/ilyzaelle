@@ -40,8 +40,16 @@ function ProjectDetailsView() {
                 <p className='text-2xl font-light text-gray-500 mt-2'>
                     {data.description}
                 </p>
-            </div>
-            <div className="mt-10">
+                <nav className='my-5 flex gap-3'>
+                <button
+                    className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                    onClick={() => navigate(location.pathname + '/dashboard')}
+                >
+                    dashboard
+                </button>
+            </nav>
+        </div >
+            <div className="mt-5">
                 <h1 className='text-5xl font-black'>
                     user/controladores
                 </h1>
@@ -54,7 +62,7 @@ function ProjectDetailsView() {
                     </button>
                 </nav>
             </div>
-            {/* no se realizo una funcion de lectura en boardApi porque cuando leimos ejecutamos la funcion de getProjectsbyid viene con la informacionde las boards anidadas porque las colecciones estan relacioandas */}
+    {/* no se realizo una funcion de lectura en boardApi porque cuando leimos ejecutamos la funcion de getProjectsbyid viene con la informacionde las boards anidadas porque las colecciones estan relacioandas */ }
             <BoardsList
                 boards={data.boards}
             />
@@ -63,8 +71,8 @@ function ProjectDetailsView() {
             <BoardDetailsModal
                 server={data.server}
             />
-            {/* <CodeEditorBoardData /> */}
-            {/* <div className="py-20">
+    {/* <CodeEditorBoardData /> */ }
+    {/* <div className="py-20">
                 <h1 className='text-5xl font-black'>
                     user/snippets
                 </h1>

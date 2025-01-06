@@ -37,29 +37,30 @@ function CodeEditorBoardView() {
                 <p className="text-lg text-gray-400 mt-2">
                     {boardNames[data.boardType] || 'Desconocido'}
                 </p>
+                <nav className='mt-5 flex gap-3'>
+                    <Link className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                        to={`/projects/${projectId}`}
+                    >
+                        volver
+                    </Link>
+                </nav>
             </div>
-            <nav className='mt-5 flex gap-3'>
-                <Link className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                    to={`/projects/${projectId}`}
-                >
-                    volver
-                </Link>
-            </nav>
-            <div className="py-10"> </div>
-            {/* <div className="mt-10">
+            <div className="py-10">
+                {/* <div className="mt-10">
                 <h1 className='text-5xl font-black'>
-                    editor/globalVar
+                editor/globalVar
                 </h1>
                 <nav className='my-5 flex gap-3'>
-                    <button
-                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                    // onClick={() => navigate(location.pathname + '?newBoard=true')}
-                    >
-                        nueva variable
-                    </button>
+                <button
+                className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                // onClick={() => navigate(location.pathname + '?newBoard=true')}
+                >
+                nueva variable
+                </button>
                 </nav>
             </div> */}
-            <CodeEditorForm boardCode={data.boardCode} />
+                <CodeEditorForm boardCode={data.boardCode} />
+            </div>
         </>
     )
 }
