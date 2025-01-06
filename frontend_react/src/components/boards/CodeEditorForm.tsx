@@ -24,16 +24,6 @@ export default function CodeEditorForm({ boardCode }: CodeEditorFormData) {
 
     return (
         <>
-            <nav className='mb-10 flex gap-3'>
-
-                <button
-                    className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                // onClick={() => navigate(location.pathname + '?newBoard=true')}
-                >
-                    dashboard
-                </button>
-            </nav>
-
             <div className="grid grid-cols-2 h-screen w-full bg-[#120d18] rounded-2xl overflow-hidden">
                 {/* Primer div que ocupa la mitad del espacio */}
                 <div

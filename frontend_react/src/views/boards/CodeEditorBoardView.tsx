@@ -1,4 +1,4 @@
-import { Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
 import { getBoardById } from "@/api/BoardApi";
 import CodeEditorForm from '@/components/boards/CodeEditorForm';
@@ -30,7 +30,7 @@ function CodeEditorBoardView() {
 
     if (data) return (
         <>
-            <div className="py-10">
+            <div className="mt-10">
                 <h1 className='text-5xl font-black'>
                     editor/{data.boardName}
                 </h1>
@@ -38,6 +38,14 @@ function CodeEditorBoardView() {
                     {boardNames[data.boardType] || 'Desconocido'}
                 </p>
             </div>
+            <nav className='mt-5 flex gap-3'>
+                <Link className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                    to={`/projects/${projectId}`}
+                >
+                    volver
+                </Link>
+            </nav>
+            <div className="py-10"> </div>
             {/* <div className="mt-10">
                 <h1 className='text-5xl font-black'>
                     editor/globalVar
