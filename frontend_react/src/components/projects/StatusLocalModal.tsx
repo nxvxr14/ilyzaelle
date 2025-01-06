@@ -81,11 +81,12 @@ import { Board } from "@/types/index";
 import { toast } from 'react-toastify';
 import { useEffect } from 'react';
 
-type BoardsListProps = {
-    boards: Board[]
-}
+// no funciono, revisar mas adelante, esto iba donde esta board en la function
+// type BoardsListProps = {
+//     boards: Board[]
+// }
 
-function StatusLocalModal({ boards }: BoardsListProps) {
+function StatusLocalModal({ boards, server }: { boards: Board[]; server: string }) {
     const params = useParams();
     const projectId = params.projectId!;
 
@@ -93,7 +94,7 @@ function StatusLocalModal({ boards }: BoardsListProps) {
 
     const { data = {}, isError } = useQuery({
         queryKey: ['apiLocalStatus'],
-        queryFn: getStatusLocal,
+        queryFn: () => getStatusLocal(server),
         refetchInterval: 5000,
         retry: false
     });

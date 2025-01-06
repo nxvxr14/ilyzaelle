@@ -29,7 +29,8 @@ function ProjectDetailsView() {
     if (data) return (
         <>
             <div className="py-10">
-                <StatusLocalModal boards={data.boards} />
+                <StatusLocalModal boards={data.boards}
+                    server={data.server} />
                 <p className="text-sm text-gray-400 italic mt-5">
                     {data.server}
                 </p>

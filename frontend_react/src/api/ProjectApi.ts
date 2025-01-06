@@ -1,5 +1,5 @@
-import { api, apiLocal } from "@/lib/axios";
-import { isAxiosError } from "axios";
+import { api } from "@/lib/axios";
+import axios, { isAxiosError } from "axios";
 import { Project, ProjectFormData, dashboardProjectSchema } from "../types";
 
 // solo las peticiones de tipo get pasan por zod, las demas por ts
@@ -63,12 +63,12 @@ export async function deleteProjectById(id: Project["_id"]) {
 }
 
 /* backend local */
-export async function getStatusLocal() {
+export async function getStatusLocal(server: string) {
   try {
-    const url = `/polling/statusLocal`;
+    const url = `http://${server}/api/polling/statusLocal`;
     // como envio un solo string lo debo enviar como objeto
     // esto pasa porque unicamente envio un string, entonces la api no conoce la clave de ese string, por eso se envia como objeto
-    const { data } = await apiLocal.get(url);
+    const { data } = await axios.get(url);
     return data.message;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
