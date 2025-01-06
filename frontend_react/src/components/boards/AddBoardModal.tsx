@@ -29,7 +29,7 @@ export default function AddBoardModal() {
 
     //boardForm exige que le pasemos datos, asi que le enviamos los valores iniciales por medio de useForm
     const initialValues: BoardFormData = {
-        boardType: '',
+        boardType: 1,
         boardName: '',
         boardConnect: 1,
         boardInfo: {

@@ -11,6 +11,11 @@ type BoardsListProps = {
     boards: Board[]
 }
 
+const boardNames: { [key: number]: string } = {
+    1: 'Arduino Uno',
+    2: 'PLC328P',
+};
+
 const groupNames: { [key: string]: string } = {
     1: "usb",
     2: "wifi",
@@ -88,7 +93,9 @@ function BoardsList({ boards }: BoardsListProps) {
                                                 >
                                                     {board.boardName}
                                                 </Link>
-                                                <p className="text-sm text-gray-400">{board.boardType}</p>
+                                                <p className="text-sm text-gray-400">
+                                                    {boardNames[board.boardType] || 'Desconocido'}
+                                                </p>
                                                 {/* Estado del proyecto */}
                                                 <div className="flex items-center space-x-2">
                                                     <div

@@ -11,6 +11,11 @@ type ServerType = {
     server: string
 }
 
+const boardNames: { [key: number]: string } = {
+    1: 'Arduino Uno',
+    2: 'PLC328P',
+};
+
 export default function BoardDetailsModal({ server }: ServerType) {
 
     const params = useParams()
@@ -127,8 +132,9 @@ export default function BoardDetailsModal({ server }: ServerType) {
                                                 className="font-black text-4xl text-slate-600 mt-5"
                                             >{data.boardName}</Dialog.Title>
                                             <div className='mt-1'>
-                                                <label className='font-bold text-sm'>{data.boardType}</label>
-                                            </div>
+                                                <p className="text-sm text-gray-400">
+                                                    {boardNames[data.boardType] || 'Desconocido'}
+                                                </p>                                            </div>
                                             <div className='mb-5'>
                                                 <button className={`block py-1 text-sm leading ${data.active ? 'text-green-500' : 'text-red-500'}`} onClick={handleClick}>
                                                     {data.active ? 'en linea' : 'desconectado'}
@@ -144,7 +150,13 @@ export default function BoardDetailsModal({ server }: ServerType) {
                                         </div>
                                         <div>
                                             {/* Right column content */}
-                                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/ArduinoUno.svg/285px-ArduinoUno.svg.png" alt="Arduino Uno" />
+                                            <img
+                                                src={data.boardType === 1
+                                                    ? "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/ArduinoUno.svg/285px-ArduinoUno.svg.png"
+                                                    : "https://i.ibb.co/BVf8kh7/image.png"}
+                                                alt={data.boardType === 1 ? "Arduino Uno" : "PLC328P"}
+                                                className="max-w-full h-auto" // This will ensure the image is not distorted
+                                            />
                                         </div>
                                     </div>
                                 </Dialog.Panel>

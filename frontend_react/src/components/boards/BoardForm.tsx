@@ -33,7 +33,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                     className="font-normal text-2xl"
                     htmlFor="boardType"
                 >tipo</label>
-                <input
+                {/* <input
                     id="boardType"
                     type="text"
                     placeholder="ej. arduino"
@@ -41,7 +41,17 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                     {...register("boardType", {
                         required: "el tipo de controlador es obligatorio",
                     })}
-                />
+                /> */}
+                <select
+                    id="boardType"
+                    className="w-full p-3 border-gray-300 border rounded-2xl"
+                    {...register("boardType", {
+                        required: "La conexión es obligatoria",
+                    })}
+                >
+                    <option value="1">arduino UNO</option>
+                    <option value="2">plc328p</option>
+                </select>
                 {errors.boardType && (
                     <ErrorMessage>{errors.boardType.message}</ErrorMessage>
                 )}

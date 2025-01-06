@@ -3,7 +3,7 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 // cada board debe tener un proyecto, y un proyecto puede tener multiples boards
 
 export interface IBoard extends Document {
-    boardType: string
+    boardType: 1 | 2 // 1 = Arduino UNO, 2 = PLC328p,
     boardName: string
     boardConnect: number
     boardInfo: object
@@ -14,9 +14,9 @@ export interface IBoard extends Document {
 
 export const BoardSchema: Schema = new Schema({
     boardType: {
-        type: String,
+        type: Number,
         required: true,
-        trim: true
+        enum: [1, 2]
     },
     boardName: {
         type: String,

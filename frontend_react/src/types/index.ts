@@ -11,7 +11,7 @@ const boardInfoSchema = z.object({
 
 export const boardSchema = z.object({
   _id: z.string(),
-  boardType: z.string(),
+  boardType: z.number(),
   boardName: z.string(),
   boardConnect: z.number(),
   boardInfo: boardInfoSchema, // Usamos el schema para boardInfo
