@@ -3,6 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { getBoardById } from "@/api/BoardApi";
 import CodeEditorForm from '@/components/boards/CodeEditorForm';
 
+const boardNames: { [key: number]: string } = {
+    1: 'Arduino Uno',
+    2: 'PLC328P',
+};
 
 function CodeEditorBoardView() {
 
@@ -30,8 +34,8 @@ function CodeEditorBoardView() {
                 <h1 className='text-5xl font-black'>
                     editor/{data.boardName}
                 </h1>
-                <p className='text-2xl font-light text-gray-500 mt-5'>
-                    {data.boardType}
+                <p className="text-lg text-gray-400 mt-2">
+                    {boardNames[data.boardType] || 'Desconocido'}
                 </p>
             </div>
             {/* <div className="mt-10">

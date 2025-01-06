@@ -7,16 +7,17 @@ import { toast } from 'react-toastify';
 import formatDateTime from '@/utils/utils.ts';
 import { isAxiosError } from 'axios';
 
-type ServerType = {
-    server: string
-}
+// type ServerType = {
+//     server: string
+// }
 
 const boardNames: { [key: number]: string } = {
     1: 'Arduino Uno',
     2: 'PLC328P',
 };
 
-export default function BoardDetailsModal({ server }: ServerType) {
+// { server }: { server: string } para recibir un prop como variable y no objeto, toca desestructurar
+export default function BoardDetailsModal({ server }: { server: string }) {
 
     const params = useParams()
     const projectId = params.projectId!
@@ -80,7 +81,7 @@ export default function BoardDetailsModal({ server }: ServerType) {
                 closing: data.active
             }
             // pollingboards sirve para verificar si hay conexion con el backend local antes de hacer una escritura a la base de datos
-            const response = await pollingBoards({ pollingData }, { server })
+            const response = await pollingBoards({ pollingData }, server)
             if (isAxiosError(response)) {
                 return toast.error("localhost sin conexion");
             }
@@ -93,6 +94,7 @@ export default function BoardDetailsModal({ server }: ServerType) {
         // componente navigate lleva de forma programada un usuario a otra url
         // no se puede usar navigate en este caso porque interfiere con react en la renderizacion y linkto funciona de forma distinta
         return <Navigate to={`/projects/${projectId}`} replace />
+
     }
 
     if (data) return (

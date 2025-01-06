@@ -1,4 +1,4 @@
-import { apiLocal, api } from "@/lib/axios";
+import { api } from "@/lib/axios";
 import axios, { isAxiosError } from "axios";
 import {
   Board,
@@ -18,10 +18,6 @@ type BoardAPIType = {
   boardCode: string;
   active: Board["active"];
   closing: boolean;
-};
-
-type ServerAPIType = {
-  server: string;
 };
 
 export async function createboard({
@@ -127,10 +123,9 @@ export async function deleteBoardById({
 /* backend local */
 export async function pollingBoards({
   pollingData,
-}: Pick<BoardAPIType, "pollingData">, server : ServerAPIType) {
+}: Pick<BoardAPIType, "pollingData">, server : string ) {
   try {
-    const url = `http://${server.server}/api/polling/boards`;
-    
+    const url = `http://${server}/api/polling/boards`;
     // como envio un solo string lo debo enviar como objeto
     // esto pasa porque unicamente envio un string, entonces la api no conoce la clave de ese string, por eso se envia como objeto
     const { data } = await axios.post(url, pollingData);
@@ -145,12 +140,12 @@ export async function pollingBoards({
 
 export async function pollingCodes({
   pollingDataCodes,
-}: Pick<BoardAPIType, "pollingDataCodes">) {
+}: Pick<BoardAPIType, "pollingDataCodes">, server: string) {
   try {
-    const url = `/polling/codes`;
+    const url = `http://${server}/api/polling/codes`;
     // como envio un solo string lo debo enviar como objeto
     // esto pasa porque unicamente envio un string, entonces la api no conoce la clave de ese string, por eso se envia como objeto
-    const { data } = await apiLocal.post(url, pollingDataCodes);
+    const { data } = await axios.post(url, pollingDataCodes);
     return data;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
@@ -159,7 +154,8 @@ export async function pollingCodes({
     return error;
   }
 }
-
+/* SIN USO AUN, posible mas adelante */ 
+/*
 export async function getBoardsStatus(id: Board["_id"]) {
   try {
     // como envio un solo string lo debo enviar como objeto
@@ -172,3 +168,4 @@ export async function getBoardsStatus(id: Board["_id"]) {
     }
   }
 }
+*/

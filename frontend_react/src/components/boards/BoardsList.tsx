@@ -65,7 +65,6 @@ function BoardsList({ boards }: BoardsListProps) {
         queryClient.invalidateQueries({ queryKey: ['project', boardId] });
     }
 
-
     return (
         <>
             {boards.length ? (

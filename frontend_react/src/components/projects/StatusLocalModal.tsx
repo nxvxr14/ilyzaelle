@@ -91,7 +91,7 @@ function StatusLocalModal({ boards }: BoardsListProps) {
 
     const queryClient = useQueryClient();
 
-    const { data: statusData = {}, isError: statusError } = useQuery({
+    const { data = {}, isError } = useQuery({
         queryKey: ['apiLocalStatus'],
         queryFn: getStatusLocal,
         refetchInterval: 5000,
@@ -110,8 +110,7 @@ function StatusLocalModal({ boards }: BoardsListProps) {
     });
 
     useEffect(() => {
-        console.log("mutate padre");
-        if (statusError) {
+        if (isError) {
             boards.forEach(board => {
                 if (!board.active) return;
                 const updatedData = {
@@ -119,23 +118,22 @@ function StatusLocalModal({ boards }: BoardsListProps) {
                     boardId: board._id,
                     active: false
                 };
-                console.log("mutate");
                 mutate(updatedData); // Se llama a la mutación solo cuando hay un error
             });
         }
-    }, [statusError]);
+    }, [isError]);
 
     return (
         <div>
-          <div 
-            className={`inline-block px-4 py-2 rounded-lg text-center text-white text-sm 
-              ${statusError ? 'bg-red-500' : 'bg-green-500'}`}
-          >
-            {statusError ? 'off' : 'En Línea'}
-          </div>
+            <div
+                className={`inline-block px-4 py-2 rounded-lg text-center text-white text-sm 
+              ${isError ? 'bg-red-500' : 'bg-green-500'}`}
+            >
+                {isError ? 'off' : 'En Línea'}
+            </div>
         </div>
-      );
-      
+    );
+
 }
 
 export default StatusLocalModal;
