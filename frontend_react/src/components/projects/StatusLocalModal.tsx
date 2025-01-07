@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import { Board } from "@/types/index";
 import { toast } from 'react-toastify';
 import { useContext } from 'react';
-import { useSocketContext } from '@/context/SocketContext';
+import { SocketContext } from '@/context/SocketContext';
 
 // no funciono, revisar mas adelante, esto iba donde esta board en la function
 // type BoardsListProps = {
@@ -18,7 +18,7 @@ function StatusLocalModal({ boards, server }: { boards: Board[]; server: string 
     // para ahorrar la delaracion lo hice en SocketContext.tsx, de lo contrario deberia hacerlo asi
     // const { socket, online } = useContext(SocketContext);
     // me ahorro el argumento de la funcion
-    const { online } = useSocketContext();
+    const { online } = useContext(SocketContext)
 
     const params = useParams();
     const projectId = params.projectId!;

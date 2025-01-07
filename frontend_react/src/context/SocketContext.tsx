@@ -1,6 +1,7 @@
-// socketcontext.tsx
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { io, Socket } from "socket.io-client";
+// SocketContext.tsx
+import { createContext, useContext, ReactNode, useState } from "react";
+import { Socket } from "socket.io-client";
+import { useSocket } from "@/hooks/useSocket"; // Asegúrate de importar el hook que hemos creado.
 
 interface SocketContextType {
   socket: Socket | null;
@@ -16,25 +17,9 @@ export const SocketContext = createContext<SocketContextType>({
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [server, setServer] = useState<string>('');
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [online, setOnline] = useState(false);
-
-  useEffect(() => {
-    if (server) {
-      const newSocket = io(`http://${server}`, {
-        transports: ["websocket"],
-      });
-      setSocket(newSocket);
-      setOnline(newSocket.connected);
-
-      newSocket.on("connect", () => setOnline(true));
-      newSocket.on("disconnect", () => setOnline(false));
-
-      return () => {
-        newSocket.disconnect();
-      };
-    }
-  }, [server]);
+  
+  // Usamos el hook useSocket que se encargará de la lógica de conexión
+  const { socket, online } = useSocket(server);
 
   return (
     <SocketContext.Provider value={{ socket, online, setServer }}>
@@ -43,6 +28,5 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// para acceder al componente desde cualquier lugar de la aplicacion facilmente
-export const useSocketContext = () => useContext(SocketContext);
-
+// para acceder al contexto desde cualquier lugar de la aplicación
+// export const useSocketContext = () => useContext(SocketContext);

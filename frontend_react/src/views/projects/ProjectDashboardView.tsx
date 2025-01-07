@@ -1,7 +1,8 @@
 import { getProjectById } from "@/api/ProjectApi";
 import StatusLocalModal from "@/components/projects/StatusLocalModal";
-import { useSocketContext } from "@/context/SocketContext";
+import { SocketContext } from "@/context/SocketContext";
 import { useQuery } from "@tanstack/react-query";
+import { useContext } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 
 const ProjectDashboardView = () => {
@@ -10,7 +11,7 @@ const ProjectDashboardView = () => {
     const projectId = params.projectId!;
 
     //  para enviar el server que se recibe en cada proyecto hacia el socket
-    const { setServer } = useSocketContext();
+    const { setServer } = useContext(SocketContext);
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ['project', projectId],
@@ -23,21 +24,21 @@ const ProjectDashboardView = () => {
     if (data) {
         // Render the dashboard when data is available
         return (
-                <div className="mt-10">
-                    <h1 className="text-5xl font-black">
-                        dashboard/{data.projectName}
-                    </h1>
-                    <StatusLocalModal boards={data.boards}
-                        server={data.server} />
-                    <nav className="mt-5 flex gap-3">
-                        <Link
-                            className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
-                            to={`/projects/${projectId}`}
-                        >
-                            Volver
-                        </Link>
-                    </nav>
-                </div>
+            <div className="mt-10">
+                <h1 className="text-5xl font-black">
+                    dashboard/{data.projectName}
+                </h1>
+                <StatusLocalModal boards={data.boards}
+                    server={data.server} />
+                <nav className="mt-5 flex gap-3">
+                    <Link
+                        className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
+                        to={`/projects/${projectId}`}
+                    >
+                        Volver
+                    </Link>
+                </nav>
+            </div>
         );
     }
     if (isLoading) return 'cargando'
