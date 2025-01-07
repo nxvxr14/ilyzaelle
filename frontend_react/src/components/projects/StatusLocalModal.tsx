@@ -4,8 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "react-router-dom";
 import { Board } from "@/types/index";
 import { toast } from 'react-toastify';
-import { useEffect, useState } from 'react';
-import { useSocket } from '@/hooks/useSocket';
+import { useContext } from 'react';
+import { useSocketContext } from '@/context/SocketContext';
 
 // no funciono, revisar mas adelante, esto iba donde esta board en la function
 // type BoardsListProps = {
@@ -13,29 +13,34 @@ import { useSocket } from '@/hooks/useSocket';
 // }
 
 function StatusLocalModal({ boards, server }: { boards: Board[]; server: string }) {
+    console.log(boards, server)
 
-    const { socket, online } = useSocket(server)
+    // para ahorrar la delaracion lo hice en SocketContext.tsx, de lo contrario deberia hacerlo asi
+    // const { socket, online } = useContext(SocketContext);
+    // me ahorro el argumento de la funcion
+    const { online } = useSocketContext();
+
     const params = useParams();
     const projectId = params.projectId!;
 
     const queryClient = useQueryClient();
 
-    const { mutate } = useMutation({
-        mutationFn: updateActiveBoardById,
-        onError: (error) => {
-            toast.error(error.message);
-        },
-        onSuccess: (data) => {
-            toast.error('local host desconectado');
-            queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-        }
-    });
+    // const { mutate } = useMutation({
+    //     mutationFn: updateActiveBoardById,
+    //     onError: (error) => {
+    //         toast.error(error.message);
+    //     },
+    //     onSuccess: (data) => {
+    //         toast.error('local host desconectado');
+    //         queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+    //     }
+    // });
 
-    useEffect(() => {
-        socket.on('current-status', (data) => {
-            console.log(data)
-        })
-    }, [socket]);
+    // useEffect(() => {
+    //     socket.on('current-status', (data) => {
+    //         console.log(data)
+    //     })
+    // }, [socket]);
 
     return (
         <div>

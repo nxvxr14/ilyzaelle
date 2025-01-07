@@ -6,6 +6,7 @@ import BoardsList from "@/components/boards/BoardsList";
 import EditBoardData from "@/components/boards/EditBoardData";
 import StatusLocalModal from "@/components/projects/StatusLocalModal";
 import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
+import { SocketProvider, useSocketContext } from "@/context/SocketContext";
 // import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 // import SnippetsList from "@/components/snippets/SnippetsList";
 
@@ -16,78 +17,80 @@ function ProjectDetailsView() {
     // con ! le decimos a ts que ese valor siempre va a venir en el param
     const projectId = params.projectId!
 
+    const { setServer } = useSocketContext();
+
     const { data, isLoading, isError } = useQuery({
         // se usa projectid en querykey para que sean unicos, no quede cacheado y no haya problemas mas adelante
         queryKey: ['project', projectId],
         //cuando tengo una funcion que toma un parametro debo tener un callback
-        queryFn: () => getProjectById(projectId)
+        queryFn: () => getProjectById(projectId), 
     })
-
+    if(data) setServer(data.server);
     if (isLoading) return 'cargando'
     if (isError) return <Navigate to='/404' />
 
     if (data) return (
-        <>
-            <div className="py-10">
-                <StatusLocalModal boards={data.boards}
-                    server={data.server} />
-                <p className="text-sm text-gray-400 italic mt-5">
-                    {data.server}
-                </p>
+            <>
+                <div className="py-10">
+                    <StatusLocalModal boards={data.boards}
+                        server={data.server} />
+                    <p className="text-sm text-gray-400 italic mt-5">
+                        {data.server}
+                    </p>
+                    <h1 className='text-5xl font-black'>
+                        proyecto/{data.projectName}
+                    </h1>
+                    <p className='text-2xl font-light text-gray-500 mt-2'>
+                        {data.description}
+                    </p>
+                    <nav className='my-5 flex gap-3'>
+                        <button
+                            className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                            onClick={() => navigate(location.pathname + '/dashboard')}
+                        >
+                            dashboard
+                        </button>
+                    </nav>
+                </div >
+                <div className="mt-5">
+                    <h1 className='text-5xl font-black'>
+                        user/controladores
+                    </h1>
+                    <nav className='my-5 flex gap-3'>
+                        <button
+                            className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                            onClick={() => navigate(location.pathname + '?newBoard=true')}
+                        >
+                            nuevo controlador
+                        </button>
+                    </nav>
+                </div>
+                {/* no se realizo una funcion de lectura en boardApi porque cuando leimos ejecutamos la funcion de getProjectsbyid viene con la informacionde las boards anidadas porque las colecciones estan relacioandas */}
+                <BoardsList
+                    boards={data.boards}
+                />
+                <AddBoardModal />
+                <EditBoardData />
+                <BoardDetailsModal
+                    server={data.server}
+                />
+                {/* <CodeEditorBoardData /> */}
+                {/* <div className="py-20">
                 <h1 className='text-5xl font-black'>
-                    proyecto/{data.projectName}
+                user/snippets
                 </h1>
-                <p className='text-2xl font-light text-gray-500 mt-2'>
-                    {data.description}
-                </p>
                 <nav className='my-5 flex gap-3'>
                 <button
-                    className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                    onClick={() => navigate(location.pathname + '/dashboard')}
+                className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                onClick={() => navigate(location.pathname + '?newSnippet=true')}
                 >
-                    dashboard
+                nuevo snippet 
                 </button>
-            </nav>
-        </div >
-            <div className="mt-5">
-                <h1 className='text-5xl font-black'>
-                    user/controladores
-                </h1>
-                <nav className='my-5 flex gap-3'>
-                    <button
-                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                        onClick={() => navigate(location.pathname + '?newBoard=true')}
-                    >
-                        nuevo controlador
-                    </button>
                 </nav>
-            </div>
-    {/* no se realizo una funcion de lectura en boardApi porque cuando leimos ejecutamos la funcion de getProjectsbyid viene con la informacionde las boards anidadas porque las colecciones estan relacioandas */ }
-            <BoardsList
-                boards={data.boards}
-            />
-            <AddBoardModal />
-            <EditBoardData />
-            <BoardDetailsModal
-                server={data.server}
-            />
-    {/* <CodeEditorBoardData /> */ }
-    {/* <div className="py-20">
-                <h1 className='text-5xl font-black'>
-                    user/snippets
-                </h1>
-                <nav className='my-5 flex gap-3'>
-                    <button
-                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                        onClick={() => navigate(location.pathname + '?newSnippet=true')}
-                    >
-                       nuevo snippet 
-                    </button>
-                </nav>
-            </div>
-            <SnippetsList />
+                </div>
+                <SnippetsList />
             <AddSnippetModal /> */}
-        </>
+            </>
     )
 }
 

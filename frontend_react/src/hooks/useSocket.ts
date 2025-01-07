@@ -10,7 +10,7 @@ export const useSocket = (server: string) => {
     return io(`http://${server}`, {
       transports: ["websocket"], // Forzar WebSocket como transporte
     });
-  }, []);
+  }, [server]);
 
   const [online, setOnline] = useState(false); // estado para el estado de conexión
 

@@ -1,31 +1,48 @@
-import { useSocket } from "@/hooks/useSocket";
-import { ReactNode, createContext } from "react";
-import { Socket } from "socket.io-client";
+// socketcontext.tsx
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { io, Socket } from "socket.io-client";
 
-// Define the context type
-// interface SocketContextType {
-//   socket: Socket | null;
-//   online: boolean;
-// }
-
-interface SocketProviderProps {
-  children: ReactNode;
-  server: string
+interface SocketContextType {
+  socket: Socket | null;
+  online: boolean;
+  setServer: (server: string) => void;
 }
 
-// en javascript permite inicializar createContext en undefined, en ts toca inicializarlo
-// export const SocketContext = createContext<SocketContextType>({
-//   socket: null,
-//   online: false
-// });
+export const SocketContext = createContext<SocketContextType>({
+  socket: null,
+  online: false,
+  setServer: () => {},
+});
 
-export const SocketContext = createContext({})
+export const SocketProvider = ({ children }: { children: ReactNode }) => {
+  const [server, setServer] = useState<string>('');
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [online, setOnline] = useState(false);
 
-export const SocketProvider = ({ children, server }: SocketProviderProps) => {
-  const { socket, online } = useSocket(server)
+  useEffect(() => {
+    if (server) {
+      const newSocket = io(`http://${server}`, {
+        transports: ["websocket"],
+      });
+      setSocket(newSocket);
+      setOnline(newSocket.connected);
+
+      newSocket.on("connect", () => setOnline(true));
+      newSocket.on("disconnect", () => setOnline(false));
+
+      return () => {
+        newSocket.disconnect();
+      };
+    }
+  }, [server]);
+
   return (
-    <SocketContext.Provider value={{ socket, online }}>
+    <SocketContext.Provider value={{ socket, online, setServer }}>
       {children}
     </SocketContext.Provider>
-  )
-}
+  );
+};
+
+// para acceder al componente desde cualquier lugar de la aplicacion facilmente
+export const useSocketContext = () => useContext(SocketContext);
+

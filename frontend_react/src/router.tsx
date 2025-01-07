@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import AppLayout from "./layouts/AppLayout";
 import DashboardView from "./views/DashboardView";
 import CreateProjectView from "./views/projects/CreateProjectView";
@@ -6,6 +6,16 @@ import EditProjectView from "./views/projects/EditProjectView";
 import ProjectDetailsView from "./views/projects/ProjectDetailsView";
 import CodeEditorBoardView from "./views/boards/CodeEditorBoardView";
 import ProjectDashboardView from "./views/projects/ProjectDashboardView";
+import { SocketProvider } from "./context/SocketContext";
+
+// Wrapper component for SocketProvider
+const SocketProviderWrapper = () => {
+    return (
+        <SocketProvider>
+            <Outlet />
+        </SocketProvider>
+    );
+};
 
 const router = () => {
 
@@ -23,11 +33,14 @@ const router = () => {
                     <Route path="/" element={<DashboardView />} index />
                     <Route path="/projects/create" element={<CreateProjectView />} />
                     <Route path="/projects/:projectId/edit" element={<EditProjectView />} />
-                    <Route path="/projects/:projectId/" element={<ProjectDetailsView />} />
-                    <Route path="/projects/:projectId/dashboard" element={<ProjectDashboardView />} />
-                    <Route path="/projects/:projectId/boards/:boardId/editor" element={<CodeEditorBoardView />} />
-                </Route>
 
+                    {/* Envolver las rutas dependientes del SocketProvider con su propio layout */}
+                    <Route element={<SocketProviderWrapper />}>
+                        <Route path="/projects/:projectId" element={<ProjectDetailsView />} />
+                        <Route path="/projects/:projectId/dashboard" element={<ProjectDashboardView />} />
+                        <Route path="/projects/:projectId/boards/:boardId/editor" element={<CodeEditorBoardView />} />
+                    </Route>
+                </Route>
             </Routes>
         </BrowserRouter>
     )
