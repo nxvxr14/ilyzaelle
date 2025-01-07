@@ -3,7 +3,7 @@ import { boards } from "../config/generate.js";
 import { SerialPort, firmata } from "../config/index.js";
 
 
-let gVar = {}
+export let gVar = {}
 
 // Almacenará todos los IDs de los temporizadores por _id
 const timerIds = new Map();

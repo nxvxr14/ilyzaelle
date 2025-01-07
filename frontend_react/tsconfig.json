@@ -16,6 +16,7 @@
       "@/utils/*" : ["utils/*"],
       "@/locales/*" : ["locales/*"],
       "@/hooks/*" : ["hooks/*"],
+      "@/context/*" : ["context/*"],
     },
     /* Bundler mode */
     "moduleResolution": "bundler",
