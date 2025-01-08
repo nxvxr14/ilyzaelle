@@ -17,6 +17,7 @@
       "@/locales/*" : ["locales/*"],
       "@/hooks/*" : ["hooks/*"],
       "@/context/*" : ["context/*"],
+      "@/dashboard/*" : ["dashboard/*"],
     },
     /* Bundler mode */
     "moduleResolution": "bundler",

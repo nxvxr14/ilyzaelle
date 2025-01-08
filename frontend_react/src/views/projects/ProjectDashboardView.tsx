@@ -4,6 +4,7 @@ import { SocketContext } from "@/context/SocketContext";
 import { useQuery } from "@tanstack/react-query";
 import { useContext, useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
+import DashboardZoneView from "../DashboardZoneView";
 
 const ProjectDashboardView = () => {
     const params = useParams();
@@ -40,7 +41,6 @@ return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de
             // Suscribirse al evento 'update-gVar'
             const handleUpdateGVar = (gVarData: object) => {
                 setGVarData(gVarData);
-                console.log(gVarData);
             };
 
             socket.on('update-gVar', handleUpdateGVar);
@@ -58,7 +58,12 @@ return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de
         queryKey: ['dashboard-project', projectId],
         queryFn: () => getProjectById(projectId)
     });
-    if (data) setServer(data.server);
+
+    useEffect(() => {
+        if (data) {
+            setServer(data.server);
+        }
+    }, [data, setServer]); // Ejecutamos el efecto solo cuando data cambie
     // la mayoria de problmas de typscript se generan por tipo de dato
     // como socket no obtiene un valor hasta que la data se obtenga toca definir el useState como un objeto socket o null, de esta manera ts no tira error pero js permitiria el funcionamiento, es diferente el maneo a statuslocalmodal
 
@@ -89,12 +94,8 @@ return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de
                     </nav>
                 </div>
                 <div>
-                    {gVarData && Object.keys(gVarData).map((key, index) => (
-                        <div key={index}>
-                            {/* Mostrar la clave (índice) */}
-                            <strong>{key}:</strong> {gVarData[key]}
-                        </div>
-                    ))}
+                    <DashboardZoneView gVar={gVarData} />
+
                 </div>
 
             </>
