@@ -20,6 +20,11 @@ ChartJS.register(
     Legend
 );
 
+type ChartProps = {
+    selectedVar: string;
+    gVar: any; // You can define a more specific type based on the shape of gVar if needed
+};
+
 export const options = {
     responsive: true,
     plugins: {
@@ -36,11 +41,20 @@ export const options = {
     },
 };
 
-function Chart({data}: any) {
-    if (!data) {
-        return <div>Error: Invalid chart data</div>;
-    }
-    // Limit the data to the last 20 points
+function Chart({ selectedVar, gVar }: ChartProps) {
+
+    const data = {
+        labels: gVar.time, // Use tiempo as the labels for the x-axis
+        datasets: [
+            {
+                label: 'Randomize over Time', // Description of the dataset
+                data: gVar[selectedVar], // Use randomize as the data for the y-axis
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            }
+        ],
+    };
+
     const limitedData = {
         ...data,
         labels: data.labels.slice(-50),
@@ -54,3 +68,5 @@ function Chart({data}: any) {
 }
 
 export default Chart;
+
+

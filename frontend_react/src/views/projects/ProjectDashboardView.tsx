@@ -4,7 +4,7 @@ import { SocketContext } from "@/context/SocketContext";
 import { useQuery } from "@tanstack/react-query";
 import { useContext, useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import DashboardZoneView from "../DashboardZoneView";
+import DashboardZoneView from "../dashboard/DashboardZoneView";
 
 const ProjectDashboardView = () => {
     const params = useParams();

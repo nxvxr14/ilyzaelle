@@ -93,10 +93,10 @@ export const boardWifi = (
       console.log("Closed!");
       // poner una promesa aca mas adelante
       clearTimersById(_id);
-      boards[_id].transport.close();
-      boards[_id].isReady = false;
-      console.log(boards[_id].isReady);
-      boards[_id].on("close", () => {});
+      // boards[_id].transport.close();
+      // boards[_id].isReady = false;
+      // console.log(boards[_id].isReady);
+      // boards[_id].on("close", () => {});
       resolve();
     }
   });
