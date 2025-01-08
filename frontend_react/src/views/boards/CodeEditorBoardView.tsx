@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
 import { getBoardById } from "@/api/BoardApi";
 import CodeEditorForm from '@/components/boards/CodeEditorForm';
+import StatusLocalModal from "@/components/projects/StatusLocalModal";
 
 const boardNames: { [key: number]: string } = {
     1: 'Arduino Uno',
@@ -30,18 +31,22 @@ function CodeEditorBoardView() {
 
     if (data) return (
         <>
-            <div className="mt-10">
-                <h1 className='text-5xl font-black'>
+            <div className="py-10">
+                <StatusLocalModal />
+                {/* <StatusLocalModal boards={data.boards}
+    server={data.server} /> */}
+                <h1 className='text-5xl font-black mt-5'>
                     editor/{data.boardName}
                 </h1>
                 <p className="text-lg text-gray-400 mt-2">
                     {boardNames[data.boardType] || 'Desconocido'}
                 </p>
-                <nav className='mt-5 flex gap-3'>
-                    <Link className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                <nav className='my-5 flex gap-3'>
+                    <Link
+                        className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
                         to={`/projects/${projectId}`}
                     >
-                        volver
+                        Volver
                     </Link>
                 </nav>
             </div>

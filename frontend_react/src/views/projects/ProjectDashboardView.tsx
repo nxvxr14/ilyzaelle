@@ -12,7 +12,7 @@ const ProjectDashboardView = () => {
 
     //  para enviar el server que se recibe en cada proyecto hacia el socket
     const { socket, setServer } = useContext(SocketContext);
-    const [gVarData, setGVarData] = useState<any>(null); // Estado para almacenar gVar[project]
+    const [gVarData, setGVarData] = useState<any>(null); // State for gVar[project]
 
     useEffect(() => {
         if (socket) {
@@ -65,28 +65,39 @@ return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de
     if (data) {
         // Render the dashboard when data is available
         return (
-            <div className="py-10">
-                <StatusLocalModal />
-                {/* <StatusLocalModal boards={data.boards}
+            <>
+                <div className="py-10">
+                    <StatusLocalModal />
+                    {/* <StatusLocalModal boards={data.boards}
     server={data.server} /> */}
-                <p className="text-sm text-gray-400 italic mt-5">
-                    {data.server}
-                </p>
-                <h1 className='text-5xl font-black'>
-                    dashboard/{data.projectName}
-                </h1>
-                <p className='text-2xl font-light text-gray-500 mt-2'>
-                    {data.description}
-                </p>
-                <nav className='my-5 flex gap-3'>
-                    <Link
-                        className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
-                        to={`/projects/${projectId}`}
-                    >
-                        Volver
-                    </Link>
-                </nav>
-            </div>
+                    <p className="text-sm text-gray-400 italic mt-5">
+                        {data.server}
+                    </p>
+                    <h1 className='text-5xl font-black'>
+                        dashboard/{data.projectName}
+                    </h1>
+                    <p className='text-2xl font-light text-gray-500 mt-2'>
+                        {data.description}
+                    </p>
+                    <nav className='my-5 flex gap-3'>
+                        <Link
+                            className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
+                            to={`/projects/${projectId}`}
+                        >
+                            Volver
+                        </Link>
+                    </nav>
+                </div>
+                <div>
+                    {gVarData && Object.keys(gVarData).map((key, index) => (
+                        <div key={index}>
+                            {/* Mostrar la clave (índice) */}
+                            <strong>{key}:</strong> {gVarData[key]}
+                        </div>
+                    ))}
+                </div>
+
+            </>
         );
     }
     if (isLoading) return 'cargando'
