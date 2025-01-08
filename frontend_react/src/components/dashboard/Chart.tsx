@@ -20,7 +20,7 @@ ChartJS.register(
     Legend
 );
 
-type ChartProps = {
+type varProps = {
     selectedVar: string;
     gVar: any; // You can define a more specific type based on the shape of gVar if needed
 };
@@ -41,7 +41,7 @@ export const options = {
     },
 };
 
-function Chart({ selectedVar, gVar }: ChartProps) {
+function Chart({ selectedVar, gVar }: varProps) {
 
     const data = {
         labels: gVar.time, // Use tiempo as the labels for the x-axis

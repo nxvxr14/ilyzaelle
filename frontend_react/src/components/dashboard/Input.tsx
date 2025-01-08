@@ -1,0 +1,50 @@
+// input.tsx
+import { SocketContext } from "@/context/SocketContext";
+import { useContext, useState } from "react";
+import { useParams } from "react-router-dom";
+
+type varProps = {
+    selectedVar: string;
+    gVar: any;
+};
+
+function InputVar({ selectedVar, gVar }: varProps) {
+    const params = useParams();
+    // Use '!' to assert that the value will always be present in the params
+    const project = params.projectId!;
+
+    const [inputVar, setInputVar] = useState<number>(gVar[selectedVar]); // Inicializamos con el valor actual
+    const { socket } = useContext(SocketContext);
+
+    const handleUpdateClick = () => {
+        if (!socket) {
+            console.error("Socket not connected");
+            return;
+        }
+        socket.emit("update-input-gVar", selectedVar, inputVar, project, (response: any) => {
+            // Callback para confirmar que el servidor recibió el evento
+            console.log("Server acknowledged the update:", response);
+        });
+    };
+
+    return (
+        <div className="space-y-5">
+            {gVar[selectedVar]}
+            <input
+                className="w-full p-3 border-gray-300 border rounded-2xl"
+                type="number"
+                placeholder="variable"
+                value={inputVar} // Usar value en lugar de defaultValue para control completo
+                onChange={(e) => setInputVar(Number(e.target.value))}
+            />
+            <button
+                className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
+                onClick={handleUpdateClick}
+            >
+                actualizar
+            </button>
+        </div>
+    );
+}
+
+export default InputVar;

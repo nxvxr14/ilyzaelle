@@ -19,7 +19,11 @@ class Sockets {
         // socket.emit solo emite al cliente conectado
         // this.io emite a todos los conectados
         socket.emit("update-gVar", gVar[project]);
-        
+      });
+
+      socket.on("update-input-gVar", (selectedVar, inputVar, project) => {
+        gVar[project][selectedVar] = inputVar;
+        console.log(gVar[project][selectedVar]);
       });
 
       socket.on("disconnect", () => {

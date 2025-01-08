@@ -1,15 +1,24 @@
 import { useState } from "react";
 import Chart from "@/components/dashboard/Chart";
+import Input from "@/components/dashboard/Input";
 
 function DashboardZoneView({ gVar }: { gVar: any }) {
     const [charts, setCharts] = useState<{ id: number; selectedVar: string }[]>([]);
+    const [inputs, setInputs] = useState<{ id: number; selectedVar: string }[]>([]);
     const [selectedVar, setSelectedVar] = useState<string>('')
 
     const addChart = (selectedVar: string) => {
         if (!selectedVar) return <div>Loading...</div>;
-        setCharts([...charts, { id: charts.length, selectedVar }]); // Añadir un nuevo gráfico con su selectedVar        // console.log(selectedVar);
+        setCharts([...charts, { id: charts.length, selectedVar }]); // Añadir un nuevo gráfico con su selectedVar        
+        // console.log(selectedVar);
         // console.log(gVar[selectedVar]);
+        setSelectedVar("")
     };
+
+    const addInput = (selectVar: string) => {
+        if (!selectVar) return <div>Loading...</div>;
+        setInputs([...inputs, { id: inputs.length, selectedVar }])
+    }
 
     if (!gVar) {
         return <div>Loading...</div>;
@@ -17,27 +26,51 @@ function DashboardZoneView({ gVar }: { gVar: any }) {
 
     return (
         <>
-            <select
-                value={selectedVar}
-                onChange={(e) => setSelectedVar(e.target.value)} // Solo actualiza selectedVar, no afecta a las gráficas existentes
-                className="mb-4 p-2 rounded"
-            >
-                <option value="" disabled>selecciona una variable</option>
-                {Object.keys(gVar).map((key) => (
-                    <option key={key} value={key}>{key}</option>
-                ))}
-            </select>
-            <button
-                className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
-                onClick={() => addChart(selectedVar)} // Solo agrega un nuevo gráfico cuando el botón es presionado
-            >
-                grafica
-            </button>
-            <div className="grid w-full bg-[#120d18] rounded-2xl overflow-hidden">
+            <div className="flex space-x-4 items-center">
+                <select
+                    className="w-full p-3 border-gray-300 border rounded-2xl"
+                    value={selectedVar}
+                    onChange={(e) => setSelectedVar(e.target.value)} // Solo actualiza selectedVar, no afecta a las gráficas existentes
+                >
+                    <option value="" disabled>selecciona una variable</option>
+                    {Object.keys(gVar).map((key) => (
+                        <option key={key} value={key}>{key}</option>
+                    ))}
+                </select>
+                <button
+                    className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
+                    onClick={() => addChart(selectedVar)} // Solo agrega un nuevo gráfico cuando el botón es presionado
+                >
+                    grafica
+                </button>
+
+                <button
+                    className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
+                    onClick={() => addInput(selectedVar)} // Solo agrega un nuevo gráfico cuando el botón es presionado
+                >
+                    input
+                </button>
+
+                <button
+                    className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
+                    onClick={() => addInput(selectedVar)} // Solo agrega un nuevo gráfico cuando el botón es presionado
+                >
+                    label
+                </button>
+            </div>
+            <div className="grid w-full bg-[#120d18] rounded-2xl overflow-hidden mt-10">
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {charts.map((chart, index) => (
                         <div key={chart.id} style={{ width: '50%', padding: '10px' }}>
                             <Chart selectedVar={chart.selectedVar} gVar={gVar} />
+                        </div>
+                    ))}
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                    {inputs.map((input, index) => (
+                        <div key={input.id} style={{ width: '50%', padding: '10px' }}>
+                            <Input selectedVar={input.selectedVar} gVar={gVar} />
                         </div>
                     ))}
                 </div>
