@@ -12,9 +12,8 @@ import { SocketContext } from '@/context/SocketContext';
 //     boards: Board[]
 // }
 
-function StatusLocalModal({ boards, server }: { boards: Board[]; server: string }) {
-    console.log(boards, server)
-
+function StatusLocalModal() {
+    // function StatusLocalModal({ boards, server }: { boards: Board[]; server: string }) {
     // para ahorrar la delaracion lo hice en SocketContext.tsx, de lo contrario deberia hacerlo asi
     // const { socket, online } = useContext(SocketContext);
     // me ahorro el argumento de la funcion

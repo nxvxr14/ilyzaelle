@@ -10,6 +10,8 @@ import { SocketProvider } from "./context/SocketContext";
 
 // Wrapper component for SocketProvider
 const SocketProviderWrapper = () => {
+    // El <Outlet /> se utiliza en el componente del layout principal
+    // dado que no puedo envolver routepaths directamente con socketprovider ahora un layaout dentro del layaout principal para envolver las rutas que necesitan el socket
     return (
         <SocketProvider>
             <Outlet />

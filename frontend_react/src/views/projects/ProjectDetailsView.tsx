@@ -13,8 +13,6 @@ import { useContext, useEffect } from "react";
 
 function ProjectDetailsView() {
 
-    console.log("details")
-
     const navigate = useNavigate()
     const params = useParams()
     // con ! le decimos a ts que ese valor siempre va a venir en el param
@@ -42,8 +40,9 @@ function ProjectDetailsView() {
     if (data) return (
         <>
             <div className="py-10">
-                <StatusLocalModal boards={data.boards}
-                    server={data.server} />
+                <StatusLocalModal />
+                {/* <StatusLocalModal boards={data.boards}
+                    server={data.server} /> */}
                 <p className="text-sm text-gray-400 italic mt-5">
                     {data.server}
                 </p>
