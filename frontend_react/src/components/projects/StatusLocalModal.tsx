@@ -47,7 +47,7 @@ function StatusLocalModal() {
                 className={`inline-block px-4 py-2 rounded-lg text-center text-white text-sm 
           ${online ? 'bg-green-500' : 'bg-red-500'}`}
             >
-                {online ? 'En Línea' : 'Desconectado'}
+                {online ? 'en linea' : 'desconectado'}
             </div>
         </div>
     );

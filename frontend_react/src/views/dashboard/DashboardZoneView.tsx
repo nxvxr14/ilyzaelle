@@ -1,15 +1,25 @@
 import { useState } from "react";
 import Chart from "@/components/dashboard/Chart";
 import Input from "@/components/dashboard/Input";
+import Label from "@/components/dashboard/Label";
 
 function DashboardZoneView({ gVar }: { gVar: any }) {
     const [charts, setCharts] = useState<{ id: number; selectedVar: string }[]>([]);
     const [inputs, setInputs] = useState<{ id: number; selectedVar: string }[]>([]);
+    const [labels, setLabels] = useState<{ id: number; selectedVar: string }[]>([]);
     const [selectedVar, setSelectedVar] = useState<string>('')
 
     const addChart = (selectedVar: string) => {
         if (!selectedVar) return <div>Loading...</div>;
         setCharts([...charts, { id: charts.length, selectedVar }]); // Añadir un nuevo gráfico con su selectedVar        
+        // console.log(selectedVar);
+        // console.log(gVar[selectedVar]);
+        setSelectedVar("")
+    };
+
+    const addLabel = (selectedVar: string) => {
+        if (!selectedVar) return <div>Loading...</div>;
+        setLabels([...labels, { id: labels.length, selectedVar }]); // Añadir un nuevo gráfico con su selectedVar        
         // console.log(selectedVar);
         // console.log(gVar[selectedVar]);
         setSelectedVar("")
@@ -53,7 +63,7 @@ function DashboardZoneView({ gVar }: { gVar: any }) {
 
                 <button
                     className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"
-                    onClick={() => addInput(selectedVar)} // Solo agrega un nuevo gráfico cuando el botón es presionado
+                    onClick={() => addLabel(selectedVar)} // Solo agrega un nuevo gráfico cuando el botón es presionado
                 >
                     label
                 </button>
@@ -64,16 +74,25 @@ function DashboardZoneView({ gVar }: { gVar: any }) {
                         <div key={chart.id} style={{ width: '50%', padding: '10px' }}>
                             <Chart selectedVar={chart.selectedVar} gVar={gVar} />
                         </div>
-                    ))}
+                    ))}:w
+                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+
+                        {inputs.map((input, index) => (
+                            <div key={input.id} style={{ width: '50%', padding: '10px' }}>
+                                <Input selectedVar={input.selectedVar} gVar={gVar} />
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                        {labels.map((label, index) => (
+                            <div key={label.id} style={{ width: '50%', padding: '10px' }}>
+                                <Label selectedVar={label.selectedVar} gVar={gVar} />
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                    {inputs.map((input, index) => (
-                        <div key={input.id} style={{ width: '50%', padding: '10px' }}>
-                            <Input selectedVar={input.selectedVar} gVar={gVar} />
-                        </div>
-                    ))}
-                </div>
+
             </div>
         </>
     );
