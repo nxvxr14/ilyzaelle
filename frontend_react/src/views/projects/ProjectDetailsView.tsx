@@ -8,6 +8,7 @@ import StatusLocalModal from "@/components/projects/StatusLocalModal";
 import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
 import { SocketContext } from "@/context/SocketContext";
 import { useContext, useEffect } from "react";
+import StatusBoardLocalModal from "@/components/boards/StatusBoardLocalModal";
 // import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 // import SnippetsList from "@/components/snippets/SnippetsList";
 
@@ -41,8 +42,8 @@ function ProjectDetailsView() {
         <>
             <div className="py-10">
                 <StatusLocalModal />
-                {/* <StatusLocalModal boards={data.boards}
-                    server={data.server} /> */}
+                <StatusBoardLocalModal boards={data.boards}
+                    server={data.server} />
                 <p className="text-sm text-gray-400 italic mt-5">
                     {data.server}
                 </p>
