@@ -52,9 +52,12 @@ export default function DashboardView() {
                                     <p className="text-sm text-gray-400 italic">
                                         {project.server}
                                     </p>
-                                    <p className={`text-lg font-bold ${project.status ? 'text-green-500' : 'text-red-500'}`}>
-                                        {project.status ? 'activo' : 'inactivo'}
-                                    </p>
+                                    <div
+                                        className={`inline-block px-4 py-2 rounded-lg text-center text-white text-sm 
+          ${project.status ? 'bg-green-500' : 'bg-red-500'}`}
+                                    >
+                                        {project.status ? 'en linea' : 'desconectado'}
+                                    </div>
                                     <p className="text-sm text-gray-400">
                                         {project.description}
                                     </p>

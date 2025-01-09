@@ -8,6 +8,11 @@ type ProjectAPIType = {
   projectId: Project["_id"];
 };
 
+type ProjectStatusAPIType = {
+  projectId: Project["_id"];
+  status: Project["status"];
+};
+
 export async function createProject(formData: ProjectFormData) {
   try {
     const { data } = await api.post("/projects", formData);
@@ -45,6 +50,21 @@ export async function updateProjectById({
 }: ProjectAPIType) {
   try {
     const { data } = await api.put<string>(`projects/${projectId}`, formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}
+
+export async function updateProjectStatusBydId({
+  projectId,
+  status,
+}: ProjectStatusAPIType) {
+  try {
+    const { data } = await api.post(`/projects/${projectId}/status`, {
+      status,
+    });
     return data;
   } catch (error) {
     if (isAxiosError(error) && error.response)
