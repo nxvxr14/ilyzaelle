@@ -20,7 +20,7 @@ export const clearTimersById = (_id) => {
   timerIds.delete(_id);
 };
 
-// Guardar las funciones originales
+// Guardar las funciones originale
 const originalSetTimeout = global.setTimeout;
 const originalSetInterval = global.setInterval;
 
