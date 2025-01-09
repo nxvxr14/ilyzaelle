@@ -49,8 +49,9 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                         required: "La conexión es obligatoria",
                     })}
                 >
-                    <option value="1">arduino UNO</option>
+                    <option value="1">arduino uno</option>
                     <option value="2">plc328p</option>
+                    <option value="3">esp32</option>
                 </select>
                 {errors.boardType && (
                     <ErrorMessage>{errors.boardType.message}</ErrorMessage>

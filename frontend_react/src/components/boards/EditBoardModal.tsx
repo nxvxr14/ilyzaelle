@@ -97,8 +97,8 @@ export default function EditTaskModal({ data, boardId }: EditBoardModalProps) {
                                     Editar Tarea
                                 </Dialog.Title>
 
-                                <p className="text-xl font-bold">Realiza cambios a una tarea en {''}
-                                    <span className="text-fuchsia-600">este formulario</span>
+                                <p className="text-xl font-bold">Realiza cambios a una board en {''}
+                                    {/* <span className="text-fuchsia-600">este formulario</span> */}
                                 </p>
 
                                 <form
@@ -112,7 +112,7 @@ export default function EditTaskModal({ data, boardId }: EditBoardModalProps) {
 
                                     <input
                                         type="submit"
-                                        className=" bg-fuchsia-600 hover:bg-fuchsia-700 w-full p-3  text-white font-black  text-xl cursor-pointer"
+                                        className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3  font-bold cursor-pointer transition-color rounded-2xl'
                                         value='Guardar Tarea'
                                     />
                                 </form>
