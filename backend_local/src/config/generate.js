@@ -1,5 +1,8 @@
 import { SerialPort, firmata } from "./index.js";
-import { updateCodeBoardController } from "../controllers/UpdateCodeBoardController.js";
+import {
+  gVar,
+  updateCodeBoardController,
+} from "../controllers/UpdateCodeBoardController.js";
 import { clearTimersById } from "../controllers/ClearTimers.js";
 
 export const boards = {};
@@ -76,6 +79,10 @@ export const connectBoard = ({ data }) => {
       console.log(successMessage);
 
       if (boards[_id].isReady) {
+        // para evitar que cada actualizacion del boardcode reinicie el objeto y se rompa el backend
+        if (!gVar[project]) {
+          gVar[project] = {};
+        }
         // mando project para tener la referencia de las variables globales del projecto unico, el _id para la referencia de la board y el boardcode unico de cada board, si no enviara project a ambas placas no podria leer gVar en ambas placas
         updateCodeBoardController({ project, _id, boardCode });
         resolve();

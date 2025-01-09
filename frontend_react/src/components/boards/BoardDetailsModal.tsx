@@ -128,7 +128,7 @@ export default function BoardDetailsModal({ server }: { server: string }) {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             {/* Left column content */}
-                                            <p className='text-sm text-slate-400'>última actualización: {formatDateTime(data.createdAt)}</p>
+                                            <p className='text-sm text-slate-400'>última actualización: {formatDateTime(data.updatedAt)}</p>
                                             <Dialog.Title
                                                 as="h3"
                                                 className="font-black text-4xl text-slate-600 mt-5"
@@ -138,7 +138,9 @@ export default function BoardDetailsModal({ server }: { server: string }) {
                                                     {boardNames[data.boardType] || 'Desconocido'}
                                                 </p>                                            </div>
                                             <div className='mb-5'>
-                                                <button className={`block py-1 text-sm leading ${data.active ? 'text-green-500' : 'text-red-500'}`} onClick={handleClick}>
+                                                <button className={`inline-block px-4 py-2 rounded-lg text-center text-white text-sm 
+          ${data.active ? 'bg-green-500' : 'bg-red-500'}`}
+                                                    onClick={handleClick}>
                                                     {data.active ? 'en linea' : 'desconectado'}
                                                 </button>
 

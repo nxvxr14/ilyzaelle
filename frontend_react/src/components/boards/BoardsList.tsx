@@ -80,8 +80,7 @@ function BoardsList({ boards }: BoardsListProps) {
                                 {groupedBoards[groupKey].map((board) => (
                                     <div
                                         key={board._id}
-                                        className="flex justify-between gap-x-6 p-5 border border-gray-100 bg-white shadow-lg rounded-2xl"
-                                        style={{ borderTopColor: '#FFFF44', borderTopWidth: '8px' }} // Estableciendo color y grosor del borde superior
+                                        className={`flex justify-between gap-x-6 p-5 border border-gray-100 bg-white shadow-lg rounded-2xl ${board.active ? 'border-t-8 border-t-green-500' : 'border-t-8 border-t-red-500'}`} // Estableciendo color y grosor del borde superior
                                     >
                                         <div className="flex min-w-0 gap-x-4">
                                             <div className="min-w-0 flex-auto space-y-2">
@@ -96,11 +95,11 @@ function BoardsList({ boards }: BoardsListProps) {
                                                     {boardNames[board.boardType] || 'Desconocido'}
                                                 </p>
                                                 {/* Estado del proyecto */}
-                                                <div className="flex items-center space-x-2">
+                                                {/* <div className="flex items-center space-x-2">
                                                     <div
                                                         className={`w-4 h-4 rounded-full ${board.active ? 'bg-green-500' : 'bg-red-500'}`}
                                                     />
-                                                </div>
+                                                </div> */}
                                                 {/* <span className="text-lg font-bold">
                                                         {board.active ? 'activo' : 'inactivo'}
                                                     </span> */}
