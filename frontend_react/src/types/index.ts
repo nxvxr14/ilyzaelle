@@ -49,7 +49,7 @@ export const projectSchema = z.object({
   projectName: z.string(),
   description: z.string(),
   status: z.boolean(),
-  server: z.string()
+  server: z.string(),
 });
 
 export const dashboardProjectSchema = z.array(
@@ -58,9 +58,16 @@ export const dashboardProjectSchema = z.array(
     projectName: true,
     description: true,
     status: true,
-    server: true
+    server: true,
   })
 );
+
+/* globarVars */
+export type GlobalVarFormData = {
+  nameGlobalVar: string;
+  initialValue: number | boolean | [];
+  typeGlobalVar: string
+};
 
 // cuando creo un proyecto no requiero el id, este se genera hasta que tengo la respuesta de la api, para no generar diferentes Schemas se hace lo siguiente
 // al usar tyeof pero la consulta y una vez que se conecte a internet ya no puede inferir correctamente la informacion
@@ -70,14 +77,24 @@ export type Snippet = z.infer<typeof SnippetSchema>;
 // para el formulario del proyecto requerimos un type, NO UN SCHEMA
 //se utiliza el utility type de pick porque si utiliza omit tendria que volver a cambiar el codigo, como el formulario solo necesita estos campos y si llegara a requerir mas no deberia cambiar
 // si uso omit y agrego cosas a mi schema me toca cambiar codigo, con pick esto no sucede
-export type ProjectFormData = Pick<Project, "projectName" | "description" | "server">;
+export type ProjectFormData = Pick<
+  Project,
+  "projectName" | "description" | "server"
+>;
 export type BoardFormData = Pick<
   Board,
   "boardType" | "boardName" | "boardConnect" | "boardInfo"
 >;
 export type PollingBoardFormData = Pick<
   Board,
-  "_id" | "boardType" | "boardName" | "boardConnect" | "boardInfo" | "active" | "project" | "boardCode"
+  | "_id"
+  | "boardType"
+  | "boardName"
+  | "boardConnect"
+  | "boardInfo"
+  | "active"
+  | "project"
+  | "boardCode"
 >;
 export type PollingCodesFormData = Pick<Board, "project" | "_id" | "boardCode">;
 export type CodeEditorFormData = Pick<Board, "boardCode">;

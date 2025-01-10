@@ -9,10 +9,15 @@ import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
 import { SocketContext } from "@/context/SocketContext";
 import { useContext, useEffect } from "react";
 import StatusBoardLocalModal from "@/components/boards/StatusBoardLocalModal";
+import AddGlobalVarModal from "@/components/globalvars/AddGlobalVarModal";
+import GlobalVarList from "@/components/globalvars/GlobalVarList";
+
 // import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 // import SnippetsList from "@/components/snippets/SnippetsList";
 
 function ProjectDetailsView() {
+
+    const { online } = useContext(SocketContext)
 
     const navigate = useNavigate()
     const params = useParams()
@@ -47,9 +52,9 @@ function ProjectDetailsView() {
                 <p className="text-sm text-gray-400 italic mt-5">
                     {data.server}
                 </p>
-                <h1 className='text-5xl font-black'>
+                <p className='text-5xl font-black'>
                     proyecto/{data.projectName}
-                </h1>
+                </p>
                 <p className='text-2xl font-light text-gray-500 mt-2'>
                     {data.description}
                 </p>
@@ -99,6 +104,27 @@ function ProjectDetailsView() {
                 </nav>
                 </div>
                 <SnippetsList />
+            <AddSnippetModal /> */}
+
+            {online && (
+                <div className="mt-20">
+                    <h1 className='text-5xl font-black'>
+                        user/globalVars
+                    </h1>
+                    <nav className='my-5 flex gap-3'>
+                        <button
+                            className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                            onClick={() => navigate(location.pathname + '?newGlobalVar=true')}
+                        >
+                            nueva variable
+                        </button>
+                    </nav>
+                </div>
+            )}
+            <AddGlobalVarModal />
+            <GlobalVarList projectId={projectId} />
+
+            {/* <SnippetsList />
             <AddSnippetModal /> */}
         </>
     )
