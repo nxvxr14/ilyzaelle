@@ -30,21 +30,13 @@ const ProjectDashboardView = () => {
 
     useEffect(() => {
         if (socket) {
-
-            /*
-            handleUpdateGVar: Creé una función handleUpdateGVar que maneja el evento de socket.on('update-gVar'). Esto es necesario para poder pasarla también en el socket.off, para que se elimine correctamente el listener.
-
-socket.on('update-gVar', handleUpdateGVar): Esta es la suscripción a un evento de socket.
-
-return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de limpieza (la que se devuelve en el useEffect), removemos el listener socket.off('update-gVar', handleUpdateGVar). Este paso es crucial para evitar la acumulación de listeners en cada renderizado o cuando el socket o projectId cambian, lo que podría causar múltiples invocaciones del console.log().
-            */
             // Suscribirse al evento 'update-gVar'
             const handleUpdateGVar = (gVarData: object) => {
+                console.log("seteando")
                 setGVarData(gVarData);
             };
 
             socket.on('update-gVar', handleUpdateGVar);
-
             // Limpiar el listener cuando el componente se desmonte o el socket cambie
             return () => {
                 console.log('desmontando')
@@ -55,7 +47,7 @@ return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de
 
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ['dashboard-project', projectId],
+        queryKey: ['project-dashboard-view', projectId],
         queryFn: () => getProjectById(projectId)
     });
 
@@ -94,7 +86,7 @@ return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de
                     </nav>
                 </div>
                 <div>
-                    <DashboardZoneView gVar={gVarData} />
+                    <DashboardZoneView gVarData={gVarData} />
 
                 </div>
 
@@ -106,3 +98,12 @@ return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de
 };
 
 export default ProjectDashboardView;
+
+
+/*
+            handleUpdateGVar: Creé una función handleUpdateGVar que maneja el evento de socket.on('update-gVar'). Esto es necesario para poder pasarla también en el socket.off, para que se elimine correctamente el listener.
+
+socket.on('update-gVar', handleUpdateGVar): Esta es la suscripción a un evento de socket.
+
+return () => { socket.off('update-gVar', handleUpdateGVar); }: En la función de limpieza (la que se devuelve en el useEffect), removemos el listener socket.off('update-gVar', handleUpdateGVar). Este paso es crucial para evitar la acumulación de listeners en cada renderizado o cuando el socket o projectId cambian, lo que podría causar múltiples invocaciones del console.log().
+            */

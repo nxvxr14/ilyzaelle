@@ -1,44 +1,22 @@
 import { SocketContext } from "@/context/SocketContext";
 import { useContext, useEffect, useState } from "react";
 import { useGlobalVarActions } from "./ActionsGlobalVars";
+import { useParams } from "react-router-dom";
 
-interface GlobalVarListProps {
-  projectId: string;
+type GlobalVarListProps = {
+  gVarData: any;
+  onAddChart: (selectedVar: string) => void;
+  onAddLabel: (selectedVar: string) => void;
 }
 
-function GlobalVarList({ projectId }: GlobalVarListProps) {
+function GlobalVarList({ gVarData, onAddChart, onAddLabel }: GlobalVarListProps) {
+  const params = useParams();
+  // Use '!' to assert that the value will always be present in the params
+  const projectId = params.projectId!;
+
   const { socket } = useContext(SocketContext);
-  const [gVarData, setGVarData] = useState<any>(null);
   const { handleSave, handleDelete } = useGlobalVarActions({ socket, projectId });
 
-  useEffect(() => {
-    if (socket) {
-      const interval = setInterval(() => {
-        socket.emit("projectid-dashboard", projectId);
-        console.log("timer")
-      }, 2000);
-
-      return () => {
-        console.log("desmontando timer");
-        clearInterval(interval);
-      };
-    }
-  }, [socket, projectId]);
-
-  useEffect(() => {
-    if (socket) {
-      const handleUpdateGVar = (gVarData: object) => {
-        setGVarData(gVarData);
-      };
-
-      socket.on("update-gVar", handleUpdateGVar);
-
-      return () => {
-        console.log("Desmontando listener");
-        socket.off("update-gVar", handleUpdateGVar);
-      };
-    }
-  }, [socket]);
 
   const getFormattedValue = (value: any) => {
     if (typeof value === "boolean") {
@@ -88,13 +66,31 @@ function GlobalVarList({ projectId }: GlobalVarListProps) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                   <div className="flex justify-center space-x-2">
-                    <button 
-                      onClick={() => handleSave(key)}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
-                    >
-                      <span className="text-orange-600 font-semibold">G</span>
-                    </button>
-                    <button 
+                    {(Array.isArray(gVarData[key])) && (
+                      <>
+                        <button
+                          onClick={() => handleSave(key)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                        >
+                          <span className="text-orange-600 font-semibold">R</span>
+                        </button>
+                        <button
+                          onClick={() => onAddChart(key)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                        >
+                          <span className="text-orange-600 font-semibold">G</span>
+                        </button>
+                      </>
+                    )}
+                    {typeof gVarData[key] === 'boolean' && (
+                      <button
+                        onClick={() => onAddLabel(key)}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                      >
+                        <span className="text-orange-600 font-semibold">L</span>
+                      </button>
+                    )}
+                    <button
                       onClick={() => handleDelete(key)}
                       className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition-colors duration-200"
                     >
