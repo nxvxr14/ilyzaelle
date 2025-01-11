@@ -38,7 +38,7 @@ export class ProjectController {
         const { projectId } = req.params
         try {
             // se pone en populate el nombre de la referencia el schema
-            const project = await Project.findById(projectId).populate('boards')
+            const project = await Project.findById(projectId).populate('boards').populate('dataVars')
             if (!project) {
                 const error = new Error("proyecto no existe")
                 return res.status(404).json({

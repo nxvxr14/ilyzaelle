@@ -10,50 +10,63 @@ nxvxr14
 
 import mongoose, { Schema, Document, PopulatedDoc, Types } from "mongoose";
 import { IBoard } from "./Board";
+import { IDataVar } from "./DataVar";
 
 // Este es el export basico de las variables en Ts
 // aca se almacena un arreglo con todas las boards que pertenecen a cada projecto
 
 export interface IProject extends Document {
-    projectName: string,
-    description: string,
-    status: boolean,
-    server: string
-    // las boards de cada project
-    // en boards solo se almacena el objectid del projecto al que pertecene cada board, pero en projects se hace un subdocumento con toda la informacion de las boards que pertenecen a cada projecto
-    boards: PopulatedDoc<IBoard & Document>[]
+  projectName: string;
+  description: string;
+  status: boolean;
+  server: string;
+  // las boards de cada project
+  // en boards solo se almacena el objectid del projecto al que pertecene cada board, pero en projects se hace un subdocumento con toda la informacion de las boards que pertenecen a cada projecto
+  boards: PopulatedDoc<IBoard & Document>[];
+  // para cuando consultemos el projecto podamos acceder a los datos de las variables globales cuando consultemos el projecto y no unicamente la referencia que se almacena en la base de datos
+  // cruce de informacion
+  dataVars: PopulatedDoc<IDataVar & Document>[];
 }
 
 // Este es el esquema para ingresar a MongoDB donde se realizan unas comprobaciones
-const ProjectSchema: Schema = new Schema({
+const ProjectSchema: Schema = new Schema(
+  {
     projectName: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
     description: {
-        type: String,
-        trim: true,
-        default: "N/A"
+      type: String,
+      trim: true,
+      default: "N/A",
     },
     status: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     server: {
-        type: String,
-        default: "localhost:4040"
+      type: String,
+      default: "localhost:4040",
     },
     boards: [
-        {
-            type: Types.ObjectId,
-            ref: 'Board'
-        }
-    ]
-}, { timestamps: true })
+      {
+        type: Types.ObjectId,
+        ref: "Board",
+      },
+    ],
+    dataVars: [
+      {
+        type: Types.ObjectId,
+        ref: "DataVar",
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
 // Defino modelo y se registra en la instancia de Mongo
 // Con el ProjectType se hace referencia al generic, yo quiero tener esas caracteristicas cuando haga referencia a los proyectos, esto es propio de Ts, en JS no existe
-const Project = mongoose.model<IProject>('Project', ProjectSchema)
-export default Project
+const Project = mongoose.model<IProject>("Project", ProjectSchema);
+export default Project;

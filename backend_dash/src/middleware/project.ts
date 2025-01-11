@@ -18,11 +18,13 @@ export async function projectExists(req: Request, res: Response, next: NextFunct
     try {
         const { projectId } = req.params
         const project = await Project.findById(projectId)
+        // genero la instancia de proyecto para poder usar en los controladores de board o dataVar de esta manera puedo pushear nuevas board y dataVars al proyecto
         if (!project) {
             const error = new Error('Project not found')
             return res.status(404).json({ error: error.message })
         }
         req.project = project
+        // hacia el siquiente middleware o controlador
         next()
     } catch (error) {
         res.status(500).json({ error: 'There was an error.' })

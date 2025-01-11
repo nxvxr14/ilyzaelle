@@ -44,7 +44,7 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
     });
 
     const handleSaveGlobalVar = (formData: SaveGlobalVarFormData) => {
-        console.log(formData)
+        console.log("aca")
         const finalFormData = {
             ...formData,
             gVar
