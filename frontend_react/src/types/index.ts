@@ -63,10 +63,16 @@ export const dashboardProjectSchema = z.array(
 );
 
 /* globarVars */
-export type GlobalVarFormData = {
+export type AddGlobalVarFormData = {
   nameGlobalVar: string;
   initialValue: number | boolean | [];
   typeGlobalVar: string
+};
+
+export type SaveGlobalVarFormData = {
+  nameGlobalVar: string;
+  nameData: string;
+  description: string;
 };
 
 // cuando creo un proyecto no requiero el id, este se genera hasta que tengo la respuesta de la api, para no generar diferentes Schemas se hace lo siguiente

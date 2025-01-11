@@ -1,14 +1,14 @@
 import { FieldErrors, UseFormRegister, UseFormSetValue } from "react-hook-form"
 import ErrorMessage from "../ErrorMessage";
-import { GlobalVarFormData } from "@/types/index";
+import { AddGlobalVarFormData } from "@/types/index";
 
 type GlobalVarFormProps = {
-    errors: FieldErrors<GlobalVarFormData>
-    register: UseFormRegister<GlobalVarFormData>
-    setValue: UseFormSetValue<GlobalVarFormData>
+    errors: FieldErrors<AddGlobalVarFormData>
+    register: UseFormRegister<AddGlobalVarFormData>
+    setValue: UseFormSetValue<AddGlobalVarFormData>
 }
 
-export default function GlobalVarForm({ errors, register, setValue }: GlobalVarFormProps) {
+export default function AddGlobalVarForm({ errors, register, setValue }: GlobalVarFormProps) {
     // Función para actualizar el valor inicial cuando se selecciona el tipo
     const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedType = e.target.value;

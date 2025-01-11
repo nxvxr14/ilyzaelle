@@ -63,7 +63,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
             />
 
             <AddGlobalVarModal />
-            {/* <div className="flex space-x-4 items-center">
+             {/* <div className="flex space-x-4 items-center">
                 <select
                     className="w-full p-3 border-gray-300 border rounded-2xl"
                     value={selectedVar}

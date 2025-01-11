@@ -9,10 +9,10 @@ class Sockets {
   socketsEvents() {
     this.io.on("connection", (socket) => {
       console.log("A new client connected:", socket.id);
-      // Emitir un mensaje al cliente
-      socket.emit("current-status", true, () => {
-        console.log("Emitiendo mensaje al cliente desde el backend");
-      });
+      // // Emitir un mensaje al cliente
+      // socket.emit("current-status", true, () => {
+      //   console.log("Emitiendo mensaje al cliente desde el backend");
+      // });
 
       // con este socket recibo el id del projecto y actualizo los valores de gVar project en el frontend, se podria evitar recibir el id del projecto y solo actualizar gVar en el frontend???? revisar
       socket.on("projectid-dashboard", (project) => {
@@ -30,9 +30,22 @@ class Sockets {
 
       // para eliminar variables del objeto
       socket.on("delete-variable", (project, nameGlobalVar) => {
-        delete gVar[project][nameGlobalVar];
-        console.log("delete")
+        const value = gVar[project][nameGlobalVar];
+        if (typeof value === "number") {
+          gVar[project][nameGlobalVar] = 0;  // Reemplazar con 0 si es un número
+        } else if (typeof value === "boolean") {
+          gVar[project][nameGlobalVar] = false;  // Reemplazar con false si es booleano
+        } else if (Array.isArray(value)) {
+          gVar[project][nameGlobalVar] = [];  // Reemplazar con un array vacío si es un array
+        }
+        console.log("Variable reemplazada por valor por defecto");
       });
+      
+
+      // // para guardar variables del objeto
+      // socket.on("save-variable", (project, nameGlobalVar) => {
+      //   console.log("***project, nameGlobalVar", project, nameGlobalVar);
+      // });
 
       // con esto inicializo las variables globales por primera vez las que seleccione en el frontend
       socket.on("initialize-gVar", (project, nameGlobalVar, initialValue) => {

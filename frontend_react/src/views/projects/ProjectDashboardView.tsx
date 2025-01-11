@@ -47,7 +47,7 @@ const ProjectDashboardView = () => {
 
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ['project-dashboard-view', projectId],
+        queryKey: ['dashboard-project', projectId],
         queryFn: () => getProjectById(projectId)
     });
 

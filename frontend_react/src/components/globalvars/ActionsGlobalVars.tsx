@@ -1,5 +1,4 @@
-import { SocketContext } from '@/context/SocketContext';
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 
 interface UseGlobalVarActionsProps {
@@ -7,15 +6,16 @@ interface UseGlobalVarActionsProps {
     projectId: string;
 }
 
-export const useGlobalVarActions = ({ projectId }: UseGlobalVarActionsProps) => {
-    const { socket } = useContext(SocketContext);
+export const useGlobalVarActions = ({ socket, projectId }: UseGlobalVarActionsProps) => {
 
-    const handleSave = useCallback((key: string) => {
-        console.log(`Guardando variable: ${key}`);
-        if (socket) {
-            socket.emit('save-variable', projectId, key);
-        }
-    }, [socket, projectId]);
+    // const handleSave = useCallback((key: string, gVarData: any) => {
+    //     navigate(location.pathname + '?saveGlobalVar=true')
+    //     console.log(projectId, key, gVarData[key]);
+    //     // console.log(`Guardando variable: ${key}`);
+    //     // if (socket) {
+    //     //     socket.emit('save-variable', projectId, key);
+    //     // }
+    // }, [socket, projectId]);
 
     const handleDelete = useCallback((key: string) => {
         console.log(`Eliminando variable: ${key}`);
@@ -25,7 +25,7 @@ export const useGlobalVarActions = ({ projectId }: UseGlobalVarActionsProps) => 
     }, [socket, projectId]);
 
     return {
-        handleSave,
+        // handleSave,
         handleDelete
     };
 };

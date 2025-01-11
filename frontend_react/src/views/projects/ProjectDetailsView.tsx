@@ -17,6 +17,8 @@ function ProjectDetailsView() {
 
     const { online } = useContext(SocketContext)
 
+    console.log("render")
+
     const navigate = useNavigate()
     const params = useParams()
     // con ! le decimos a ts que ese valor siempre va a venir en el param

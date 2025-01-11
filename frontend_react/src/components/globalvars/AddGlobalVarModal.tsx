@@ -4,11 +4,12 @@ import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import GlobalVarForm from './GlobalVarForm';
-import { GlobalVarFormData } from '@/types/index';
+import AddGlobalVarForm from './AddGlobalVarForm';
+import { AddGlobalVarFormData } from '@/types/index';
 import { SocketContext } from '@/context/SocketContext';
 
 export default function AddGlobalVarModal() {
+    console.log("react")
 
     const { socket } = useContext(SocketContext)
 
@@ -29,7 +30,7 @@ export default function AddGlobalVarModal() {
     const queryClient = useQueryClient()
 
     //boardForm exige que le pasemos datos, asi que le enviamos los valores iniciales por medio de useForm
-    const initialValues: GlobalVarFormData = {
+    const initialValues: AddGlobalVarFormData = {
         nameGlobalVar: '',
         initialValue: 0,
         typeGlobalVar: ''
@@ -39,7 +40,7 @@ export default function AddGlobalVarModal() {
         defaultValues: initialValues
     });
 
-    const handleCreateBoard = (formData: GlobalVarFormData) => {
+    const handleAddGlobalVar = (formData: AddGlobalVarFormData) => {
         const { nameGlobalVar, initialValue } = formData;
         console.log(formData)
         if (socket) socket.emit('initialize-gVar', projectId, nameGlobalVar, initialValue);
@@ -88,10 +89,10 @@ export default function AddGlobalVarModal() {
 
                                     <form
                                         className='mt-10 space-y-3'
-                                        onSubmit={handleSubmit(handleCreateBoard)}
+                                        onSubmit={handleSubmit(handleAddGlobalVar)}
                                         noValidate
                                     >
-                                        <GlobalVarForm
+                                        <AddGlobalVarForm
                                             register={register}
                                             errors={errors}
                                             setValue={setValue}

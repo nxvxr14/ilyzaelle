@@ -1,24 +1,20 @@
-import { Fragment, useContext } from 'react';
+import { Fragment, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import GlobalVarForm from './GlobalVarForm';
-import { GlobalVarFormData } from '@/types/index';
 import { SocketContext } from '@/context/SocketContext';
+import SaveGlobalVarForm from './SaveGlobalVarForm';
+import { SaveGlobalVarFormData } from "@/types/index";
+
 
 type SaveGlobalModalProps = {
-    gVarData: [],
     nameGlobalVar: string
+    gVar: [],
 }
 
-export default function SaveGlobalVarModal({ gVarData, nameGlobalVar }: SaveGlobalModalProps) {
-    console.log(gVarData, nameGlobalVar)
-
-    console.log("render")
-
-    const { socket } = useContext(SocketContext)
+export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalModalProps) {
 
     // para quitar el parametro de la url 
     const navigate = useNavigate()
@@ -37,21 +33,24 @@ export default function SaveGlobalVarModal({ gVarData, nameGlobalVar }: SaveGlob
     const queryClient = useQueryClient()
 
     //boardForm exige que le pasemos datos, asi que le enviamos los valores iniciales por medio de useForm
-    const initialValues: GlobalVarFormData = {
+    const initialValues: SaveGlobalVarFormData = {
         nameGlobalVar: '',
-        initialValue: 0,
-        typeGlobalVar: ''
+        nameData: '',
+        description: '',
     };
 
-    const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
+    const { register, handleSubmit, reset, formState: { errors } } = useForm({
         defaultValues: initialValues
     });
 
-    const handleCreateBoard = (formData: GlobalVarFormData) => {
-        const { nameGlobalVar, initialValue } = formData;
+    const handleSaveGlobalVar = (formData: SaveGlobalVarFormData) => {
         console.log(formData)
-        if (socket) socket.emit('initialize-gVar', projectId, nameGlobalVar, initialValue);
-        queryClient.invalidateQueries({ queryKey: ['project'] })
+        const finalFormData = {
+            ...formData,
+            gVar
+        }
+        console.log(finalFormData)
+        // queryClient.invalidateQueries({ queryKey: ['project'] })
         reset();
         navigate(location.pathname, { replace: true })
     }
@@ -96,14 +95,14 @@ export default function SaveGlobalVarModal({ gVarData, nameGlobalVar }: SaveGlob
 
                                     <form
                                         className='mt-10 space-y-3'
-                                        onSubmit={handleSubmit(handleCreateBoard)}
+                                        onSubmit={handleSubmit(handleSaveGlobalVar)}
                                         noValidate
                                     >
-                                        {/* <GlobalVarForm
+                                        <SaveGlobalVarForm
+                                            nameGlobalVar={nameGlobalVar}
                                             register={register}
                                             errors={errors}
-                                            setValue={setValue}
-                                        /> */}
+                                        />
                                         <input
                                             type="submit"
                                             value='agregar'
