@@ -1,10 +1,27 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { deleteDataVar } from "@/api/DataVarApi";
 
-function GlobalVarList({ dataVars }: { dataVars: any[] }) {
+function DataVarList({ dataVars }: { dataVars: any[] }) {
     const params = useParams();
     const projectId = params.projectId!;
 
+    const queryClient = useQueryClient()
+
+    const { mutate } = useMutation({
+        mutationFn: deleteDataVar,
+        onError: (error) => {
+            toast.error(error.message)
+        },
+        onSuccess: (data) => {
+            if (data) {
+                toast.success(`Variable eliminada: ${data.nameData}`);
+                queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+            }
+        }
+    })
 
     // Add pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -18,6 +35,11 @@ function GlobalVarList({ dataVars }: { dataVars: any[] }) {
 
     // Get current page items
     const currentItems = dataVars?.slice(startIndex, endIndex) || [];
+
+    // Handle delete button click
+    const handleDelete = (dataVarId: string) => {
+        mutate({ projectId, dataVarId });
+    }
 
     if (!dataVars || dataVars.length === 0) return (
         <div className="w-full p-4 text-center text-gray-500">vacio...</div>
@@ -69,6 +91,7 @@ function GlobalVarList({ dataVars }: { dataVars: any[] }) {
                                             <span className="text-orange-600 font-semibold">S</span>
                                         </button>
                                         <button
+                                            onClick={() => handleDelete(item._id)}
                                             className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition-colors duration-200"
                                         >
                                             <span className="text-red-600 font-semibold">X</span>
@@ -118,5 +141,4 @@ function GlobalVarList({ dataVars }: { dataVars: any[] }) {
     );
 }
 
-export default GlobalVarList;
-
+export default DataVarList;

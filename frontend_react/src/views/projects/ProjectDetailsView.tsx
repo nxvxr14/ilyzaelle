@@ -112,9 +112,6 @@ function ProjectDetailsView() {
                     user/almacenamiento
                 </h1>
                 <nav className='my-5 flex gap-3'>
-                    <div>
-                        todo: configurar el backend
-                    </div>
                     {/* <button
                         className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
                         onClick={() => navigate(location.pathname + '?newGlobalVar=true')}
@@ -122,9 +119,9 @@ function ProjectDetailsView() {
                         nueva variable
                     </button> */}
                 </nav>
+                <DataVarList dataVars={data.dataVars} />
             </div>
 
-            <DataVarList dataVars={data.dataVars} />
             {/* <SnippetsList />
             <AddSnippetModal /> */}
         </>
