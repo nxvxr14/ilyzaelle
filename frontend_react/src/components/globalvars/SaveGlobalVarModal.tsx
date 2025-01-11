@@ -1,12 +1,12 @@
 import { Fragment, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { SocketContext } from '@/context/SocketContext';
 import SaveGlobalVarForm from './SaveGlobalVarForm';
 import { SaveGlobalVarFormData } from "@/types/index";
+import { createDataVar } from '@/api/DataVarApi';
 
 
 type SaveGlobalModalProps = {
@@ -15,7 +15,6 @@ type SaveGlobalModalProps = {
 }
 
 export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalModalProps) {
-
     // para quitar el parametro de la url 
     const navigate = useNavigate()
 
@@ -34,7 +33,6 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
 
     //boardForm exige que le pasemos datos, asi que le enviamos los valores iniciales por medio de useForm
     const initialValues: SaveGlobalVarFormData = {
-        nameGlobalVar: '',
         nameData: '',
         description: '',
     };
@@ -43,16 +41,34 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
         defaultValues: initialValues
     });
 
+    // despues de crear snippetapi vengo aca y uso usemutation
+    const { mutate } = useMutation({
+        // aca va la funcion de la api
+        mutationFn: createDataVar,
+        onError: (error) => {
+            toast.error(error.message)
+
+        },
+        onSuccess: (data) => {
+            toast.success(data)
+            // revisar esto bien
+            queryClient.invalidateQueries({ queryKey: ['project'] })
+            reset();
+            navigate(location.pathname, { replace: true })
+        }
+    })
+
     const handleSaveGlobalVar = (formData: SaveGlobalVarFormData) => {
-        console.log("aca")
         const finalFormData = {
             ...formData,
+            nameGlobalVar,
             gVar
         }
-        console.log(finalFormData)
-        // queryClient.invalidateQueries({ queryKey: ['project'] })
-        reset();
-        navigate(location.pathname, { replace: true })
+        const data = {
+            finalFormData,
+            projectId
+        }
+        mutate(data)
     }
 
     return (

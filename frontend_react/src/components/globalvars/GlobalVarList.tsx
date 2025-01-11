@@ -3,7 +3,6 @@ import { useContext, useState } from "react";
 import { useGlobalVarActions } from "./ActionsGlobalVars";
 import { useNavigate, useParams } from "react-router-dom";
 import SaveGlobalVarModal from "./SaveGlobalVarModal";
-import { set } from "zod";
 
 type GlobalVarListProps = {
   gVarData: any;
@@ -28,7 +27,7 @@ function GlobalVarList({ gVarData, onAddChart, onAddLabel }: GlobalVarListProps)
   const handleSave = (key: string) => {
     setSelectedKey(key);
     navigate(location.pathname + '?saveGlobalVar=true')
-    console.log("save"+projectId, setSelectedKey, gVarData[key]);
+    console.log(selectedKey)
     // console.log(`Guardando variable: ${key}`);
     // if (socket) {
     //     socket.emit('save-variable', projectId, key);

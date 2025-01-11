@@ -63,16 +63,23 @@ export const dashboardProjectSchema = z.array(
 );
 
 /* globarVars */
+
+/* Snippets */
+export const dataVarSchema = z.object({
+  // usamos types porque hace referencia a que es un objeto de mongo, dado que el dato del projecto al que pertenece el dato es un objectId
+  _id: z.string(),
+  nameGlobalVar: z.string(),
+  nameData: z.string(),
+  description: z.string().optional(),
+  gVar: z.array(z.any()), // or specify the exact type you want to store in the array
+  project: z.string(),
+  createdAt: z.string(),
+});
+
 export type AddGlobalVarFormData = {
   nameGlobalVar: string;
   initialValue: number | boolean | [];
-  typeGlobalVar: string
-};
-
-export type SaveGlobalVarFormData = {
-  nameGlobalVar: string;
-  nameData: string;
-  description: string;
+  typeGlobalVar: string;
 };
 
 // cuando creo un proyecto no requiero el id, este se genera hasta que tengo la respuesta de la api, para no generar diferentes Schemas se hace lo siguiente
@@ -80,6 +87,7 @@ export type SaveGlobalVarFormData = {
 export type Project = z.infer<typeof projectSchema>;
 export type Board = z.infer<typeof boardSchema>;
 export type Snippet = z.infer<typeof SnippetSchema>;
+export type DataVar = z.infer<typeof dataVarSchema>;
 // para el formulario del proyecto requerimos un type, NO UN SCHEMA
 //se utiliza el utility type de pick porque si utiliza omit tendria que volver a cambiar el codigo, como el formulario solo necesita estos campos y si llegara a requerir mas no deberia cambiar
 // si uso omit y agrego cosas a mi schema me toca cambiar codigo, con pick esto no sucede
@@ -108,3 +116,8 @@ export type SnippetFormData = Pick<
   Snippet,
   "snippetName" | "description" | "version"
 >;
+export type DataVarFormData = Pick<
+  DataVar,
+  "nameGlobalVar" | "nameData" | "description" | "gVar">
+
+  export type SaveGlobalVarFormData = Pick<DataVar, "nameData" | "description" >;

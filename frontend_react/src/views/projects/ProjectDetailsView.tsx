@@ -9,6 +9,7 @@ import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
 import { SocketContext } from "@/context/SocketContext";
 import { useContext, useEffect } from "react";
 import StatusBoardLocalModal from "@/components/boards/StatusBoardLocalModal";
+import DataVarList from "@/components/dataVars/DataVarList";
 
 // import AddSnippetModal from "@/components/snippets/AddSnippetModal";
 // import SnippetsList from "@/components/snippets/SnippetsList";
@@ -123,7 +124,7 @@ function ProjectDetailsView() {
                 </nav>
             </div>
 
-
+            <DataVarList dataVars={data.dataVars} />
             {/* <SnippetsList />
             <AddSnippetModal /> */}
         </>

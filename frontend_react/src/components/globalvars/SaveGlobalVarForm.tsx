@@ -21,7 +21,6 @@ export default function SaveGlobalVarForm({ nameGlobalVar, errors, register }: S
                     value={nameGlobalVar} // Solo muestra el valor
                     readOnly
                     className="w-full p-3 border-gray-300 border rounded-2xl"
-                    {...register("nameGlobalVar")} // Esto sigue registrando el campo, pero no se puede editar
                 />
             </div>
 

@@ -19,7 +19,7 @@ app.use(cors(corsConfig))
 app.use(morgan('dev'))
 
 // Leer datos del formulario
-app.use(express.json())
+app.use(express.json({limit: '5mb'})); // Adjust the size as needed
 
 //Routes
 // Exponemos la direccion de la api para realizar las peticiones CRUD
