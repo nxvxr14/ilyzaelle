@@ -18,8 +18,8 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
         onSuccess: (data) => {
             if (data) {
                 toast.success(`Variable eliminada: ${data.nameData}`);
-                queryClient.invalidateQueries({ queryKey: ['project', projectId] });
             }
+            queryClient.invalidateQueries({ queryKey: ['project', projectId] });
         }
     })
 
