@@ -16,7 +16,6 @@ import DataVarList from "@/components/dataVars/DataVarList";
 
 function ProjectDetailsView() {
 
-    const { online } = useContext(SocketContext)
 
     console.log("render")
 
@@ -25,7 +24,7 @@ function ProjectDetailsView() {
     // con ! le decimos a ts que ese valor siempre va a venir en el param
     const projectId = params.projectId!
 
-    const { setServer } = useContext(SocketContext);
+    const { setProject } = useContext(SocketContext);
 
     const { data, isLoading, isError } = useQuery({
         // se usa projectid en querykey para que sean unicos, no quede cacheado y no haya problemas mas adelante
@@ -37,9 +36,9 @@ function ProjectDetailsView() {
     // Usamos useEffect para evitar setServer dentro del render
     useEffect(() => {
         if (data) {
-            setServer(data.server);
+            setProject(projectId);
         }
-    }, [data, setServer]); // Ejecutamos el efecto solo cuando data cambie
+    }, [data, setProject]); // Ejecutamos el efecto solo cuando data cambie
 
     if (isLoading) return 'cargando'
     if (isError) return <Navigate to='/404' />
@@ -48,8 +47,8 @@ function ProjectDetailsView() {
         <>
             <div className="py-10">
                 <StatusLocalModal />
-                <StatusBoardLocalModal boards={data.boards}
-                    server={data.server} />
+                {/* <StatusBoardLocalModal boards={data.boards}
+                    server={data.server} /> */}
                 <p className="text-sm text-gray-400 italic mt-5">
                     {data.server}
                 </p>

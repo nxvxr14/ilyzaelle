@@ -36,6 +36,7 @@ import { connectDB } from "./db";
 import projectRoutes from "../routes/projectRoutes";
 import snippetRoutes from "../routes/snippetRoutes";
 import { corsConfig } from "./cors";
+import { corsConfigServer } from "./corsSocket";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
 import Sockets from "./sockets";
@@ -55,7 +56,7 @@ class ServerApp {
     this.server = http.createServer(this.app);
     //configuracion de sockets
     this.io = new Server(this.server, {
-      cors: corsConfig, // Aquí pasamos corsConfig directamente a Socket.IO
+      cors: corsConfigServer, // Aquí pasamos corsConfig directamente a Socket.IO
     });
   }
 
