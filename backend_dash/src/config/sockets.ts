@@ -1,50 +1,75 @@
 import { Server } from "socket.io"; // Importamos el tipo Server de socket.io, que nos permite interactuar con el servidor de WebSockets
 
+// backend/socket.ts
 class Sockets {
-  io: Server; // Declaramos una propiedad io que contendrá la instancia del servidor de WebSockets
+  io: Server;
+  connectedServers: Set<string>;
 
   constructor(io) {
-    this.io = io; // Inicializamos la propiedad io con el objeto pasado al constructor
-    this.socketsEvents(); // Llamamos a la función que manejará los eventos de WebSocket
+    this.io = io;
+    this.connectedServers = new Set();
+    this.socketsEvents();
   }
 
-  // backend/socket.ts
   socketsEvents() {
     this.io.on("connection", (socket) => {
       console.log(`Cliente conectado: ${socket.id}`);
-console.log(socket.handshake.query.serverId)
-      // Obtener el serverId del servidor que se pasa a través de la consulta del socket
-      const serverId = socket.handshake.query.serverId;
-      if (serverId) {
-        // Si existe un serverId, unimos al cliente a la sala correspondiente
+      console.log(socket.handshake.query.serverId);
+
+      let serverId = socket.handshake.query.serverId;
+
+      // Verificar si serverId es un arreglo y obtener el primer elemento si es necesario
+      if (Array.isArray(serverId)) {
+        console.log("si")
+        serverId = serverId[0];
+      }
+
+      const clientType = socket.handshake.query.type;
+
+      if (serverId && clientType === "server") {
+        // Si es una conexión de servidor
         socket.join(serverId);
+        this.connectedServers.add(serverId); // Registrar el servidor
         console.log(`Servidor ${serverId} conectado`);
 
-        // Emitimos inmediatamente el estado de conexión a todos en la sala
         this.io.to(serverId).emit("server-connected", {
           message: "Servidor conectado",
           serverId,
-          online: true, // Add this flag
+          online: true,
         });
 
-        // Configuramos el evento de desconexión
         socket.on("disconnect", () => {
+          if (Array.isArray(serverId)) {
+            serverId = serverId[0];
+          }
+
           console.log(`Servidor ${serverId} desconectado`);
+          this.connectedServers.delete(serverId); // Eliminar el servidor
           this.io.to(serverId).emit("server-disconnected", {
             message: "Servidor desconectado",
             serverId,
-            online: false, // Add this flag
+            online: false,
+          });
+        });
+      } else {
+        // Si es una conexión de cliente
+        socket.on("join-server", (serverId) => {
+          socket.join(serverId);
+          console.log(`Cliente ${socket.id} unido a la sala ${serverId}`);
+
+          // Enviar el estado actual del servidor al cliente que se acaba de unir
+          const isServerOnline = this.connectedServers.has(serverId);
+          socket.emit("server-status", {
+            message: isServerOnline
+              ? "Servidor conectado"
+              : "Servidor desconectado",
+            serverId,
+            online: isServerOnline,
           });
         });
       }
-
-      // Recibir el serverId del cliente cuando se conecta
-      socket.on("join-server", (serverId) => {
-        socket.join(serverId);
-        console.log(`Cliente ${socket.id} unido a la sala ${serverId}`);
-      });
     });
   }
 }
 
-export default Sockets; // Exportamos la clase para poder usarla en otras partes del código
+export default Sockets;

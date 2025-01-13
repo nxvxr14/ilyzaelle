@@ -8,7 +8,6 @@ export const useSocket = (serverId: string) => {
 
   useEffect(() => {
     if (serverId) {
-      // Establecemos la conexión al servidor de WebSocket
       const socket = io(import.meta.env.VITE_SOCKET_SERVER, {
         transports: ["websocket"],
       });
@@ -17,31 +16,38 @@ export const useSocket = (serverId: string) => {
 
       socket.on("connect", () => {
         console.log(`Conectado a servidor: ${serverId}`);
-        socket.emit("join-server", serverId); // Unirse a la sala correspondiente
+        socket.emit("join-server", serverId);
       });
 
       socket.on("disconnect", () => {
         console.log(`Desconectado del servidor: ${serverId}`);
+        setOnline(false);
+      });
+
+      // Manejar el estado inicial del servidor
+      socket.on("server-status", (data) => {
+        console.log("Estado inicial del servidor:", data);
+        setOnline(data.online);
       });
 
       socket.on("server-connected", (data) => {
         console.log(data.message);
-        setOnline(true); // El servidor se conectó, marcar como online
+        setOnline(true);
       });
 
       socket.on("server-disconnected", (data) => {
         console.log(data.message);
-        setOnline(false); // El servidor se desconectó, marcar como offline
+        setOnline(false);
       });
 
       return () => {
-        socket.disconnect(); // Desconectar el socket cuando el componente se desmonta
+        socket.disconnect();
       };
     }
   }, [serverId]);
 
   return {
     socket,
-    online
+    online,
   };
 };
