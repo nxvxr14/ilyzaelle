@@ -2,12 +2,12 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-export const useSocket = (serverId: string) => {
+export const useSocket = (serverAPI: string) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [online, setOnline] = useState<boolean>(false);
 
   useEffect(() => {
-    if (serverId) {
+    if (serverAPI) {
       const socket = io(import.meta.env.VITE_SOCKET_SERVER, {
         transports: ["websocket"],
       });
@@ -15,12 +15,12 @@ export const useSocket = (serverId: string) => {
       setSocket(socket);
 
       socket.on("connect", () => {
-        console.log(`Conectado a servidor: ${serverId}`);
-        socket.emit("join-server", serverId);
+        console.log(`Conectado a servidor: ${serverAPI}`);
+        socket.emit("join-server", serverAPI);
       });
 
       socket.on("disconnect", () => {
-        console.log(`Desconectado del servidor: ${serverId}`);
+        console.log(`Desconectado del servidor: ${serverAPI}`);
         setOnline(false);
       });
 
@@ -44,7 +44,7 @@ export const useSocket = (serverId: string) => {
         socket.disconnect();
       };
     }
-  }, [serverId]);
+  }, [serverAPI]);
 
   return {
     socket,

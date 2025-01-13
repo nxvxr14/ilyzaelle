@@ -28,7 +28,7 @@ class ServerApp {
   }
 
   socketsConfiguration() {
-    new Sockets(process.env.SOCKETSERVER_URL, process.env.SOCKETAPI_KEY);
+    new Sockets(process.env.SOCKETSERVER_URL, process.env.SERVERAPI_KEY);
   }
 
   execute() {

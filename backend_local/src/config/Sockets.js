@@ -2,11 +2,12 @@
 import { io } from "socket.io-client";
 
 class Sockets {
-  constructor(url, serverId) {
+  constructor(url, serverAPIKey) {
+    console.log(serverAPIKey)
     this.socket = io(url, {
       transports: ["websocket"],
       query: { 
-        serverId,
+        serverAPIKey,
         type: 'server'  // Identificamos que es una conexión de servidor
       },
     });
@@ -16,11 +17,11 @@ class Sockets {
 
   socketsEvents() {
     this.socket.on("connect", () => {
-      console.log("Servidor local conectado al servidor Socket.IO");
+      console.log("[devMessage] backend_local connected to Socket.IO server");
     });
 
     this.socket.on("disconnect", () => {
-      console.log("Servidor local desconectado del servidor Socket.IO");
+      console.log("[devMessage] backend_local disconnected from Socket.IO server");
     });
   }
 }

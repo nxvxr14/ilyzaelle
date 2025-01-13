@@ -43,15 +43,29 @@ export default function ProjectForm({ register, errors }: ProjectFormProps) {
             </div>
 
             <div className="mb-5 space-y-3">
-                <label htmlFor="server" className="text-lg font-bold">
-                server
+                <label htmlFor="host" className="text-lg font-bold">
+                host
                 </label>
                 <textarea
-                    id="server"
+                    id="host"
                     className="w-full p-3  border border-gray-200"
-                    placeholder="server"
-                    {...register("server", {
-                        required: "server obligatoria"
+                    placeholder="host"
+                    {...register("host", {
+                        required: "host obligatoria"
+                    })}
+                />
+            </div>
+
+            <div className="mb-5 space-y-3">
+                <label htmlFor="serverAPIKey" className="text-lg font-bold">
+               server API 
+                </label>
+                <textarea
+                    id="serverAPIKey"
+                    className="w-full p-3  border border-gray-200"
+                    placeholder="serverAPIKey"
+                    {...register("serverAPIKey", {
+                        required: "serverAPIKey obligatoria"
                     })}
                 />
             </div>

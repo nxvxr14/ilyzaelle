@@ -57,7 +57,7 @@ export async function updateProjectById({
   }
 }
 
-export async function updateProjectStatusBydId({
+export async function updateProjectStatusBydIdserver({
   projectId,
   status,
 }: ProjectStatusAPIType) {

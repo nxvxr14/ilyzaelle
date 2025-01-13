@@ -17,7 +17,8 @@ export default function CreateProjectView() {
     const initialValues: ProjectFormData = {
         projectName: "",
         description: "",
-        server: ""
+        host: "",
+        serverAPIKey: ""
     }
 
     const { register, handleSubmit, formState: { errors } } = useForm({

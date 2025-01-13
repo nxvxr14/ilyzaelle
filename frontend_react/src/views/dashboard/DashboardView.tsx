@@ -50,7 +50,7 @@ export default function DashboardView() {
                                     <Link to={`/projects/${project._id}`} className="text-gray-600 cursor-pointer hover:underline text-3xl font-bold"
                                     >{project.projectName}</Link>
                                     <p className="text-sm text-gray-400 italic">
-                                        {project.server}
+                                        {project.host}
                                     </p>
                                     <div
                                         className={`inline-block px-4 py-2 rounded-lg text-center text-white text-sm 

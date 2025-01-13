@@ -6,23 +6,23 @@ import { useSocket } from "@/hooks/useSocket"; // Asegúrate de importar el hook
 interface SocketContextType {
   socket: Socket | null;
   online: boolean;
-  setProject: (project: string) => void;
+  setServerAPI: (serverAPI: string) => void;
 }
 
 export const SocketContext = createContext<SocketContextType>({
   socket: null,
   online: false,
-  setProject: () => { },
+  setServerAPI: () => { },
 });
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
-  const [project, setProject] = useState<string>('');
+  const [serverAPI, setServerAPI] = useState<string>('');
 
   // Usamos el hook useSocket que se encargará de la lógica de conexión
-  const { socket, online } = useSocket(project);
+  const { socket, online } = useSocket(serverAPI);
 
   return (
-    <SocketContext.Provider value={{ socket, online, setProject }}>
+    <SocketContext.Provider value={{ socket, online, setServerAPI }}>
       {children}
     </SocketContext.Provider>
   );
