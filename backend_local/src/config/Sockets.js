@@ -26,15 +26,32 @@ class Sockets {
         "[devMessage] backend_local disconnected from Socket.IO server"
       );
     });
+
     // Escuchar solicitudes de actualización del frontend
     this.socket.on("request-gVar-update-b-b", (projectId) => {
       // Emitir los datos actualizados al room específico del proyecto
       this.socket.emit("response-gVar-update-b-b", gVar[projectId]);
     });
+
+    this.socket.on("request-gVariable-delete-f-b", (projectId, key) => {
+      const value = gVar[projectId][key];
+      if (typeof value === "number") {
+        gVar[projectId][key] = 0; // Reemplazar con 0 si es un número
+      } else if (typeof value === "boolean") {
+        gVar[projectId][key] = false; // Reemplazar con false si es booleano
+      } else if (Array.isArray(value)) {
+        gVar[projectId][key] = []; // Reemplazar con un array vacío si es un array
+      }
+      console.log(
+        "Variable reemplazada por valor por defecto: " + gVar[projectId][key]
+      );
+    });
   }
 }
 
 export default Sockets;
+
+// Escuchar solicitudes de actualización del frontend
 
 // this.io.on("connection", (socket) => {
 //   console.log("A new client connected:", socket.id);

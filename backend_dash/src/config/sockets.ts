@@ -10,11 +10,12 @@ class Sockets {
     this.socketsEvents();
   }
 
+  // Evento principal de conexión
   socketsEvents() {
     // Evento principal de conexión
     this.io.on("connection", (socket) => {
       console.log("Cliente conectado :)", socket.id);
-      
+
       // Extraer serverAPIKey de los parámetros de conexión
       let serverAPIKey = socket.handshake.query.serverAPIKey;
 
@@ -41,8 +42,8 @@ class Sockets {
         });
 
         socket.on("response-gVar-update-b-b", (data) => {
-          this.io.emit("response-gVar-update-b-f", data)
-        })
+          this.io.emit("response-gVar-update-b-f", data);
+        });
 
         // Manejar desconexión del servidor
         socket.on("disconnect", () => {
@@ -52,7 +53,7 @@ class Sockets {
 
           console.log(`Servidor ${serverAPIKey} desconectado`);
           this.connectedServers.delete(serverAPIKey);
-          
+
           // Notificar a todos los clientes en la sala que el servidor se desconectó
           this.io.to(serverAPIKey).emit("server-disconnected", {
             message: "Servidor desconectado",
@@ -60,13 +61,16 @@ class Sockets {
             online: false,
           });
         });
-
       } else {
         // Manejar conexión del frontend
-        
-        // Unirse a la sala de un proyecto específico
+
         socket.on("request-gVar-update-f-b", (projectId) => {
-          this.io.emit("request-gVar-update-b-b", projectId)
+          this.io.emit("request-gVar-update-b-b", projectId);
+        });
+
+        socket.on("request-gVariable-delete-f-b", (projectId, key) => {
+          console.log(projectId, key);
+          this.io.emit("request-gVariable-delete-f-b", projectId, key);
         });
 
         // Manejar solicitud de unión a un servidor específico

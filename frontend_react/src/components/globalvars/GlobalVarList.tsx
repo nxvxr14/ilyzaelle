@@ -1,6 +1,6 @@
 import { SocketContext } from "@/context/SocketContext";
 import { useContext, useState } from "react";
-import { useGlobalVarActions } from "./ActionsGlobalVars";
+import { useGlobalVarActionsModal } from "./ActionsGlobalVarsModal";
 import { useNavigate, useParams } from "react-router-dom";
 import SaveGlobalVarModal from "./SaveGlobalVarModal";
 
@@ -18,7 +18,7 @@ function GlobalVarList({ gVarData, onAddChart, onAddLabel }: GlobalVarListProps)
 
   const { socket } = useContext(SocketContext);
   const [selectedKey, setSelectedKey] = useState<string>('');
-  const { handleDelete } = useGlobalVarActions({ socket, projectId });
+  const { handleDelete } = useGlobalVarActionsModal({ socket, projectId });
 
   // Add pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,7 +27,6 @@ function GlobalVarList({ gVarData, onAddChart, onAddLabel }: GlobalVarListProps)
   const handleSave = (key: string) => {
     setSelectedKey(key);
     navigate(location.pathname + '?saveGlobalVar=true')
-    console.log(selectedKey)
     // console.log(`Guardando variable: ${key}`);
     // if (socket) {
     //     socket.emit('save-variable', projectId, key);

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useContext, useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import DashboardZoneView from "../dashboard/DashboardZoneView";
+import StatusBoardLocalModal from "@/components/boards/StatusBoardLocalModal";
 
 const ProjectDashboardView = () => {
     const params = useParams();
@@ -26,10 +27,9 @@ const ProjectDashboardView = () => {
     useEffect(() => {
         if (socket) {
             // Unirse al room del proyecto
-            console.log("gola")
             const interval = setInterval(() => {
                 socket.emit('request-gVar-update-f-b', projectId);
-            }, 1000);
+            }, 500);
 
             // Escuchar actualizaciones de gVar
             const handleUpdateGVar = (gVarData: object) => {
@@ -45,17 +45,6 @@ const ProjectDashboardView = () => {
             };
         }
     }, [socket]);
-
-    // Para actualizar una variable desde el frontend
-    const updateGVar = (selectedVar: string, inputVar: any) => {
-        if (socket) {
-            socket.emit('update-input-gVar', {
-                projectId,
-                selectedVar,
-                inputVar
-            });
-        }
-    };
 
     // Usamos useEffect para evitar setServer dentro del render
     useEffect(() => {
@@ -76,8 +65,8 @@ const ProjectDashboardView = () => {
         <>
             <div className="py-10">
                 <StatusLocalModal />
-                {/* <StatusLocalModal boards={data.boards}
-server={data.server} /> */}
+                <StatusBoardLocalModal boards={data.boards}
+                    host={data.host} />
                 <p className="text-sm text-gray-400 italic mt-5">
                     {data.host}
                 </p>
