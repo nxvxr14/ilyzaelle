@@ -15,10 +15,6 @@ import DataVarList from "@/components/dataVars/DataVarList";
 // import SnippetsList from "@/components/snippets/SnippetsList";
 
 function ProjectDetailsView() {
-
-
-    console.log("render")
-
     const navigate = useNavigate()
     const params = useParams()
     // con ! le decimos a ts que ese valor siempre va a venir en el param
@@ -47,8 +43,8 @@ function ProjectDetailsView() {
         <>
             <div className="py-10">
                 <StatusLocalModal />
-                {/* <StatusBoardLocalModal boards={data.boards}
-                    server={data.server} /> */}
+                <StatusBoardLocalModal boards={data.boards}
+                    host={data.host} />
                 <p className="text-sm text-gray-400 italic mt-5">
                     {data.host}
                 </p>

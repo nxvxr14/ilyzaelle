@@ -6,7 +6,7 @@ import { Board } from "@/types/index";
 import { toast } from 'react-toastify';
 import { useEffect } from "react";
 
-function StatusLocalModal({ boards, server }: { boards: Board[]; server: string }) {
+function StatusLocalModal({ boards, host }: { boards: Board[]; host: string }) {
     // function StatusLocalModal({ boards, server }: { boards: Board[]; server: string }) {
     // para ahorrar la delaracion lo hice en SocketContext.tsx, de lo contrario deberia hacerlo asi
     // const { socket, online } = useContext(SocketContext);
@@ -17,7 +17,7 @@ function StatusLocalModal({ boards, server }: { boards: Board[]; server: string 
 
     const { data = {}, isError, isFetching } = useQuery({
         queryKey: ['apiLocalStatus'],
-        queryFn: () => getStatusLocal(server),
+        queryFn: () => getStatusLocal(host),
         refetchInterval: 5000,
         retry: false
     });
