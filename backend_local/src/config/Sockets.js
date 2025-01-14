@@ -27,6 +27,7 @@ class Sockets {
       );
     });
 
+    /** EVENTOS DE SOCKET **/
     // Escuchar solicitudes de actualización del frontend
     this.socket.on("request-gVar-update-b-b", (projectId) => {
       // Emitir los datos actualizados al room específico del proyecto
@@ -48,11 +49,27 @@ class Sockets {
     });
 
     //   // si en el dashboardzoneview elegi la opcion de editar una variable global aca recibo los datos y actualizo
-    this.socket.on("request-gVariable-change-b-b", (selectedVar, inputVar, projectId) => {
-      console.log(selectedVar, inputVar, projectId);
-      gVar[projectId][selectedVar] = inputVar;
-      console.log(gVar[projectId][selectedVar]);
+    this.socket.on(
+      "request-gVariable-change-b-b",
+      (selectedVar, inputVar, projectId) => {
+        console.log(selectedVar, inputVar, projectId);
+        gVar[projectId][selectedVar] = inputVar;
+        console.log(gVar[projectId][selectedVar]);
+      }
+    );
+
+    //   // con esto inicializo las variables globales por primera vez las que seleccione en el frontend
+    this.socket.on("request-gVarriable-initialize-b-b", (projectId, nameGlobalVar, initialValue) => {
+      console.log(projectId, nameGlobalVar, initialValue);
+      gVar[projectId] = gVar[projectId] || {};
+      if (gVar[projectId].hasOwnProperty(nameGlobalVar)) {
+        console.log("true");
+        return;
+      }
+      gVar[projectId][nameGlobalVar] = initialValue;
+      console.log(gVar[projectId]);
     });
+    /** EVENTOS DE SOCKET **/
   }
 }
 

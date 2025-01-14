@@ -64,18 +64,39 @@ class Sockets {
       } else {
         // Manejar conexión del frontend
 
+        /** EVENTOS DE SOCKET **/
         socket.on("request-gVar-update-f-b", (projectId) => {
           this.io.emit("request-gVar-update-b-b", projectId);
         });
 
         socket.on("request-gVariable-delete-f-b", (projectId, key) => {
-          console.log(projectId, key);
           this.io.emit("request-gVariable-delete-b-b", projectId, key);
         });
 
-        socket.on("request-gVariable-change-f-b", (selectedVar, inputVar, projectId) => {
-          this.io.emit("request-gVariable-change-b-b", selectedVar, inputVar, projectId);
-        });
+        socket.on(
+          "request-gVariable-change-f-b",
+          (selectedVar, inputVar, projectId) => {
+            this.io.emit(
+              "request-gVariable-change-b-b",
+              selectedVar,
+              inputVar,
+              projectId
+            );
+          }
+        );
+
+        socket.on(
+          "request-gVarriable-initialize-f-b",
+          (projectId, nameGlobalVar, initialValue) => {
+            this.io.emit(
+              "request-gVarriable-initialize-b-b",
+              projectId,
+              nameGlobalVar,
+              initialValue
+            );
+          }
+        );
+        /** EVENTOS DE SOCKET **/
 
         // Manejar solicitud de unión a un servidor específico
         socket.on("join-server", (serverAPIKey) => {

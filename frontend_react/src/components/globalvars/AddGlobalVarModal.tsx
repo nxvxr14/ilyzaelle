@@ -9,8 +9,6 @@ import { AddGlobalVarFormData } from '@/types/index';
 import { SocketContext } from '@/context/SocketContext';
 
 export default function AddGlobalVarModal() {
-    console.log("react")
-
     const { socket } = useContext(SocketContext)
 
     // para quitar el parametro de la url 
@@ -43,7 +41,7 @@ export default function AddGlobalVarModal() {
     const handleAddGlobalVar = (formData: AddGlobalVarFormData) => {
         const { nameGlobalVar, initialValue } = formData;
         console.log(formData)
-        if (socket) socket.emit('initialize-gVar', projectId, nameGlobalVar, initialValue);
+        if (socket) socket.emit('request-gVarriable-initialize-f-b', projectId, nameGlobalVar, initialValue);
         queryClient.invalidateQueries({ queryKey: ['project'] })
         reset();
         navigate(location.pathname, { replace: true })
