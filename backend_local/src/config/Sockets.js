@@ -27,28 +27,10 @@ class Sockets {
       );
     });
     // Escuchar solicitudes de actualización del frontend
-    this.socket.on("request-gVar-update", (projectId) => {
+    this.socket.on("request-gVar-update-b-b", (projectId) => {
       // Emitir los datos actualizados al room específico del proyecto
-      this.socket.emit("backend-gVar-update", {
-        projectId,
-        data: gVar[projectId],
-      });
+      this.socket.emit("response-gVar-update-b-b", gVar[projectId]);
     });
-
-    // Escuchar actualizaciones de variables desde el frontend
-    this.socket.on(
-      "frontend-update-gVar",
-      ({ projectId, selectedVar, inputVar }) => {
-        if (gVar[projectId]) {
-          gVar[projectId][selectedVar] = inputVar;
-          // Emitir la actualización a todos los clientes en el room
-          this.socket.emit("backend-gVar-update", {
-            projectId,
-            data: gVar[projectId],
-          });
-        }
-      }
-    );
   }
 }
 

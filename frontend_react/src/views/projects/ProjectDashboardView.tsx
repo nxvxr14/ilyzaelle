@@ -26,25 +26,25 @@ const ProjectDashboardView = () => {
     useEffect(() => {
         if (socket) {
             // Unirse al room del proyecto
+            console.log("gola")
             const interval = setInterval(() => {
-                socket.emit('join-project', projectId);
+                socket.emit('request-gVar-update-f-b', projectId);
             }, 1000);
 
             // Escuchar actualizaciones de gVar
             const handleUpdateGVar = (gVarData: object) => {
-                console.log("Actualizando gVar");
                 setGVarData(gVarData);
             };
 
-            socket.on('update-gVar', handleUpdateGVar);
+            socket.on('response-gVar-update-b-f', handleUpdateGVar);
 
             return () => {
                 console.log('desmontando timer')
                 clearInterval(interval);
-                socket.off('update-gVar', handleUpdateGVar);
+                socket.off('response-gVar-update-b-f', handleUpdateGVar);
             };
         }
-    }, [socket, projectId]);
+    }, [socket]);
 
     // Para actualizar una variable desde el frontend
     const updateGVar = (selectedVar: string, inputVar: any) => {

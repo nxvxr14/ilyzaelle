@@ -40,11 +40,9 @@ class Sockets {
           online: true,
         });
 
-        // Manejar actualizaciones de gVar desde el backend_local
-        socket.on("backend-gVar-update", ({ projectId, data }) => {
-          console.log(`Actualizando gVar para proyecto ${projectId}`);
-          this.io.to(projectId).emit("update-gVar", data);
-        });
+        socket.on("response-gVar-update-b-b", (data) => {
+          this.io.emit("response-gVar-update-b-f", data)
+        })
 
         // Manejar desconexión del servidor
         socket.on("disconnect", () => {
@@ -67,12 +65,8 @@ class Sockets {
         // Manejar conexión del frontend
         
         // Unirse a la sala de un proyecto específico
-        socket.on("join-project", (projectId) => {
-          socket.join(projectId);
-          console.log(`Cliente ${socket.id} unido al proyecto ${projectId}`);
-
-          // Solicitar actualización inicial de gVar al backend_local
-          this.io.emit("request-gVar-update", projectId);
+        socket.on("request-gVar-update-f-b", (projectId) => {
+          this.io.emit("request-gVar-update-b-b", projectId)
         });
 
         // Manejar solicitud de unión a un servidor específico
@@ -89,12 +83,6 @@ class Sockets {
             serverAPIKey,
             online: isServerOnline,
           });
-        });
-
-        // Manejar actualizaciones de variables desde el frontend
-        socket.on("update-input-gVar", (data) => {
-          console.log("Recibida actualización desde frontend:");
-          this.io.emit("frontend-update-gVar", data);
         });
 
         // Manejar desconexión del cliente frontend
