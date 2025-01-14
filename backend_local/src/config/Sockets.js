@@ -33,7 +33,7 @@ class Sockets {
       this.socket.emit("response-gVar-update-b-b", gVar[projectId]);
     });
 
-    this.socket.on("request-gVariable-delete-f-b", (projectId, key) => {
+    this.socket.on("request-gVariable-delete-b-b", (projectId, key) => {
       const value = gVar[projectId][key];
       if (typeof value === "number") {
         gVar[projectId][key] = 0; // Reemplazar con 0 si es un número
@@ -45,6 +45,13 @@ class Sockets {
       console.log(
         "Variable reemplazada por valor por defecto: " + gVar[projectId][key]
       );
+    });
+
+    //   // si en el dashboardzoneview elegi la opcion de editar una variable global aca recibo los datos y actualizo
+    this.socket.on("request-gVariable-change-b-b", (selectedVar, inputVar, projectId) => {
+      console.log(selectedVar, inputVar, projectId);
+      gVar[projectId][selectedVar] = inputVar;
+      console.log(gVar[projectId][selectedVar]);
     });
   }
 }

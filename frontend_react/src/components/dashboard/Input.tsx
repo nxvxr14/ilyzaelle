@@ -11,7 +11,7 @@ type varProps = {
 function InputVar({ selectedVar, gVar }: varProps) {
     const params = useParams();
     // Use '!' to assert that the value will always be present in the params
-    const project = params.projectId!;
+    const projectId = params.projectId!;
 
     const [inputVar, setInputVar] = useState<number>(gVar[selectedVar]); // Inicializamos con el valor actual
     const { socket } = useContext(SocketContext);
@@ -21,7 +21,8 @@ function InputVar({ selectedVar, gVar }: varProps) {
             console.error("Socket not connected");
             return;
         }
-        socket.emit("update-input-gVar", selectedVar, inputVar, project, (response: any) => {
+        console.log("input"+gVar[selectedVar]);
+        socket.emit("request-gVariable-change-f-b", selectedVar, inputVar, projectId, (response: any) => {
             // Callback para confirmar que el servidor recibió el evento
             console.log("Server acknowledged the update:", response);
         });

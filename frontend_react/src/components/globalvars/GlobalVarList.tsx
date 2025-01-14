@@ -8,9 +8,10 @@ type GlobalVarListProps = {
   gVarData: any;
   onAddChart: (selectedVar: string) => void;
   onAddLabel: (selectedVar: string) => void;
+  onAddInput: (selectedVar: string) => void;
 }
 
-function GlobalVarList({ gVarData, onAddChart, onAddLabel }: GlobalVarListProps) {
+function GlobalVarList({ gVarData, onAddChart, onAddLabel, onAddInput }: GlobalVarListProps) {
   const params = useParams();
   const navigate = useNavigate()
   // Use '!' to assert that the value will always be present in the params
@@ -112,12 +113,20 @@ function GlobalVarList({ gVarData, onAddChart, onAddLabel }: GlobalVarListProps)
                             </button>
                           </>
                         )}
-                        {typeof gVarData[key] === 'boolean' || 'number' && (
+                        {(typeof gVarData[key] === 'boolean' || typeof gVarData[key] === 'number') && (
                           <button
                             onClick={() => onAddLabel(key)}
                             className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
                           >
                             <span className="text-orange-600 font-semibold">L</span>
+                          </button>
+                        )}
+                        {(typeof gVarData[key] === 'number') && (
+                          <button
+                            onClick={() => onAddInput(key)}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                          >
+                            <span className="text-orange-600 font-semibold">I</span>
                           </button>
                         )}
                         <button

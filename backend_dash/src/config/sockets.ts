@@ -70,7 +70,11 @@ class Sockets {
 
         socket.on("request-gVariable-delete-f-b", (projectId, key) => {
           console.log(projectId, key);
-          this.io.emit("request-gVariable-delete-f-b", projectId, key);
+          this.io.emit("request-gVariable-delete-b-b", projectId, key);
+        });
+
+        socket.on("request-gVariable-change-f-b", (selectedVar, inputVar, projectId) => {
+          this.io.emit("request-gVariable-change-b-b", selectedVar, inputVar, projectId);
         });
 
         // Manejar solicitud de unión a un servidor específico

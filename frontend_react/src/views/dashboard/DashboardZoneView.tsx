@@ -30,9 +30,10 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
         setSelectedVar("")
     };
 
-    const addInput = (selectVar: string) => {
-        if (!selectVar) return <div>Loading...</div>;
+    const addInput = (selectedVar: string) => {
+        if (!selectedVar) return <div>Loading...</div>;
         setInputs([...inputs, { id: inputs.length, selectedVar }])
+        setSelectedVar("")
     }
 
     if (!gVarData) {
@@ -60,6 +61,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                 gVarData={gVarData}
                 onAddChart={addChart}  // Pasamos la función addChart como prop
                 onAddLabel={addLabel}  // Pasamos la función addLabel como prop
+                onAddInput={addInput}
             />
 
             <AddGlobalVarModal />
