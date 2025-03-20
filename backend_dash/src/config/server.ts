@@ -29,6 +29,7 @@
 // export default app
 /* REFACTORIZACION con clases */
 
+import morgan from "morgan";
 import express from "express";
 import http from "http";
 import cors from "cors";
@@ -51,6 +52,9 @@ class ServerApp {
     dotenv.config();
     connectDB();
     this.app = express();
+    // // con morgan logeamos todas las consultas y con react querys evitamos hacer peticiones innecesarias
+    // // Logging
+    this.app.use(morgan("dev"));
     this.port = process.env.PORT || 3000;
     // configuraciones de sockets
     this.server = http.createServer(this.app);
