@@ -19,7 +19,7 @@ export interface IProject extends Document {
   projectName: string;
   description: string;
   status: boolean;
-  host: string;
+  server: string;
   serverAPIKey: string;
   // las boards de cada project
   // en boards solo se almacena el objectid del projecto al que pertecene cada board, pero en projects se hace un subdocumento con toda la informacion de las boards que pertenecen a cada projecto
@@ -47,13 +47,13 @@ const ProjectSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
-    host: {
+    server: {
       type: String,
-      default: "a9b3f0d5123b7a6e9f41c2d3",
+      default: "localhost",
     },
     serverAPIKey: {
       type: String,
-      default: "localhost:4040",
+      default: "a9b3f0d5123b7a6e9f41c2d3",
     },
     boards: [
       {

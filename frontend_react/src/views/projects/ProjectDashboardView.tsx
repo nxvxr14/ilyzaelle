@@ -58,7 +58,7 @@ const ProjectDashboardView = () => {
 
     if (isLoading) return 'cargando'
     if (isError) return <Navigate to='/404' />
-
+console.log(data)
 
     // Render the dashboard when data is available
     if (data) return (
@@ -66,9 +66,9 @@ const ProjectDashboardView = () => {
             <div className="py-10">
                 <StatusLocalModal />
                 <StatusBoardLocalModal boards={data.boards}
-                    host={data.host} />
+                    server={data.server} />
                 <p className="text-sm text-gray-400 italic mt-5">
-                    {data.host}
+                    {data.server}
                 </p>
                 <h1 className='text-5xl font-black'>
                     dashboard/{data.projectName}

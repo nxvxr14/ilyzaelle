@@ -49,7 +49,7 @@ export const projectSchema = z.object({
   projectName: z.string(),
   description: z.string(),
   status: z.boolean(),
-  host: z.string(),
+  server: z.string(),
   serverAPIKey: z.string()
 });
 
@@ -59,7 +59,7 @@ export const dashboardProjectSchema = z.array(
     projectName: true,
     description: true,
     status: true,
-    host: true,
+    server: true,
     serverAPIKey: true
   })
 );
@@ -95,7 +95,7 @@ export type DataVar = z.infer<typeof dataVarSchema>;
 // si uso omit y agrego cosas a mi schema me toca cambiar codigo, con pick esto no sucede
 export type ProjectFormData = Pick<
   Project,
-  "projectName" | "description" | "host" | "serverAPIKey"
+  "projectName" | "description" | "server" | "serverAPIKey"
 >;
 export type BoardFormData = Pick<
   Board,

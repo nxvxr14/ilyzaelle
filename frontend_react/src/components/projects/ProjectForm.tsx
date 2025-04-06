@@ -43,15 +43,15 @@ export default function ProjectForm({ register, errors }: ProjectFormProps) {
             </div>
 
             <div className="mb-5 space-y-3">
-                <label htmlFor="host" className="text-lg font-bold">
-                host
+                <label htmlFor="server" className="text-lg font-bold">
+               server 
                 </label>
                 <textarea
-                    id="host"
+                    id="server"
                     className="w-full p-3  border border-gray-200"
-                    placeholder="host"
-                    {...register("host", {
-                        required: "host obligatoria"
+                    placeholder="server"
+                    {...register("server", {
+                        required: "server obligatoria"
                     })}
                 />
             </div>

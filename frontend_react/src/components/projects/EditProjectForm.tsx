@@ -21,7 +21,7 @@ function EditProjectForm({ data, projectId }: EditProjectFormProps) {
         defaultValues: {
             projectName: data.projectName,
             description: data.description,
-            host: data.host,
+            server: data.server,
             serverAPIKey: data.serverAPIKey
         }
     })
