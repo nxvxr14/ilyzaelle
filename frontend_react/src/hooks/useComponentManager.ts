@@ -6,6 +6,39 @@ interface Component {
   title: string;
 }
 
+// Helper functions to validate data types for components
+const isValidChartData = (gVarData: any, varName: string): boolean => {
+  // For charts, we need to ensure there's both the variable data AND a time array
+  if (!gVarData || typeof gVarData !== 'object') return false;
+  
+  // Check if the variable exists and is array-like
+  const varData = gVarData[varName];
+  const timeData = gVarData.time;
+  
+  if (!Array.isArray(varData) || varData.length === 0) {
+    console.warn(`Variable "${varName}" is not an array or is empty`);
+    return false;
+  }
+  
+  if (!Array.isArray(timeData) || timeData.length === 0) {
+    console.warn(`Time data is not an array or is empty, which is required for charts`);
+    return false;
+  }
+  
+  return true;
+};
+
+const isValidInputData = (data: any): boolean => {
+  // Inputs can handle numbers, strings, or booleans
+  const type = typeof data;
+  return type === 'number' || type === 'string' || type === 'boolean';
+};
+
+const isValidLabelData = (data: any): boolean => {
+  // Labels can display most primitive types (anything with a reasonable toString())
+  return data !== undefined && data !== null;
+};
+
 export function useComponentManager(projectId: string, gVarData: any) {
   const [charts, setCharts] = useState<Component[]>([]);
   const [inputs, setInputs] = useState<Component[]>([]);
@@ -35,15 +68,21 @@ export function useComponentManager(projectId: string, gVarData: any) {
             const parsedCharts = JSON.parse(storedCharts);
             if (Array.isArray(parsedCharts)) {
               const validCharts = parsedCharts.filter(chart => {
-                const isValid = gVarData.hasOwnProperty(chart.selectedVar);
-                if (!isValid) {
-                  console.warn(`Removing chart with non-existent variable: ${chart.selectedVar}`);
+                // Check if variable exists AND is compatible with chart component
+                const varExists = gVarData.hasOwnProperty(chart.selectedVar);
+                const isValidType = varExists && isValidChartData(gVarData, chart.selectedVar);
+                
+                if (!varExists) {
+                  console.warn(`Removing chart: Variable "${chart.selectedVar}" does not exist`);
+                } else if (!isValidType) {
+                  console.warn(`Removing chart: Variable "${chart.selectedVar}" is not compatible with chart component`);
                 }
-                return isValid;
+                
+                return isValidType;
               });
               
               if (validCharts.length !== parsedCharts.length) {
-                console.info(`Filtered out ${parsedCharts.length - validCharts.length} charts with non-existent variables`);
+                console.info(`Filtered out ${parsedCharts.length - validCharts.length} charts with incompatible variables`);
               }
               
               setCharts(validCharts);
@@ -55,15 +94,22 @@ export function useComponentManager(projectId: string, gVarData: any) {
             const parsedInputs = JSON.parse(storedInputs);
             if (Array.isArray(parsedInputs)) {
               const validInputs = parsedInputs.filter(input => {
-                const isValid = gVarData.hasOwnProperty(input.selectedVar);
-                if (!isValid) {
-                  console.warn(`Removing input with non-existent variable: ${input.selectedVar}`);
+                // Check if variable exists AND is compatible with input component
+                const varExists = gVarData.hasOwnProperty(input.selectedVar);
+                const varData = gVarData[input.selectedVar];
+                const isValidType = varExists && isValidInputData(varData);
+                
+                if (!varExists) {
+                  console.warn(`Removing input: Variable "${input.selectedVar}" does not exist`);
+                } else if (!isValidType) {
+                  console.warn(`Removing input: Variable "${input.selectedVar}" is not a valid input type, found: ${typeof varData}`);
                 }
-                return isValid;
+                
+                return isValidType;
               });
               
               if (validInputs.length !== parsedInputs.length) {
-                console.info(`Filtered out ${parsedInputs.length - validInputs.length} inputs with non-existent variables`);
+                console.info(`Filtered out ${parsedInputs.length - validInputs.length} inputs with incompatible variables`);
               }
               
               setInputs(validInputs);
@@ -75,15 +121,22 @@ export function useComponentManager(projectId: string, gVarData: any) {
             const parsedLabels = JSON.parse(storedLabels);
             if (Array.isArray(parsedLabels)) {
               const validLabels = parsedLabels.filter(label => {
-                const isValid = gVarData.hasOwnProperty(label.selectedVar);
-                if (!isValid) {
-                  console.warn(`Removing label with non-existent variable: ${label.selectedVar}`);
+                // Check if variable exists AND is compatible with label component
+                const varExists = gVarData.hasOwnProperty(label.selectedVar);
+                const varData = gVarData[label.selectedVar];
+                const isValidType = varExists && isValidLabelData(varData);
+                
+                if (!varExists) {
+                  console.warn(`Removing label: Variable "${label.selectedVar}" does not exist`);
+                } else if (!isValidType) {
+                  console.warn(`Removing label: Variable "${label.selectedVar}" is null or undefined`);
                 }
-                return isValid;
+                
+                return isValidType;
               });
               
               if (validLabels.length !== parsedLabels.length) {
-                console.info(`Filtered out ${parsedLabels.length - validLabels.length} labels with non-existent variables`);
+                console.info(`Filtered out ${parsedLabels.length - validLabels.length} labels with incompatible variables`);
               }
               
               setLabels(validLabels);
@@ -142,12 +195,19 @@ export function useComponentManager(projectId: string, gVarData: any) {
     }
   }, [labels, projectId, isInitialized]);
 
-  // Add new chart only if the variable exists in gVarData
+  // Add new chart only if the variable exists and is array-like and time data exists
   const addChart = (varName: string) => {
-    if (!varName || !gVarData || !gVarData.hasOwnProperty(varName)) {
-      console.warn(`Cannot add chart: Variable "${varName}" does not exist`);
+    if (!varName || !gVarData) {
+      console.warn(`Cannot add chart: Variable "${varName}" does not exist or gVarData is not available`);
       return;
     }
+    
+    // Updated validation to check specific Chart requirements
+    if (!isValidChartData(gVarData, varName)) {
+      console.warn(`Cannot add chart: Variable "${varName}" is not compatible with chart component`);
+      return;
+    }
+    
     const newChart = { 
       id: Date.now(), 
       selectedVar: varName,
@@ -170,12 +230,19 @@ export function useComponentManager(projectId: string, gVarData: any) {
     ));
   };
 
-  // Add new input only if the variable exists in gVarData
+  // Add new input only if the variable exists and is a valid input type
   const addInput = (varName: string) => {
-    if (!varName || !gVarData || !gVarData.hasOwnProperty(varName)) {
+    if (!varName || !gVarData) {
       console.warn(`Cannot add input: Variable "${varName}" does not exist`);
       return;
     }
+    
+    const varData = gVarData[varName];
+    if (!isValidInputData(varData)) {
+      console.warn(`Cannot add input: Variable "${varName}" is not a valid input type`);
+      return;
+    }
+    
     const newInput = { 
       id: Date.now(), 
       selectedVar: varName,
@@ -198,12 +265,19 @@ export function useComponentManager(projectId: string, gVarData: any) {
     ));
   };
 
-  // Add new label only if the variable exists in gVarData
+  // Add new label only if the variable exists and is displayable
   const addLabel = (varName: string) => {
-    if (!varName || !gVarData || !gVarData.hasOwnProperty(varName)) {
+    if (!varName || !gVarData) {
       console.warn(`Cannot add label: Variable "${varName}" does not exist`);
       return;
     }
+    
+    const varData = gVarData[varName];
+    if (!isValidLabelData(varData)) {
+      console.warn(`Cannot add label: Variable "${varName}" is null or undefined`);
+      return;
+    }
+    
     const newLabel = { 
       id: Date.now(), 
       selectedVar: varName,
