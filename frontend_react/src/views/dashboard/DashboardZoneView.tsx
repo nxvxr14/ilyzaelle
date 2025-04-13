@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Chart from "@/components/dashboard/Chart";
 import Input from "@/components/dashboard/Input";
 import Label from "@/components/dashboard/Label";
@@ -6,9 +6,19 @@ import GlobalVarList from "@/components/globalvars/GlobalVarList";
 import AddGlobalVarModal from "@/components/globalvars/AddGlobalVarModal";
 import { useComponentManager } from "@/hooks/useComponentManager";
 import RemovableComponent from "@/components/dashboard/RemovableComponent";
+import ClearDashboardButton from "@/components/dashboard/ClearDashboardButton";
+import { useEffect } from "react";
 
 function DashboardZoneView({ gVarData }: { gVarData: any }) {
     const navigate = useNavigate();
+    const params = useParams();
+    // Get projectId from params, or use a default for safety
+    const projectId = params.projectId;
+    
+    // Log projectId to verify it's being passed correctly
+    useEffect(() => {
+        console.log('Current projectId in DashboardZoneView:', projectId);
+    }, [projectId]);
     
     const {
         charts,
@@ -22,8 +32,16 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
         updateInputTitle,
         addLabel,
         removeLabel,
-        updateLabelTitle
-    } = useComponentManager();
+        updateLabelTitle,
+        clearAllComponents
+    } = useComponentManager(projectId);
+
+    // Log state whenever it changes
+    useEffect(() => {
+        console.log('Current charts:', charts);
+        console.log('Current inputs:', inputs);
+        console.log('Current labels:', labels);
+    }, [charts, inputs, labels]);
 
     if (!gVarData) {
         return <div>Loading...</div>;
@@ -35,14 +53,16 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                 <p className='text-5xl font-black'>
                     user/globalVars
                 </p>
-                <nav className='my-5 flex gap-3'>
+                <div className='my-5 flex justify-between items-center'>
                     <button
                         className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
                         onClick={() => navigate(location.pathname + '?newGlobalVar=true')}
                     >
                         nueva variable
                     </button>
-                </nav>
+                    
+                    <ClearDashboardButton onClear={clearAllComponents} />
+                </div>
             </div>
 
             <GlobalVarList
