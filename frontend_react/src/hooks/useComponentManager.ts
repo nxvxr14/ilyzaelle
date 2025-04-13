@@ -6,14 +6,14 @@ interface Component {
   title: string;
 }
 
-export function useComponentManager(projectId: string) {
+export function useComponentManager(projectId: string, gVarData: any) {
   const [charts, setCharts] = useState<Component[]>([]);
   const [inputs, setInputs] = useState<Component[]>([]);
   const [labels, setLabels] = useState<Component[]>([]);
   const [selectedVar, setSelectedVar] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load from localStorage on component mount
+  // Load from localStorage and validate with gVarData
   useEffect(() => {
     if (!projectId) {
       console.error('No projectId provided to useComponentManager');
@@ -28,26 +28,70 @@ export function useComponentManager(projectId: string) {
         const storedInputs = localStorage.getItem(`dashboard-inputs-${projectId}`);
         const storedLabels = localStorage.getItem(`dashboard-labels-${projectId}`);
         
-        console.log('Stored charts:', storedCharts);
-        console.log('Stored inputs:', storedInputs);
-        console.log('Stored labels:', storedLabels);
-        
-        if (storedCharts) {
-          const parsedCharts = JSON.parse(storedCharts);
-          setCharts(Array.isArray(parsedCharts) ? parsedCharts : []);
+        // Only proceed with validation if gVarData is available
+        if (gVarData) {
+          // Process charts
+          if (storedCharts) {
+            const parsedCharts = JSON.parse(storedCharts);
+            if (Array.isArray(parsedCharts)) {
+              const validCharts = parsedCharts.filter(chart => {
+                const isValid = gVarData.hasOwnProperty(chart.selectedVar);
+                if (!isValid) {
+                  console.warn(`Removing chart with non-existent variable: ${chart.selectedVar}`);
+                }
+                return isValid;
+              });
+              
+              if (validCharts.length !== parsedCharts.length) {
+                console.info(`Filtered out ${parsedCharts.length - validCharts.length} charts with non-existent variables`);
+              }
+              
+              setCharts(validCharts);
+            }
+          }
+          
+          // Process inputs
+          if (storedInputs) {
+            const parsedInputs = JSON.parse(storedInputs);
+            if (Array.isArray(parsedInputs)) {
+              const validInputs = parsedInputs.filter(input => {
+                const isValid = gVarData.hasOwnProperty(input.selectedVar);
+                if (!isValid) {
+                  console.warn(`Removing input with non-existent variable: ${input.selectedVar}`);
+                }
+                return isValid;
+              });
+              
+              if (validInputs.length !== parsedInputs.length) {
+                console.info(`Filtered out ${parsedInputs.length - validInputs.length} inputs with non-existent variables`);
+              }
+              
+              setInputs(validInputs);
+            }
+          }
+          
+          // Process labels
+          if (storedLabels) {
+            const parsedLabels = JSON.parse(storedLabels);
+            if (Array.isArray(parsedLabels)) {
+              const validLabels = parsedLabels.filter(label => {
+                const isValid = gVarData.hasOwnProperty(label.selectedVar);
+                if (!isValid) {
+                  console.warn(`Removing label with non-existent variable: ${label.selectedVar}`);
+                }
+                return isValid;
+              });
+              
+              if (validLabels.length !== parsedLabels.length) {
+                console.info(`Filtered out ${parsedLabels.length - validLabels.length} labels with non-existent variables`);
+              }
+              
+              setLabels(validLabels);
+            }
+          }
+          
+          setIsInitialized(true);
         }
-        
-        if (storedInputs) {
-          const parsedInputs = JSON.parse(storedInputs);
-          setInputs(Array.isArray(parsedInputs) ? parsedInputs : []);
-        }
-        
-        if (storedLabels) {
-          const parsedLabels = JSON.parse(storedLabels);
-          setLabels(Array.isArray(parsedLabels) ? parsedLabels : []);
-        }
-        
-        setIsInitialized(true);
       } catch (error) {
         console.error('Error loading dashboard data from localStorage:', error);
         // Initialize with empty arrays in case of error
@@ -58,8 +102,11 @@ export function useComponentManager(projectId: string) {
       }
     };
     
-    loadFromStorage();
-  }, [projectId]);
+    // Only load from storage if gVarData is available
+    if (gVarData) {
+      loadFromStorage();
+    }
+  }, [projectId, gVarData]);
 
   // Save to localStorage when state changes
   useEffect(() => {
@@ -95,8 +142,12 @@ export function useComponentManager(projectId: string) {
     }
   }, [labels, projectId, isInitialized]);
 
+  // Add new chart only if the variable exists in gVarData
   const addChart = (varName: string) => {
-    if (!varName) return;
+    if (!varName || !gVarData || !gVarData.hasOwnProperty(varName)) {
+      console.warn(`Cannot add chart: Variable "${varName}" does not exist`);
+      return;
+    }
     const newChart = { 
       id: Date.now(), 
       selectedVar: varName,
@@ -119,8 +170,12 @@ export function useComponentManager(projectId: string) {
     ));
   };
 
+  // Add new input only if the variable exists in gVarData
   const addInput = (varName: string) => {
-    if (!varName) return;
+    if (!varName || !gVarData || !gVarData.hasOwnProperty(varName)) {
+      console.warn(`Cannot add input: Variable "${varName}" does not exist`);
+      return;
+    }
     const newInput = { 
       id: Date.now(), 
       selectedVar: varName,
@@ -143,8 +198,12 @@ export function useComponentManager(projectId: string) {
     ));
   };
 
+  // Add new label only if the variable exists in gVarData
   const addLabel = (varName: string) => {
-    if (!varName) return;
+    if (!varName || !gVarData || !gVarData.hasOwnProperty(varName)) {
+      console.warn(`Cannot add label: Variable "${varName}" does not exist`);
+      return;
+    }
     const newLabel = { 
       id: Date.now(), 
       selectedVar: varName,

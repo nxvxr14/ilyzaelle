@@ -13,13 +13,9 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
     const navigate = useNavigate();
     const params = useParams();
     // Get projectId from params, or use a default for safety
-    const projectId = params.projectId;
+    const projectId = params.projectId || 'default';
     
-    // Log projectId to verify it's being passed correctly
-    useEffect(() => {
-        console.log('Current projectId in DashboardZoneView:', projectId);
-    }, [projectId]);
-    
+    // Pass gVarData to the hook for validation
     const {
         charts,
         inputs,
@@ -34,14 +30,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
         removeLabel,
         updateLabelTitle,
         clearAllComponents
-    } = useComponentManager(projectId);
-
-    // Log state whenever it changes
-    useEffect(() => {
-        console.log('Current charts:', charts);
-        console.log('Current inputs:', inputs);
-        console.log('Current labels:', labels);
-    }, [charts, inputs, labels]);
+    } = useComponentManager(projectId, gVarData);
 
     if (!gVarData) {
         return <div>Loading...</div>;
@@ -75,6 +64,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
             <AddGlobalVarModal />
             
             <div className="grid w-full bg-[#120d18] rounded-2xl overflow-hidden mt-10 p-4">
+                {/* Charts section */}
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {charts.map((chart) => (
                         <div key={chart.id} style={{ width: '50%', padding: '10px' }}>
@@ -88,6 +78,8 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                         </div>
                     ))}
                 </div>
+                
+                {/* Inputs section */}
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {inputs.map((input) => (
                         <div key={input.id} style={{ width: '50%', padding: '10px' }}>
@@ -101,6 +93,8 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                         </div>
                     ))}
                 </div>
+                
+                {/* Labels section */}
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {labels.map((label) => (
                         <div key={label.id} style={{ width: '50%', padding: '10px' }}>

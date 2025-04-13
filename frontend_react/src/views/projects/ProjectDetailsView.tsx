@@ -39,7 +39,6 @@ function ProjectDetailsView() {
     if (isLoading) return 'cargando'
     if (isError) return <Navigate to='/404' />
 
-    console.log(data)
 
     if (data) return (
         <>
