@@ -78,67 +78,77 @@ function GlobalVarList({ gVarData, onAddChart, onAddLabel, onAddInput }: GlobalV
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Valor Actual
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tamaño
+                  </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {currentItems.map((key) => (
-                  <tr key={key} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {key}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {typeof gVarData[key]}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getFormattedValue(gVarData[key])}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                      <div className="flex justify-center space-x-2">
-                        {(Array.isArray(gVarData[key])) && (
-                          <>
+                {currentItems.map((key) => {
+                  const varType = Array.isArray(gVarData[key]) ? 'array' : typeof gVarData[key];
+                  const size = Array.isArray(gVarData[key]) ? gVarData[key].length : '-';
+                  return (
+                    <tr key={key} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {key}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {varType}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {getFormattedValue(gVarData[key])}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {size}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        <div className="flex justify-center space-x-2">
+                          {(Array.isArray(gVarData[key])) && (
+                            <>
+                              <button
+                                onClick={() => handleSave(key)}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                              >
+                                <span className="text-orange-600 font-semibold">R</span>
+                              </button>
+                              <button
+                                onClick={() => onAddChart(key)}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                              >
+                                <span className="text-orange-600 font-semibold">G</span>
+                              </button>
+                            </>
+                          )}
+                          {(typeof gVarData[key] === 'boolean' || typeof gVarData[key] === 'number') && (
                             <button
-                              onClick={() => handleSave(key)}
+                              onClick={() => onAddLabel(key)}
                               className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
                             >
-                              <span className="text-orange-600 font-semibold">R</span>
+                              <span className="text-orange-600 font-semibold">L</span>
                             </button>
+                          )}
+                          {(typeof gVarData[key] === 'number') && (
                             <button
-                              onClick={() => onAddChart(key)}
+                              onClick={() => onAddInput(key)}
                               className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
                             >
-                              <span className="text-orange-600 font-semibold">G</span>
+                              <span className="text-orange-600 font-semibold">I</span>
                             </button>
-                          </>
-                        )}
-                        {(typeof gVarData[key] === 'boolean' || typeof gVarData[key] === 'number') && (
+                          )}
                           <button
-                            onClick={() => onAddLabel(key)}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                            onClick={() => handleDelete(key)}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition-colors duration-200"
                           >
-                            <span className="text-orange-600 font-semibold">L</span>
+                            <span className="text-red-600 font-semibold">X</span>
                           </button>
-                        )}
-                        {(typeof gVarData[key] === 'number') && (
-                          <button
-                            onClick={() => onAddInput(key)}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
-                          >
-                            <span className="text-orange-600 font-semibold">I</span>
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(key)}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition-colors duration-200"
-                        >
-                          <span className="text-red-600 font-semibold">X</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
