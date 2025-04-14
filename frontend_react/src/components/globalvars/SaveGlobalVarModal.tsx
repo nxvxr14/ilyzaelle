@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useContext } from 'react';
+import { Fragment, useEffect, useContext, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,6 +18,7 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
     // para quitar el parametro de la url 
     const navigate = useNavigate()
     const { socket } = useContext(SocketContext);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     // con todo este codigo puedo leer los datos que se envian por medio de la url
     const location = useLocation()
@@ -46,11 +47,13 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
     const { mutate } = useMutation({
         // aca va la funcion de la api
         mutationFn: createDataVar,
-        onError: (error) => {
-            toast.error(error.message)
+        onError: (error: any) => {
+            setSaveError(error.message || "Error al guardar la variable");
+            toast.error(error.message || "Error al guardar la variable");
         },
         onSuccess: (data) => {
-            toast.success(data)
+            setSaveError(null);
+            toast.success(data);
             // revisar esto bien
             queryClient.invalidateQueries({ queryKey: ['project'] })
             reset();
@@ -71,6 +74,7 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
     });
 
     const handleSaveGlobalVar = (formData: SaveGlobalVarFormData) => {
+        setSaveError(null);
         // Save the original variable
         const finalFormData = {
             ...formData,
@@ -170,6 +174,12 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
                                             </span>
                                         )}
                                     </p>
+
+                                    {saveError && (
+                                        <div className="mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                            {saveError}
+                                        </div>
+                                    )}
 
                                     <form
                                         className='mt-10 space-y-3'

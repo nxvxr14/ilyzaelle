@@ -22,6 +22,8 @@ const ProjectSchema: Schema = new Schema(
       type: String,
       trim: true,
       required: true,
+      unique: true, // Make nameData unique across all DataVar documents
+      index: true,  // Add index for better query performance
     },
     description: {
       type: String,
