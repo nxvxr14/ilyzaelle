@@ -23,25 +23,30 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
         }
     })
 
+    // Filter out time vector variables
+    const filteredDataVars = dataVars?.filter(item => 
+        !item.nameData.endsWith('_time') && !item.nameGlobalVar.endsWith('_time')
+    ) || [];
+
     // Add pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
-    // Calculate pagination values
-    const totalItems = dataVars?.length || 0;
+    // Calculate pagination values based on filtered data
+    const totalItems = filteredDataVars.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
 
     // Get current page items
-    const currentItems = dataVars?.slice(startIndex, endIndex) || [];
+    const currentItems = filteredDataVars.slice(startIndex, endIndex);
 
     // Handle delete button click
     const handleDelete = (dataVarId: string) => {
         mutate({ projectId, dataVarId });
     }
 
-    if (!dataVars || dataVars.length === 0) return (
+    if (!filteredDataVars || filteredDataVars.length === 0) return (
         <div className="w-full p-4 text-center text-gray-500">vacio...</div>
     )
 
@@ -126,17 +131,6 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
                     </button>
                 </div>
             )}
-            {/* Raw DATA */}
-            {/* <div className="mt-4 p-4 bg-gray-100 rounded-lg overflow-x-auto">
-                <h3 className="text-lg font-semibold mb-2">Raw gVar Data:</h3>
-                <pre className="whitespace-pre-wrap">
-                    {dataVars.map((item, index) => (
-                        <div key={index}>
-                            {JSON.stringify(item.gVar)}
-                        </div>
-                    ))}
-                </pre>
-            </div> */}
         </div>
     );
 }

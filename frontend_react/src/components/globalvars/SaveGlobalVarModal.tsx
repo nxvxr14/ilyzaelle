@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, useContext } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -7,16 +7,17 @@ import { toast } from 'react-toastify';
 import SaveGlobalVarForm from './SaveGlobalVarForm';
 import { SaveGlobalVarFormData } from "@/types/index";
 import { createDataVar } from '@/api/DataVarApi';
-
+import { SocketContext } from "@/context/SocketContext";
 
 type SaveGlobalModalProps = {
     nameGlobalVar: string
-    gVar: [],
+    gVar: any,
 }
 
 export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalModalProps) {
     // para quitar el parametro de la url 
     const navigate = useNavigate()
+    const { socket } = useContext(SocketContext);
 
     // con todo este codigo puedo leer los datos que se envian por medio de la url
     const location = useLocation()
@@ -47,7 +48,6 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
         mutationFn: createDataVar,
         onError: (error) => {
             toast.error(error.message)
-
         },
         onSuccess: (data) => {
             toast.success(data)
@@ -56,9 +56,22 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
             reset();
             navigate(location.pathname, { replace: true })
         }
-    })
+    });
+
+    // New mutation for saving the time vector
+    const { mutate: mutateTimeVector } = useMutation({
+        mutationFn: createDataVar,
+        onError: (error) => {
+            toast.error(`Time vector error: ${error.message}`)
+        },
+        onSuccess: (data) => {
+            toast.info(`Time vector saved: ${data}`)
+            queryClient.invalidateQueries({ queryKey: ['project'] })
+        }
+    });
 
     const handleSaveGlobalVar = (formData: SaveGlobalVarFormData) => {
+        // Save the original variable
         const finalFormData = {
             ...formData,
             nameGlobalVar,
@@ -68,7 +81,50 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
             finalFormData,
             projectId
         }
-        mutate(data)
+        mutate(data);
+
+        // Check if this is an array and has a corresponding time vector
+        if (Array.isArray(gVar)) {
+            // Get the corresponding time vector name
+            const timeVectorName = `${nameGlobalVar}_time`;
+            
+            // Request the full gVar data to access the time vector
+            if (socket) {
+                socket.emit('request-gVar-update-f-b', projectId);
+                
+                // Listen for the response
+                const handleGVarData = (gVarData: any) => {
+                    // Check if the time vector exists
+                    if (gVarData && gVarData[timeVectorName]) {
+                        // Create a new data variable for the time vector
+                        const timeVectorFormData = {
+                            nameData: `${formData.nameData}_time`, // Append _time to the name
+                            description: `Time vector for ${formData.nameData}`,
+                            nameGlobalVar: timeVectorName,
+                            gVar: gVarData[timeVectorName]
+                        };
+                        
+                        const timeData = {
+                            finalFormData: timeVectorFormData,
+                            projectId
+                        };
+                        
+                        // Save the time vector
+                        mutateTimeVector(timeData);
+                        
+                        // Remove the listener
+                        socket.off('response-gVar-update-b-f', handleGVarData);
+                    }
+                };
+                
+                socket.on('response-gVar-update-b-f', handleGVarData);
+                
+                // Set a timeout to remove the listener if no response
+                setTimeout(() => {
+                    socket.off('response-gVar-update-b-f', handleGVarData);
+                }, 5000);
+            }
+        }
     }
 
     return (
@@ -106,7 +162,13 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
                                         nueva variable
                                     </Dialog.Title>
 
-                                    <p className="text-xl font-bold">Llena el formulario y crea  {''}
+                                    <p className="text-xl font-bold">
+                                        Llena el formulario y crea {''}
+                                        {Array.isArray(gVar) && (
+                                            <span className="text-green-600">
+                                                (Se guardará automáticamente el vector de tiempo asociado)
+                                            </span>
+                                        )}
                                     </p>
 
                                     <form
