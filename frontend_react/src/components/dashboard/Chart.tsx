@@ -10,6 +10,7 @@ import {
     InteractionMode,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { useEffect } from 'react';
 
 ChartJS.register(
     CategoryScale,
@@ -23,7 +24,7 @@ ChartJS.register(
 
 type varProps = {
     selectedVar: string;
-    gVar: any; // You can define a more specific type based on the shape of gVar if needed
+    gVar: any;
 };
 
 export const options = {
@@ -38,44 +39,65 @@ export const options = {
         },
     },
     animation: {
-        duration: 0, // Desactiva las animaciones
+        duration: 0,
     },
     scales: {
         x: {
             grid: {
-                color: 'rgba(255, 255, 255, 0.2)', // Color blanco para la cuadrícula del eje X
-                lineWidth: 1 // Ancho de las líneas de la cuadrícula del eje X
+                color: 'rgba(255, 255, 255, 0.2)',
+                lineWidth: 1
             }
         },
         y: {
             grid: {
-                color: 'rgba(255, 255, 255, 0.2)', // Color blanco para la cuadrícula del eje Y
-                lineWidth: 1 // Ancho de las líneas de la cuadrícula del eje Y
+                color: 'rgba(255, 255, 255, 0.2)',
+                lineWidth: 1
             }
         }
     },
     interaction: {
-        mode: 'nearest' as InteractionMode, // TypeScript will now expect one of the valid InteractionMode values
-        intersect: false // Para que el gráfico responda al movimiento del mouse incluso sin que toque un punto
+        mode: 'nearest' as InteractionMode,
+        intersect: false
     }
 };
 
 function Chart({ selectedVar, gVar }: varProps) {
+    const timeKey = `${selectedVar}_time`;
+    
+    useEffect(() => {
+        console.log('Chart rendering for variable:', selectedVar);
+        console.log('Available keys in gVar:', Object.keys(gVar));
+        console.log('Using time vector:', timeKey in gVar ? timeKey : 'global time');
+    }, [selectedVar, gVar, timeKey]);
+    
+    const timeVector = gVar[timeKey] || [];
+    
+    useEffect(() => {
+        if (!gVar[timeKey] && Array.isArray(gVar[selectedVar])) {
+            console.warn(`Missing time vector for array "${selectedVar}". This should be fixed in the backend.`);
+        }
+    }, [timeKey, selectedVar, gVar]);
+    
+    const earliestTime = timeVector.length > 0 ? Math.min(...timeVector) : 0;
+    
+    const formattedLabels = timeVector.map((timestamp: number) => {
+        const elapsedMs = timestamp - earliestTime;
+        return `${elapsedMs}`;
+    });
 
     const data = {
-        labels: gVar.time, // Use tiempo as the labels for the x-axis
+        labels: formattedLabels,
         datasets: [
             {
-                label: selectedVar, // Description of the dataset
-                data: gVar[selectedVar], // Use randomize as the data for the y-axis
-                borderColor: 'rgb(255, 255, 0)', // Color amarillo para el trazo (la línea que une los puntos)               
+                label: selectedVar,
+                data: gVar[selectedVar] || [],
+                borderColor: 'rgb(255, 255, 0)',               
                 backgroundColor: 'rgb(255, 255, 0)',
                 tension: 0.2,
-                // Cambia los puntos a un tamaño más pequeño
-                pointRadius: 2, // Establece el tamaño de los puntos (puedes ajustar este valor según el tamaño que desees)
-                pointBackgroundColor: 'rgb(255, 255, 0)', // Cambia el color de los puntos a amarillo
-                pointBorderColor: 'rgb(255, 255, 0)', // Establece el borde de los puntos a amarillo
-                borderWidth: 1 // Establece el ancho de la línea (puedes hacerla más fina con un valor bajo, como 1 o 2)
+                pointRadius: 2,
+                pointBackgroundColor: 'rgb(255, 255, 0)',
+                pointBorderColor: 'rgb(255, 255, 0)',
+                borderWidth: 1
             }
         ],
     };

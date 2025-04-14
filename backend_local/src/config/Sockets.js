@@ -30,6 +30,22 @@ class Sockets {
     /** EVENTOS DE SOCKET **/
     // Escuchar solicitudes de actualización del frontend
     this.socket.on("request-gVar-update-b-b", (projectId) => {
+      // Ensure all arrays have their time vectors before sending data
+      this.ensureArrayTimeVectors(projectId);
+      
+      // Log the variables with time vectors before sending
+      console.log("Sending gVar update with keys:", Object.keys(gVar[projectId] || {}));
+      
+      // Check which arrays have time vectors
+      if (gVar[projectId]) {
+        Object.keys(gVar[projectId]).forEach(key => {
+          if (Array.isArray(gVar[projectId][key]) && !key.endsWith('_time')) {
+            const timeKey = `${key}_time`;
+            console.log(`Array variable ${key} has time vector: ${timeKey in gVar[projectId]} with length: ${gVar[projectId][timeKey]?.length || 0}`);
+          }
+        });
+      }
+      
       // Emitir los datos actualizados al room específico del proyecto
       this.socket.emit("response-gVar-update-b-b", gVar[projectId]);
     });
@@ -42,6 +58,10 @@ class Sockets {
         gVar[projectId][key] = false; // Reemplazar con false si es booleano
       } else if (Array.isArray(value)) {
         gVar[projectId][key] = []; // Reemplazar con un array vacío si es un array
+        // Si se elimina un array, también reiniciamos su vector de tiempo
+        if (gVar[projectId][`${key}_time`]) {
+          gVar[projectId][`${key}_time`] = [];
+        }
       }
       console.log(
         "Variable reemplazada por valor por defecto: " + gVar[projectId][key]
@@ -53,82 +73,117 @@ class Sockets {
       "request-gVariable-change-b-b",
       (selectedVar, inputVar, projectId) => {
         console.log(selectedVar, inputVar, projectId);
+        const oldValue = gVar[projectId][selectedVar];
         gVar[projectId][selectedVar] = inputVar;
+        
+        // Si es un array y ha cambiado de tamaño (se añadieron elementos), actualizamos el vector de tiempo
+        if (Array.isArray(inputVar)) {
+          // Ensure time vector exists
+          if (!gVar[projectId][`${selectedVar}_time`]) {
+            gVar[projectId][`${selectedVar}_time`] = [];
+          }
+          
+          const timeVector = gVar[projectId][`${selectedVar}_time`];
+          
+          // Si es un nuevo array o ha cambiado de tamaño, ajustamos el vector de tiempo
+          if (!Array.isArray(oldValue) || inputVar.length !== timeVector.length) {
+            // Si el vector de tiempo es más corto que el array, añadimos nuevos timestamps
+            while (timeVector.length < inputVar.length) {
+              timeVector.push(Date.now());
+            }
+            
+            // Si el vector de tiempo es más largo que el array, lo recortamos
+            if (timeVector.length > inputVar.length) {
+              gVar[projectId][`${selectedVar}_time`] = timeVector.slice(0, inputVar.length);
+            }
+            
+            console.log(`Updated time vector for ${selectedVar}, new length: ${gVar[projectId][`${selectedVar}_time`].length}`);
+          }
+        }
+        
         console.log(gVar[projectId][selectedVar]);
       }
     );
 
     //   // con esto inicializo las variables globales por primera vez las que seleccione en el frontend
     this.socket.on("request-gVarriable-initialize-b-b", (projectId, nameGlobalVar, initialValue) => {
-      console.log(projectId, nameGlobalVar, initialValue);
+      console.log("Initializing variable:", projectId, nameGlobalVar);
       gVar[projectId] = gVar[projectId] || {};
       if (gVar[projectId].hasOwnProperty(nameGlobalVar)) {
-        console.log("true");
+        console.log("Variable already exists, not reinitializing");
         return;
       }
+      
       gVar[projectId][nameGlobalVar] = initialValue;
-      console.log(gVar[projectId]);
+      
+      // Si es un array, creamos un vector de tiempo correspondiente
+      if (Array.isArray(initialValue)) {
+        // Creamos un vector de tiempo con la misma longitud que el array inicial
+        const timeVector = [];
+        const now = Date.now();
+        for (let i = 0; i < initialValue.length; i++) {
+          // Usamos timestamps ligeramente diferentes si el array ya tiene datos
+          timeVector.push(now - (initialValue.length - i - 1) * 1000);
+        }
+        
+        // Guardamos el vector de tiempo con un nombre relacionado a la variable original
+        gVar[projectId][`${nameGlobalVar}_time`] = timeVector;
+        
+        console.log(`Created time vector for ${nameGlobalVar} with length ${timeVector.length}`);
+        console.log(`Time vector keys after initialization:`, 
+          Object.keys(gVar[projectId]).filter(key => key.endsWith('_time')));
+      }
+      
+      console.log("Updated gVar:", Object.keys(gVar[projectId]));
     });
     /** EVENTOS DE SOCKET **/
+  }
+
+  // New helper method to ensure all arrays have proper time vectors
+  ensureArrayTimeVectors(projectId) {
+    if (!gVar[projectId]) return;
+    
+    // Find all array variables
+    Object.keys(gVar[projectId]).forEach(key => {
+      // Skip time vector keys themselves
+      if (key.endsWith('_time')) return;
+      
+      const value = gVar[projectId][key];
+      if (Array.isArray(value)) {
+        const timeKey = `${key}_time`;
+        
+        // Create time vector if it doesn't exist
+        if (!gVar[projectId][timeKey]) {
+          console.log(`Creating missing time vector for ${key}`);
+          const timeVector = [];
+          const now = Date.now();
+          
+          // Create timestamps for each element
+          for (let i = 0; i < value.length; i++) {
+            timeVector.push(now - (value.length - i - 1) * 1000);
+          }
+          
+          gVar[projectId][timeKey] = timeVector;
+        } else if (gVar[projectId][timeKey].length !== value.length) {
+          // Fix length mismatch between array and its time vector
+          console.log(`Fixing time vector length for ${key}: array=${value.length}, time=${gVar[projectId][timeKey].length}`);
+          
+          const timeVector = gVar[projectId][timeKey];
+          const now = Date.now();
+          
+          // Add missing timestamps
+          while (timeVector.length < value.length) {
+            timeVector.push(now);
+          }
+          
+          // Remove extra timestamps
+          if (timeVector.length > value.length) {
+            gVar[projectId][timeKey] = timeVector.slice(0, value.length);
+          }
+        }
+      }
+    });
   }
 }
 
 export default Sockets;
-
-// Escuchar solicitudes de actualización del frontend
-
-// this.io.on("connection", (socket) => {
-//   console.log("A new client connected:", socket.id);
-//   // // Emitir un mensaje al cliente
-//   // socket.emit("current-status", true, () => {
-//   //   console.log("Emitiendo mensaje al cliente desde el backend");
-//   // });
-
-//   // con este socket recibo el id del projecto y actualizo los valores de gVar project en el frontend, se podria evitar recibir el id del projecto y solo actualizar gVar en el frontend???? revisar
-//   socket.on("projectid-dashboard", (project) => {
-//     console.log("projectid-dashboard", project);
-//     // socket.emit solo emite al cliente conectado
-//     // this.io emite a todos los conectados
-//     socket.emit("update-gVar", gVar[project]);
-//   });
-
-//   // si en el dashboardzoneview elegi la opcion de editar una variable global aca recibo los datos y actualizo
-//   socket.on("update-input-gVar", (selectedVar, inputVar, project) => {
-//     gVar[project][selectedVar] = inputVar;
-//     console.log(gVar[project][selectedVar]);
-//   });
-
-//   // para eliminar variables del objeto
-//   socket.on("delete-variable", (project, nameGlobalVar) => {
-//     const value = gVar[project][nameGlobalVar];
-//     if (typeof value === "number") {
-//       gVar[project][nameGlobalVar] = 0;  // Reemplazar con 0 si es un número
-//     } else if (typeof value === "boolean") {
-//       gVar[project][nameGlobalVar] = false;  // Reemplazar con false si es booleano
-//     } else if (Array.isArray(value)) {
-//       gVar[project][nameGlobalVar] = [];  // Reemplazar con un array vacío si es un array
-//     }
-//     console.log("Variable reemplazada por valor por defecto");
-//   });
-
-//   // // para guardar variables del objeto
-//   // socket.on("save-variable", (project, nameGlobalVar) => {
-//   //   console.log("***project, nameGlobalVar", project, nameGlobalVar);
-//   // });
-
-//   // con esto inicializo las variables globales por primera vez las que seleccione en el frontend
-//   socket.on("initialize-gVar", (project, nameGlobalVar, initialValue) => {
-//     console.log(project, nameGlobalVar, initialValue);
-//     gVar[project] = gVar[project] || {};
-//     if (gVar[project].hasOwnProperty(nameGlobalVar)) {
-//       console.log("true");
-//       return;
-//     }
-//     gVar[project][nameGlobalVar] = initialValue;
-//     console.log(gVar[project]);
-//   });
-
-//   socket.on("disconnect", () => {
-//     console.log(`Client disconnected: ${socket.id}`);
-//   });
-// });

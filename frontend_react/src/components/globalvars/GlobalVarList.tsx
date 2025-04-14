@@ -44,14 +44,17 @@ function GlobalVarList({ gVarData, onAddChart, onAddLabel, onAddInput }: GlobalV
     return value;
   };
 
+  // Filter out keys that end with _time
+  const filteredKeys = Object.keys(gVarData || {}).filter(key => !key.endsWith('_time'));
+
   // Calculate pagination values
-  const totalItems = Object.keys(gVarData || {}).length;
+  const totalItems = filteredKeys.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
 
   // Get current page items
-  const currentItems = Object.keys(gVarData || {}).slice(startIndex, endIndex);
+  const currentItems = filteredKeys.slice(startIndex, endIndex);
 
   if (!gVarData) return (
     <div className="w-full p-4 text-center text-gray-500">vacio...</div>
