@@ -3,12 +3,18 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { deleteDataVar } from "@/api/DataVarApi";
+import DataVarChartModal from "./DataVarChartModal";
 
 function DataVarList({ dataVars }: { dataVars: any[] }) {
     const params = useParams();
     const projectId = params.projectId!;
 
-    const queryClient = useQueryClient()
+    const queryClient = useQueryClient();
+
+    // State for chart modal
+    const [showChartModal, setShowChartModal] = useState(false);
+    const [selectedDataVar, setSelectedDataVar] = useState<any>(null);
+    const [selectedDataName, setSelectedDataName] = useState('');
 
     const { mutate } = useMutation({
         mutationFn: deleteDataVar,
@@ -27,6 +33,26 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
     const filteredDataVars = dataVars?.filter(item => 
         !item.nameData.endsWith('_time') && !item.nameGlobalVar.endsWith('_time')
     ) || [];
+
+    // Function to find time vector for a saved variable
+    const findTimeVector = (dataName: string) => {
+        const timeVectorName = `${dataName}_time`;
+        return dataVars?.find(item => item.nameData === timeVectorName)?.gVar || null;
+    };
+
+    // Handle opening the chart modal
+    const handleShowChart = (data: any) => {
+        setSelectedDataVar(data.gVar);
+        setSelectedDataName(data.nameGlobalVar);
+        
+        // Find corresponding time vector and store in localStorage for the chart modal to use
+        const timeVector = findTimeVector(data.nameData);
+        if (timeVector) {
+            localStorage.setItem(`${data.nameGlobalVar}_time_vector`, JSON.stringify(timeVector));
+        }
+        
+        setShowChartModal(true);
+    };
 
     // Add pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -91,13 +117,16 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                     <div className="flex justify-center space-x-2">
                                         <button
+                                            onClick={() => handleShowChart(item)}
                                             className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                                            title="Mostrar gráfico"
                                         >
                                             <span className="text-orange-600 font-semibold">S</span>
                                         </button>
                                         <button
                                             onClick={() => handleDelete(item._id)}
                                             className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition-colors duration-200"
+                                            title="Eliminar variable"
                                         >
                                             <span className="text-red-600 font-semibold">X</span>
                                         </button>
@@ -130,6 +159,16 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
                         Siguiente
                     </button>
                 </div>
+            )}
+
+            {/* Chart Modal */}
+            {selectedDataVar && (
+                <DataVarChartModal 
+                    show={showChartModal}
+                    onClose={() => setShowChartModal(false)}
+                    dataVar={selectedDataVar}
+                    dataName={selectedDataName}
+                />
             )}
         </div>
     );
