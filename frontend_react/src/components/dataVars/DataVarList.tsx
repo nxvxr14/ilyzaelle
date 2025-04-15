@@ -16,6 +16,7 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
     const [selectedDataVar, setSelectedDataVar] = useState<any>(null);
     const [selectedDataName, setSelectedDataName] = useState('');
 
+    // Mutation for deleting data variables
     const { mutate } = useMutation({
         mutationFn: deleteDataVar,
         onError: (error) => {
@@ -27,7 +28,7 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
             }
             queryClient.invalidateQueries({ queryKey: ['project', projectId] });
         }
-    })
+    });
 
     // Filter out time vector variables
     const filteredDataVars = dataVars?.filter(item => 
@@ -37,7 +38,7 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
     // Function to find time vector for a saved variable
     const findTimeVector = (dataName: string) => {
         const timeVectorName = `${dataName}_time`;
-        return dataVars?.find(item => item.nameData === timeVectorName)?.gVar || null;
+        return dataVars?.find(item => item.nameData === timeVectorName);
     };
 
     // Handle opening the chart modal
@@ -46,7 +47,7 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
         setSelectedDataName(data.nameGlobalVar);
         
         // Find corresponding time vector and store in localStorage for the chart modal to use
-        const timeVector = findTimeVector(data.nameData);
+        const timeVector = findTimeVector(data.nameData)?.gVar || null;
         if (timeVector) {
             localStorage.setItem(`${data.nameGlobalVar}_time_vector`, JSON.stringify(timeVector));
         }
@@ -67,9 +68,34 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
     // Get current page items
     const currentItems = filteredDataVars.slice(startIndex, endIndex);
 
-    // Handle delete button click
-    const handleDelete = (dataVarId: string) => {
-        mutate({ projectId, dataVarId });
+    // Handle delete button click - now deletes both the variable and its time vector
+    const handleDelete = (item: any) => {
+        // First, delete the main data variable
+        mutate({ projectId, dataVarId: item._id });
+        
+        // Then, check if there's a corresponding time vector and delete it too
+        const timeVector = findTimeVector(item.nameData);
+        if (timeVector) {
+            // Small delay to avoid overwhelming the server with simultaneous requests
+            setTimeout(() => {
+                mutate(
+                    { projectId, dataVarId: timeVector._id },
+                    {
+                        onSuccess: (data) => {
+                            if (data) {
+                                toast.info(`Vector de tiempo eliminado: ${data.nameData}`);
+                            }
+                            queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+                        },
+                        onError: () => {
+                            // If there's an error deleting the time vector, don't show it to the user
+                            // as the main operation (deleting the data var) succeeded
+                            console.error("Error eliminando el vector de tiempo asociado");
+                        }
+                    }
+                );
+            }, 300);
+        }
     }
 
     if (!filteredDataVars || filteredDataVars.length === 0) return (
@@ -124,9 +150,9 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
                                             <span className="text-orange-600 font-semibold">S</span>
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(item._id)}
+                                            onClick={() => handleDelete(item)}
                                             className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition-colors duration-200"
-                                            title="Eliminar variable"
+                                            title="Eliminar variable y su vector de tiempo"
                                         >
                                             <span className="text-red-600 font-semibold">X</span>
                                         </button>
