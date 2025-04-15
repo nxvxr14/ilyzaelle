@@ -15,6 +15,8 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
     const [showChartModal, setShowChartModal] = useState(false);
     const [selectedDataVar, setSelectedDataVar] = useState<any>(null);
     const [selectedDataName, setSelectedDataName] = useState('');
+    const [selectedDataId, setSelectedDataId] = useState('');
+    const [selectedTimeId, setSelectedTimeId] = useState('');
 
     // Mutation for deleting data variables
     const { mutate } = useMutation({
@@ -45,11 +47,15 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
     const handleShowChart = (data: any) => {
         setSelectedDataVar(data.gVar);
         setSelectedDataName(data.nameGlobalVar);
+        setSelectedDataId(data._id); // Store the data array ID
         
         // Find corresponding time vector and store in localStorage for the chart modal to use
-        const timeVector = findTimeVector(data.nameData)?.gVar || null;
+        const timeVector = findTimeVector(data.nameData);
         if (timeVector) {
-            localStorage.setItem(`${data.nameGlobalVar}_time_vector`, JSON.stringify(timeVector));
+            localStorage.setItem(`${data.nameGlobalVar}_time_vector`, JSON.stringify(timeVector.gVar));
+            setSelectedTimeId(timeVector._id); // Store the time vector ID
+        } else {
+            setSelectedTimeId('No time vector found');
         }
         
         setShowChartModal(true);
@@ -194,6 +200,8 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
                     onClose={() => setShowChartModal(false)}
                     dataVar={selectedDataVar}
                     dataName={selectedDataName}
+                    dataId={selectedDataId}
+                    timeId={selectedTimeId}
                 />
             )}
         </div>

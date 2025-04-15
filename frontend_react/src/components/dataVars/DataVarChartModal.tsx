@@ -8,10 +8,13 @@ type DataVarChartModalProps = {
   onClose: () => void;
   dataVar: any;
   dataName: string;
+  dataId: string;
+  timeId: string;
 }
 
-function DataVarChartModal({ show, onClose, dataVar, dataName }: DataVarChartModalProps) {
+function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }: DataVarChartModalProps) {
   const [viewMode, setViewMode] = useState<'standard' | 'scrollable'>('scrollable');
+  const [showIds, setShowIds] = useState(false);
   
   // Create a data object structure similar to what Chart component expects
   const chartData: any = {
@@ -89,8 +92,33 @@ function DataVarChartModal({ show, onClose, dataVar, dataName }: DataVarChartMod
                     >
                       Histórico
                     </button>
+                    <button
+                      onClick={() => setShowIds(!showIds)}
+                      className={`px-3 py-1 rounded-md text-sm ${showIds 
+                        ? 'bg-[#FFFF44] text-black' 
+                        : 'bg-gray-700 text-white'}`}
+                      title="Mostrar IDs de MongoDB"
+                    >
+                      <span>IDs</span>
+                    </button>
                   </div>
                 </Dialog.Title>
+                
+                {/* Database IDs display */}
+                {showIds && (
+                  <div className="bg-gray-800 rounded-lg p-4 mb-4 text-sm">
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">ID Datos:</span>
+                        <code className="text-[#FFFF44] font-mono">{dataId}</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">ID Vector Tiempo:</span>
+                        <code className="text-[#FFFF44] font-mono">{timeId}</code>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="mt-4" style={{ height: '500px' }}>
                   {viewMode === 'standard' ? (
