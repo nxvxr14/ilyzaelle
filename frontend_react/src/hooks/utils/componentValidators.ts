@@ -10,7 +10,15 @@ export const isValidChartData = (gVarData: any, varName: string): boolean => {
   if (!gVarData || typeof gVarData !== 'object') return false;
   
   const varData = gVarData[varName];
-  const timeData = gVarData.time;
+  
+  // Check for variable-specific time vector first (new format)
+  const timeVectorName = `${varName}_time`;
+  let timeData = gVarData[timeVectorName];
+  
+  // If specific time vector doesn't exist, fall back to global time (legacy format)
+  if (!timeData) {
+    timeData = gVarData.time;
+  }
   
   if (!Array.isArray(varData) || varData.length === 0) {
     console.warn(`Variable "${varName}" is not an array or is empty`);
@@ -18,7 +26,7 @@ export const isValidChartData = (gVarData: any, varName: string): boolean => {
   }
   
   if (!Array.isArray(timeData) || timeData.length === 0) {
-    console.warn(`Time data is not an array or is empty, which is required for charts`);
+    console.warn(`Time data (${timeVectorName} or time) is not an array or is empty, which is required for charts`);
     return false;
   }
   
