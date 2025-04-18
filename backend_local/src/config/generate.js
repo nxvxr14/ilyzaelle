@@ -22,6 +22,17 @@ export const connectBoard = ({ data }) => {
   } = data;
 
   return new Promise((resolve, reject) => {
+    // Special handling for boardType 4
+    if (boardType === 4) {
+      if (!gVar[project]) {
+        gVar[project] = {};
+      }
+      updateCodeBoardController({ project, _id, boardCode });
+      resolve();
+      return;
+    }
+    
+    // Original code for all other boardTypes
     // Función auxiliar para manejar el cierre de la placa
     const handleBoardClose = () => {
       console.log(`Closed! ${boardType}`);
