@@ -52,6 +52,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                     <option value="1">arduino uno</option>
                     <option value="2">plc328p</option>
                     <option value="3">esp32</option>
+                    <option value="4">factoryIO</option>
                 </select>
                 {errors.boardType && (
                     <ErrorMessage>{errors.boardType.message}</ErrorMessage>

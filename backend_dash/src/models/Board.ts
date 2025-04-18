@@ -14,7 +14,7 @@ export type BoardTypes = typeof boardTypes[keyof typeof boardTypes]
 */
 
 export interface IBoard extends Document {
-    boardType: 1 | 2 // 1 = Arduino UNO, 2 = PLC328p,
+    boardType: 1 | 2 | 3 | 4// 1 = Arduino UNO, 2 = PLC328p,
     // boardType: BoardTypes
     boardName: string
     boardConnect: number
@@ -28,7 +28,7 @@ export const BoardSchema: Schema = new Schema({
     boardType: {
         type: Number,
         required: true,
-        enum: [1, 2]
+        enum: [1, 2, 3, 4]
         // enum: Object.values(boardTypes)
     },
     boardName: {
