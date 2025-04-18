@@ -51,6 +51,14 @@ export const isValidLabelData = (data: any): boolean => {
 };
 
 /**
+ * Validates if the data is suitable for a toggle component
+ * Toggles require boolean data
+ */
+export const isValidToggleData = (data: any): boolean => {
+  return typeof data === 'boolean';
+};
+
+/**
  * Validates if a component's variable exists and has the correct type
  */
 export const validateComponent = (

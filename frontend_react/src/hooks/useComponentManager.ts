@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { 
   isValidChartData, 
   isValidInputData, 
-  isValidLabelData, 
+  isValidLabelData,
+  isValidToggleData, // New validator for toggle components
   validateComponent 
 } from "./utils/componentValidators";
 import {
@@ -21,6 +22,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
   const [charts, setCharts] = useState<Component[]>([]);
   const [inputs, setInputs] = useState<Component[]>([]);
   const [labels, setLabels] = useState<Component[]>([]);
+  const [toggles, setToggles] = useState<Component[]>([]); // New state for toggles
   const [selectedVar, setSelectedVar] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -41,6 +43,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
         const storedCharts = loadComponents(projectId, 'charts');
         const storedInputs = loadComponents(projectId, 'inputs');
         const storedLabels = loadComponents(projectId, 'labels');
+        const storedToggles = loadComponents(projectId, 'toggles'); // Load stored toggles
         
         // Filter and validate charts
         const validCharts = storedCharts.filter(chart => {
@@ -69,10 +72,20 @@ export function useComponentManager(projectId: string, gVarData: any) {
           return validation.isValid;
         });
         
+        // Filter and validate toggles
+        const validToggles = storedToggles.filter(toggle => {
+          const validation = validateComponent(toggle, gVarData, isValidToggleData, 'toggle');
+          if (!validation.isValid && validation.reason) {
+            console.warn(`Removing toggle: ${validation.reason}`);
+          }
+          return validation.isValid;
+        });
+        
         // Set validated components
         setCharts(validCharts);
         setInputs(validInputs);
         setLabels(validLabels);
+        setToggles(validToggles); // Set the validated toggles
         
         setIsInitialized(true);
       } catch (error) {
@@ -80,6 +93,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
         setCharts([]);
         setInputs([]);
         setLabels([]);
+        setToggles([]);
         setIsInitialized(true);
       }
     };
@@ -102,6 +116,12 @@ export function useComponentManager(projectId: string, gVarData: any) {
     if (!projectId || !isInitialized) return;
     saveComponents(projectId, 'labels', labels);
   }, [labels, projectId, isInitialized]);
+
+  // Save toggles to localStorage when state changes
+  useEffect(() => {
+    if (!projectId || !isInitialized) return;
+    saveComponents(projectId, 'toggles', toggles);
+  }, [toggles, projectId, isInitialized]);
 
   // Component management functions
   const addChart = (varName: string) => {
@@ -196,10 +216,42 @@ export function useComponentManager(projectId: string, gVarData: any) {
     ));
   };
 
+  // Toggle component management functions
+  const addToggle = (varName: string) => {
+    if (!varName || !gVarData) {
+      console.warn(`Cannot add toggle: Variable "${varName}" does not exist or gVarData is not available`);
+      return;
+    }
+    
+    if (!isValidToggleData(gVarData[varName])) {
+      console.warn(`Cannot add toggle: Variable "${varName}" is not a boolean type`);
+      return;
+    }
+    
+    const newToggle = { 
+      id: Date.now(), 
+      selectedVar: varName,
+      title: "Toggle Control" 
+    };
+    setToggles(prev => [...prev, newToggle]);
+    setSelectedVar("");
+  };
+
+  const removeToggle = (id: number) => {
+    setToggles(prev => prev.filter(toggle => toggle.id !== id));
+  };
+  
+  const updateToggleTitle = (id: number, newTitle: string) => {
+    setToggles(prev => prev.map(toggle => 
+      toggle.id === id ? { ...toggle, title: newTitle } : toggle
+    ));
+  };
+
   const handleClearAllComponents = () => {
     setCharts([]);
     setInputs([]);
     setLabels([]);
+    setToggles([]);
     clearAllComponents(projectId);
   };
 
@@ -207,6 +259,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
     charts,
     inputs,
     labels,
+    toggles,
     selectedVar,
     setSelectedVar,
     addChart,
@@ -218,6 +271,9 @@ export function useComponentManager(projectId: string, gVarData: any) {
     addLabel,
     removeLabel,
     updateLabelTitle,
+    addToggle,
+    removeToggle,
+    updateToggleTitle,
     clearAllComponents: handleClearAllComponents
   };
 }

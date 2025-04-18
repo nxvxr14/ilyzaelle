@@ -9,9 +9,16 @@ type GlobalVarListProps = {
   onAddChart: (selectedVar: string) => void;
   onAddLabel: (selectedVar: string) => void;
   onAddInput: (selectedVar: string) => void;
+  onAddToggle: (selectedVar: string) => void; // New prop for handling toggle component
 }
 
-function GlobalVarList({ gVarData, onAddChart, onAddLabel, onAddInput }: GlobalVarListProps) {
+function GlobalVarList({ 
+  gVarData, 
+  onAddChart, 
+  onAddLabel, 
+  onAddInput, 
+  onAddToggle 
+}: GlobalVarListProps) {
   const params = useParams();
   const navigate = useNavigate()
   // Use '!' to assert that the value will always be present in the params
@@ -139,6 +146,16 @@ function GlobalVarList({ gVarData, onAddChart, onAddLabel, onAddInput }: GlobalV
                               className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
                             >
                               <span className="text-orange-600 font-semibold">I</span>
+                            </button>
+                          )}
+                          {/* New Toggle button for boolean variables */}
+                          {(typeof gVarData[key] === 'boolean') && (
+                            <button
+                              onClick={() => onAddToggle(key)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
+                              title="Add Toggle"
+                            >
+                              <span className="text-orange-600 font-semibold">T</span>
                             </button>
                           )}
                           <button

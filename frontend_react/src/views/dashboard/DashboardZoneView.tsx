@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Chart from "@/components/dashboard/Chart";
 import Input from "@/components/dashboard/Input";
 import Label from "@/components/dashboard/Label";
+import Toggle from "@/components/dashboard/Toggle"; // Import the new Toggle component
 import GlobalVarList from "@/components/globalvars/GlobalVarList";
 import AddGlobalVarModal from "@/components/globalvars/AddGlobalVarModal";
 import { useComponentManager } from "@/hooks/useComponentManager";
@@ -20,6 +21,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
         charts,
         inputs,
         labels,
+        toggles, // Add new toggles state
         addChart,
         removeChart,
         updateChartTitle,
@@ -29,6 +31,9 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
         addLabel,
         removeLabel,
         updateLabelTitle,
+        addToggle, // Add new toggle functions
+        removeToggle,
+        updateToggleTitle,
         clearAllComponents
     } = useComponentManager(projectId, gVarData);
 
@@ -59,6 +64,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                 onAddChart={addChart}
                 onAddLabel={addLabel}
                 onAddInput={addInput}
+                onAddToggle={addToggle} // Pass the addToggle function
             />
 
             <AddGlobalVarModal />
@@ -104,6 +110,21 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                                 onTitleChange={(newTitle) => updateLabelTitle(label.id, newTitle)}
                             >
                                 <Label selectedVar={label.selectedVar} gVar={gVarData} />
+                            </RemovableComponent>
+                        </div>
+                    ))}
+                </div>
+                
+                {/* Toggles section - new */}
+                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                    {toggles.map((toggle) => (
+                        <div key={toggle.id} style={{ width: '50%', padding: '10px' }}>
+                            <RemovableComponent 
+                                onRemove={() => removeToggle(toggle.id)}
+                                title={toggle.title}
+                                onTitleChange={(newTitle) => updateToggleTitle(toggle.id, newTitle)}
+                            >
+                                <Toggle selectedVar={toggle.selectedVar} gVar={gVarData} />
                             </RemovableComponent>
                         </div>
                     ))}
