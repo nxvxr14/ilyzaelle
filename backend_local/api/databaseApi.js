@@ -1,12 +1,12 @@
 import axios from "axios";
 
-const url = "http://192.168.1.12:3030/api/projects/6772dd4f41c61141bf8a69b2/";
+const url = `${process.env.SOCKETSERVER_URL}/api/projects/6772dd4f41c61141bf8a69b2/`;
 
 export async function getBoards() {
   try {
     const { data } = await axios.get(url, {
       headers: {
-        Origin: "http://localhost:5173",
+        Origin: [process.env.FRONTEND_URL],
       },
     });
     return data.boards;
