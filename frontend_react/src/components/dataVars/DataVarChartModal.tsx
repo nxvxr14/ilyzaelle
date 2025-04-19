@@ -27,7 +27,7 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
   // Create API URLs for data and time arrays
   const dataApiUrl = `${apiBaseUrl}/projects/${projectId}/datavars/${dataId}`;
   const timeApiUrl = timeId && timeId !== 'No time vector found' 
-    ? `${apiBaseUrl}/api/projects/${projectId}/datavars/${timeId}`
+    ? `${apiBaseUrl}/projects/${projectId}/datavars/${timeId}`
     : '';
   
   // Create a data object structure similar to what Chart component expects
