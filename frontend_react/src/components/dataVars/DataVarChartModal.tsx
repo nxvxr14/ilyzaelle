@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import Chart from '@/components/dashboard/Chart';
 import ScrollableChart from './ScrollableChart';
+import { useParams } from "react-router-dom";
 
 type DataVarChartModalProps = {
   show: boolean;
@@ -15,6 +16,19 @@ type DataVarChartModalProps = {
 function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }: DataVarChartModalProps) {
   const [viewMode, setViewMode] = useState<'standard' | 'scrollable'>('scrollable');
   const [showIds, setShowIds] = useState(false);
+  const [showApiUrls, setShowApiUrls] = useState(false);
+
+  const params = useParams();
+  const projectId = params.projectId!;
+  
+  // Get API base URL from environment variable
+  const apiBaseUrl = import.meta.env.VITE_API_URL;
+  
+  // Create API URLs for data and time arrays
+  const dataApiUrl = `${apiBaseUrl}/projects/${projectId}/datavars/${dataId}`;
+  const timeApiUrl = timeId && timeId !== 'No time vector found' 
+    ? `${apiBaseUrl}/api/projects/${projectId}/datavars/${timeId}`
+    : '';
   
   // Create a data object structure similar to what Chart component expects
   const chartData: any = {
@@ -101,6 +115,15 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
                     >
                       <span>IDs</span>
                     </button>
+                    <button
+                      onClick={() => setShowApiUrls(!showApiUrls)}
+                      className={`px-3 py-1 rounded-md text-sm ${showApiUrls 
+                        ? 'bg-[#FFFF44] text-black' 
+                        : 'bg-gray-700 text-white'}`}
+                      title="Mostrar URLs de API"
+                    >
+                      <span>GET</span>
+                    </button>
                   </div>
                 </Dialog.Title>
                 
@@ -116,6 +139,43 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
                         <span className="text-gray-400">ID Vector Tiempo:</span>
                         <code className="text-[#FFFF44] font-mono">{timeId}</code>
                       </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* API URLs display */}
+                {showApiUrls && (
+                  <div className="bg-gray-800 rounded-lg p-4 mb-4 text-sm">
+                    <div className="flex flex-col space-y-4">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-gray-400">URL para Datos:</span>
+                        </div>
+                        <a 
+                          href={dataApiUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[#FFFF44] font-mono text-xs break-all hover:underline"
+                        >
+                          {dataApiUrl}
+                        </a>
+                      </div>
+                      
+                      {timeApiUrl && (
+                        <div>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-gray-400">URL para Vector Tiempo:</span>
+                          </div>
+                          <a 
+                            href={timeApiUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-[#FFFF44] font-mono text-xs break-all hover:underline"
+                          >
+                            {timeApiUrl}
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
