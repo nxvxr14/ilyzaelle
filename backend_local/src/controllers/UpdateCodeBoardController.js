@@ -10,6 +10,31 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
     try {
       // Limpiar solo los temporizadores asociados a este _id antes de ejecutar nuevo código
       clearTimersById(_id);
+
+      // Check for array initializations and ensure time vectors are also reset
+      const arrayInitRegex = /gVar\[project\]\.(\w+)\s*=\s*\[\]/g;
+      let match;
+      let arrayInits = [];
+
+      // Find all array initializations in the code
+      while ((match = arrayInitRegex.exec(boardCode)) !== null) {
+        const varName = match[1];
+        if (!varName.endsWith('_time')) { // Only process data arrays, not time vectors
+          arrayInits.push(varName);
+        }
+      }
+
+      // For each array initialization, check and reset its time vector if it exists
+      arrayInits.forEach(varName => {
+        const timeVectorName = `${varName}_time`;
+        // Check if the time vector exists
+        if (gVar[project] && gVar[project].hasOwnProperty(timeVectorName)) {
+          console.log(`Resetting time vector for ${varName}: ${timeVectorName}`);
+          // Reset the time vector to an empty array
+          gVar[project][timeVectorName] = [];
+        }
+      });
+
       // Ejecutar el código directamente con eval
       eval(boardCode);
       resolve();
