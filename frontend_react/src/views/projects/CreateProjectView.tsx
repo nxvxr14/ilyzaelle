@@ -6,6 +6,9 @@ import ProjectForm from "@/components/projects/ProjectForm";
 import { ProjectFormData } from "types";
 import { createProject } from "@/api/ProjectApi";
 
+// LocalStorage key for storing unlocked projects (same as in DashboardView)
+const UNLOCKED_PROJECTS_KEY = 'unlockedProjects';
+
 export default function CreateProjectView() {
     // react queri es una libreria para obtener datos del servidor
     // obtiene datos de forma rapida, cachea las consultas, se puede usar con fetch api o axios
@@ -28,17 +31,38 @@ export default function CreateProjectView() {
     const { mutate } = useMutation({
         mutationFn: createProject,
         onError: (error) => {
-        toast.error(error.message)
+            toast.error(error.message)
         },
-        onSuccess: (data) => {
+        onSuccess: (data, variables) => {
             toast.success(data)
+            
+            // Save the serverAPIKey to localStorage so this project is automatically unlocked
+            if (variables.serverAPIKey) {
+                try {
+                    // Get existing unlocked projects
+                    const storedProjects = localStorage.getItem(UNLOCKED_PROJECTS_KEY);
+                    let unlockedProjects: string[] = [];
+                    
+                    if (storedProjects) {
+                        unlockedProjects = JSON.parse(storedProjects);
+                    }
+                    
+                    // Add the new project's serverAPIKey if it's not already there
+                    if (!unlockedProjects.includes(variables.serverAPIKey)) {
+                        unlockedProjects.push(variables.serverAPIKey);
+                        localStorage.setItem(UNLOCKED_PROJECTS_KEY, JSON.stringify(unlockedProjects));
+                    }
+                } catch (e) {
+                    console.error('Error saving project to localStorage:', e);
+                }
+            }
+            
             navigate('/')
         }
     })
 
     const handleForm = (formData: ProjectFormData) => mutate(formData)
     
-
     // ejemplo de peticion con axios sin querys
     /*
     const handleForm = async (formData: ProjectFormData) => {
@@ -74,7 +98,7 @@ export default function CreateProjectView() {
                     <input
                         type="submit"
                         value='crear'
-                        className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3  font-bold cursor-pointer transition-color'
+                        className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3 font-bold cursor-pointer transition-color'
                     />
                 </form>
             </div>
