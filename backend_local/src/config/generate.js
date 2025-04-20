@@ -9,8 +9,6 @@ import { xelInterval, xelTimeout } from "../utils/xeloriumLib.js";
 
 export const boards = {};
 export const virtualBridges = {};
-// Export the Xelorium functions to make them available to the eval code
-export { xelInterval, xelTimeout };
 
 export const connectBoard = ({ data }) => {
   const {
@@ -28,6 +26,11 @@ export const connectBoard = ({ data }) => {
   return new Promise((resolve, reject) => {
     // Special handling for boardType 4
     if (boardType === 4) {
+      if(closing){
+        clearTimersById(_id);
+        resolve();
+        return;
+      }
       if (!gVar[project]) {
         gVar[project] = {};
       }
@@ -35,7 +38,7 @@ export const connectBoard = ({ data }) => {
       resolve();
       return;
     }
-    
+
     // Original code for all other boardTypes
     // Función auxiliar para manejar el cierre de la placa
     const handleBoardClose = () => {
