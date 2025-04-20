@@ -69,6 +69,7 @@ export default function DashboardView() {
         // Special case: "null" for debug mode
         if (serverApiKeyInput.trim().toLowerCase() === "null") {
             setDebugMode(true);
+            localStorage.setItem('debugMode', 'true'); // Store debug mode in localStorage
             toast.info('Modo depuración activado - Mostrando todos los proyectos');
             setServerApiKeyInput('');
             return;
@@ -99,6 +100,7 @@ export default function DashboardView() {
     // Exit debug mode function
     const exitDebugMode = () => {
         setDebugMode(false);
+        localStorage.removeItem('debugMode'); // Remove debug mode from localStorage
         toast.info('Modo depuración desactivado');
     };
     

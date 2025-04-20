@@ -7,18 +7,21 @@ import EditBoardData from "@/components/boards/EditBoardData";
 import StatusLocalModal from "@/components/projects/StatusLocalModal";
 import BoardDetailsModal from "@/components/boards/BoardDetailsModal";
 import { SocketContext } from "@/context/SocketContext";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import StatusBoardLocalModal from "@/components/boards/StatusBoardLocalModal";
 import DataVarList from "@/components/dataVars/DataVarList";
 
-// import AddSnippetModal from "@/components/snippets/AddSnippetModal";
-// import SnippetsList from "@/components/snippets/SnippetsList";
+// LocalStorage key for storing unlocked projects (same as in DashboardView)
+const UNLOCKED_PROJECTS_KEY = 'unlockedProjects';
 
 function ProjectDetailsView() {
     const navigate = useNavigate()
     const params = useParams()
     // con ! le decimos a ts que ese valor siempre va a venir en el param
     const projectId = params.projectId!
+    
+    // State to track whether the current project is authorized
+    const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
     const { setServerAPI } = useContext(SocketContext);
 
@@ -29,18 +32,65 @@ function ProjectDetailsView() {
         queryFn: () => getProjectById(projectId),
     })
 
-    // Usamos useEffect para evitar setServer dentro del render
+    // Check if the project is authorized once data is loaded
     useEffect(() => {
         if (data) {
+            // First check for debug mode - if there's a project with null serverAPIKey it's a special case
+            const specialDebugMode = localStorage.getItem('debugMode') === 'true';
+            if (specialDebugMode) {
+                setIsAuthorized(true);
+                return;
+            }
+            
+            // Check if the project's serverAPIKey is in the unlocked projects list
+            try {
+                const storedProjects = localStorage.getItem(UNLOCKED_PROJECTS_KEY);
+                let unlockedProjects: string[] = [];
+                
+                if (storedProjects) {
+                    unlockedProjects = JSON.parse(storedProjects);
+                }
+                
+                // Set authorization status based on whether the project's key is in the unlocked list
+                setIsAuthorized(unlockedProjects.includes(data.serverAPIKey));
+            } catch (e) {
+                console.error('Error checking project authorization:', e);
+                setIsAuthorized(false);
+            }
+        }
+    }, [data]);
+
+    // Usamos useEffect para evitar setServer dentro del render
+    useEffect(() => {
+        if (data && isAuthorized) {
             setServerAPI(data.serverAPIKey);
         }
-    }, [data, setServerAPI]); // Ejecutamos el efecto solo cuando data cambie
+    }, [data, setServerAPI, isAuthorized]); // Ejecutamos el efecto solo cuando data o isAuthorized cambien
 
     if (isLoading) return 'cargando'
     if (isError) return <Navigate to='/404' />
+    
+    // If the project exists but user is not authorized, show access denied
+    if (data && isAuthorized === false) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 px-4">
+                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-5 w-full max-w-lg">
+                    <h2 className="text-2xl font-bold mb-4">Acceso Denegado</h2>
+                    <p className="mb-4">
+                        No tienes acceso a este proyecto. Debes desbloquearlo primero utilizando la clave API correspondiente.
+                    </p>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="bg-red-500 hover:bg-red-600 text-white font-bold px-6 py-2 rounded transition-colors"
+                    >
+                        Volver al inicio
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
-
-    if (data) return (
+    if (data && isAuthorized) return (
         <>
             <div className="py-10">
                 <StatusLocalModal />
@@ -125,6 +175,9 @@ function ProjectDetailsView() {
             <AddSnippetModal /> */}
         </>
     )
+    
+    // If we reach here, something went wrong (data loaded but isAuthorized is still null)
+    return 'Verificando acceso...';
 }
 
-export default ProjectDetailsView 
+export default ProjectDetailsView
