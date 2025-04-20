@@ -58,7 +58,6 @@ const ProjectDashboardView = () => {
 
     if (isLoading) return 'cargando'
     if (isError) return <Navigate to='/404' />
-console.log(data)
 
     // Render the dashboard when data is available
     if (data) return (
