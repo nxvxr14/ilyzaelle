@@ -20,7 +20,7 @@ export default function CreateProjectView() {
     const initialValues: ProjectFormData = {
         projectName: "",
         description: "",
-        host: "",
+        server: "",
         serverAPIKey: ""
     }
 
