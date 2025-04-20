@@ -2,6 +2,7 @@
 import { boards } from "../config/generate.js";
 import { SerialPort, firmata } from "../config/index.js";
 import { clearTimersById } from "./ClearTimers.js";
+import { xelInterval, xelTimeout } from "../utils/xeloriumLib.js";
 
 export let gVar = {}
 

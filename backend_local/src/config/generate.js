@@ -4,9 +4,13 @@ import {
   updateCodeBoardController,
 } from "../controllers/UpdateCodeBoardController.js";
 import { clearTimersById } from "../controllers/ClearTimers.js";
+// Import the new Xelorium library
+import { xelInterval, xelTimeout } from "../utils/xeloriumLib.js";
 
 export const boards = {};
 export const virtualBridges = {};
+// Export the Xelorium functions to make them available to the eval code
+export { xelInterval, xelTimeout };
 
 export const connectBoard = ({ data }) => {
   const {
