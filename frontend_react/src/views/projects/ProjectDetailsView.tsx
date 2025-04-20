@@ -93,9 +93,10 @@ function ProjectDetailsView() {
     if (data && isAuthorized) return (
         <>
             <div className="py-10">
-                <StatusLocalModal />
-                <StatusBoardLocalModal boards={data.boards}
-                    server={data.server} />
+                <StatusLocalModal boards={data.boards} 
+                    server={data.server}/>
+                {/* <StatusBoardLocalModal boards={data.boards} 
+                    server={data.server} /> */}
                 <p className="text-sm text-gray-400 italic mt-5">
                     {data.server}
                 </p>
