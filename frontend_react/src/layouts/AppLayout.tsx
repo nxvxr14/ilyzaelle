@@ -16,7 +16,7 @@ function AppLayout() {
                         </Link>
                     </div>
                     <nav>
-                        <NavMenu />
+                        {/* <NavMenu /> */}
                     </nav>
                 </div>
             </header>
@@ -26,7 +26,7 @@ function AppLayout() {
             </section>
 
             <footer className='py-5'>
-                <p className='text-center'> Ilyzaelle {new Date().getFullYear()}</p>
+                <p className='text-center'> UNAB - {new Date().getFullYear()}</p>
             </footer>
 
             <ToastContainer

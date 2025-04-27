@@ -67,7 +67,12 @@ function ProjectDetailsView() {
         }
     }, [data, setServerAPI, isAuthorized]); // Ejecutamos el efecto solo cuando data o isAuthorized cambien
 
-    if (isLoading) return 'cargando'
+    if (isLoading) return (
+        <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-pulse text-2xl font-bold text-gray-600">Cargando proyecto...</div>
+        </div>
+    )
+    
     if (isError) return <Navigate to='/404' />
     
     // If the project exists but user is not authorized, show access denied
@@ -91,90 +96,115 @@ function ProjectDetailsView() {
     }
 
     if (data && isAuthorized) return (
-        <>
-            <div className="py-10">
-                <StatusLocalModal boards={data.boards} 
-                    server={data.server}/>
-                {/* <StatusBoardLocalModal boards={data.boards} 
-                    server={data.server} /> */}
-                <p className="text-sm text-gray-400 italic mt-5">
-                    {data.server}
-                </p>
-                <p className="text-sm text-gray-400 italic mt-5">
-                    {data.serverAPIKey}
-                </p>
-                <p className='text-5xl font-black'>
-                    proyecto/{data.projectName}
-                </p>
-                <p className='text-2xl font-light text-gray-500 mt-2'>
-                    {data.description}
-                </p>
-                <nav className='my-5 flex gap-3'>
+        <div className="container mx-auto px-4 py-8">
+            {/* Project Header Section */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-10">
+                <div className="p-6">
+                    {/* Status indicator */}
+                    <div className="mb-4">
+                        <StatusLocalModal boards={data.boards} server={data.server} />
+                    </div>
+                    
+                    {/* Project Information Card */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-black text-gray-800 mb-2">
+                                {data.projectName}
+                            </h1>
+                            <p className="text-xl font-light text-gray-500 mb-4">
+                                {data.description}
+                            </p>
+                        </div>
+                        
+                        <div className="flex flex-col gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100 w-full md:w-auto">
+                            <p className="text-sm text-indigo-600 font-medium flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+                                </svg>
+                                <span className="font-semibold">Server:</span> <span className="ml-1 font-mono">{data.server}</span>
+                            </p>
+                            
+                            <p className="text-sm text-emerald-600 font-medium flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                <span className="font-semibold">API Key:</span> <span className="ml-1 font-mono bg-gray-100 px-2 py-1 rounded">{data.serverAPIKey}</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Navigation Buttons */}
+                    <div className="flex flex-wrap gap-3 mt-6">
+                        <button
+                            className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-lg cursor-pointer transition-all rounded-xl shadow-sm hover:shadow-md flex items-center gap-2"
+                            onClick={() => navigate(location.pathname + '/dashboard')}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3m0 0l3 3m-3-3v12m6-9l3-3m0 0l3 3m-3-3v12" />
+                            </svg>
+                            Dashboard
+                        </button>
+                        
+                        <button
+                            className="border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-bold px-8 py-3 text-lg cursor-pointer transition-all rounded-xl shadow-sm hover:shadow-md flex items-center gap-2"
+                            onClick={() => navigate('/')}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Volver
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Controllers Section */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                    <h2 className="text-3xl font-black text-gray-800 mb-3 md:mb-0 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        Controladores
+                    </h2>
+                    
                     <button
-                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                        onClick={() => navigate(location.pathname + '/dashboard')}
-                    >
-                        dashboard
-                    </button>
-                </nav>
-            </div >
-            <div className="mt-5">
-                <h1 className='text-5xl font-black'>
-                    user/controladores
-                </h1>
-                <nav className='my-5 flex gap-3'>
-                    <button
-                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                        className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-8 py-3 text-lg cursor-pointer transition-all rounded-xl shadow-sm hover:shadow-md flex items-center gap-2"
                         onClick={() => navigate(location.pathname + '?newBoard=true')}
                     >
-                        nuevo controlador
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nuevo controlador
                     </button>
-                </nav>
+                </div>
+                
+                <div className="bg-gray-50 rounded-lg p-4">
+                    <BoardsList boards={data.boards} />
+                </div>
             </div>
-            {/* no se realizo una funcion de lectura en boardApi porque cuando leimos ejecutamos la funcion de getProjectsbyid viene con la informacionde las boards anidadas porque las colecciones estan relacioandas */}
-            <BoardsList
-                boards={data.boards}
-            />
+
+            {/* Stored Variables Section */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                    <h2 className="text-3xl font-black text-gray-800 mb-3 md:mb-0 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Variables almacenadas
+                    </h2>
+                </div>
+                
+                <div className="bg-gray-50 rounded-lg p-4">
+                    <DataVarList dataVars={data.dataVars} />
+                </div>
+            </div>
+            
+            {/* Keep the modals */}
             <AddBoardModal />
             <EditBoardData />
-            <BoardDetailsModal
-                server={data.server}
-            />
-            {/* <CodeEditorBoardData /> */}
-            {/* <div className="py-20">
-                <h1 className='text-5xl font-black'>
-                user/snippets
-                </h1>
-                <nav className='my-5 flex gap-3'>
-                <button
-                className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                onClick={() => navigate(location.pathname + '?newSnippet=true')}
-                >
-                nuevo snippet 
-                </button>
-                </nav>
-                </div>
-                <SnippetsList />
-            <AddSnippetModal /> */}
-
-            <div className="mt-20">
-                <h1 className='text-5xl font-black'>
-                    user/almacenamiento
-                </h1>
-                <nav className='my-5 flex gap-3'>
-                    {/* <button
-                        className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                        onClick={() => navigate(location.pathname + '?newGlobalVar=true')}
-                    >
-                        nueva variable
-                    </button> */}
-                </nav>
-                <DataVarList dataVars={data.dataVars} />
-            </div>
-
-            {/* <SnippetsList />
-            <AddSnippetModal /> */}
-        </>
+            <BoardDetailsModal server={data.server} />
+        </div>
     )
     
     // If we reach here, something went wrong (data loaded but isAuthorized is still null)

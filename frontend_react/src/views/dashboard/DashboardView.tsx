@@ -111,14 +111,14 @@ export default function DashboardView() {
 
     if (data) return (
         <>
-            <h1 className='text-5xl font-black'>proyectos/</h1>
-            <p className='text-1xl font-light text-gray-500 mt-5'>maneja y administra tus proyectos</p>
+            <h1 className='text-5xl font-black'>Proyectos</h1>
+            <p className='text-1xl font-light text-gray-500 mt-5'>Administra tus proyectos</p>
 
             <div className="my-5 flex flex-col md:flex-row md:items-center gap-4">
                 <Link className='bg-black hover:bg-[#FFFF44] text-white hover:text-black px-10 py-3 text-xl font-bold cursor-pointer transition-colors rounded-2xl'
                     to='/projects/create'
                 >
-                    nuevo proyecto
+                    Nuevo proyecto
                 </Link>
                 
                 <form onSubmit={handleServerApiKeySubmit} className="flex-grow flex max-w-md">
@@ -159,33 +159,39 @@ export default function DashboardView() {
                     {visibleProjects.map((project) => (
                         <li key={project._id} className="flex justify-between gap-x-6 px-5 py-10">
                             <div className="flex min-w-0 gap-x-4">
-                                <div className="min-w-0 flex-auto space-y-2">
-                                    <Link to={`/projects/${project._id}`} className="text-gray-600 cursor-pointer hover:underline text-3xl font-bold"
-                                    >{project.projectName}</Link>
-                                    <p className="text-sm text-gray-400 italic">
-                                        {project.server}
-                                    </p>
-                                    <div
-                                        className={`inline-block px-4 py-2 rounded-lg text-center text-white text-sm 
-                                        ${project.status ? 'bg-green-500' : 'bg-red-500'}`}
+                                <div className="min-w-0 flex-auto space-y-3">
+                                    <Link to={`/projects/${project._id}`} 
+                                        className="text-gray-800 cursor-pointer text-3xl font-bold tracking-tight block transition-all duration-200 hover:text-blue-600 relative group"
                                     >
-                                        {project.status ? 'en linea' : 'desconectado'}
+                                        {project.projectName}
+                                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+                                    </Link>
+                                    
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 mb-1">
+                                        <p className="text-sm text-indigo-600 font-medium flex items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+                                            </svg>
+                                            <span>Server:</span> <span className="ml-1 font-mono">{project.server}</span>
+                                        </p>
+                                        
+                                        <p className="text-sm text-emerald-600 font-medium flex items-center mt-1 sm:mt-0">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                            </svg>
+                                            <span>API Key:</span> <span className="ml-1 font-mono bg-gray-100 px-1 rounded">{project.serverAPIKey}</span>
+                                        </p>
                                     </div>
-                                    <p className="text-sm text-gray-400">
+                                    
+                                    <p className="text-gray-500 leading-relaxed border-l-4 border-gray-200 pl-3 italic">
                                         {project.description}
                                     </p>
-                                    {/* Display serverAPIKey in debug mode */}
-                                    {debugMode && (
-                                        <p className="text-xs text-gray-500 mt-2 font-mono bg-gray-100 p-1 inline-block">
-                                            API Key: {project.serverAPIKey}
-                                        </p>
-                                    )}
                                 </div>
                             </div>
                             <div className="flex shrink-0 items-center gap-x-6">
                                 <Menu as="div" className="relative flex-none">
                                     <Menu.Button className="-m-2.5 block p-2.5 text-gray-500 hover:text-gray-900">
-                                        <span className="sr-only">opciones</span>
+                                        <span className="sr-only">Opciones</span>
                                         <EllipsisVerticalIcon className="h-9 w-9" aria-hidden="true" />
                                     </Menu.Button>
                                     <Transition as={Fragment} enter="transition ease-out duration-100"
@@ -198,7 +204,7 @@ export default function DashboardView() {
                                             <Menu.Item>
                                                 <Link to={`/projects/${project._id}`}
                                                     className='block px-3 py-1 text-sm leading-6 text-gray-900'>
-                                                    abrir
+                                                    Abrir
                                                 </Link>
                                             </Menu.Item>
                                             <Menu.Item>
@@ -206,7 +212,7 @@ export default function DashboardView() {
                                                 {/* se lee de la url  */}
                                                 <Link to={`/projects/${project._id}/edit`}
                                                     className='block px-3 py-1 text-sm leading-6 text-gray-900'>
-                                                    editar
+                                                    Editar
                                                 </Link>
                                             </Menu.Item>
                                             <Menu.Item>
@@ -215,7 +221,7 @@ export default function DashboardView() {
                                                     className='block px-3 py-1 text-sm leading-6 text-red-500'
                                                     onClick={() => mutate(project._id)}
                                                 >
-                                                    eliminar
+                                                    Eliminar
                                                 </button>
                                             </Menu.Item>
                                         </Menu.Items>
@@ -229,7 +235,7 @@ export default function DashboardView() {
                 <div className="mt-20 text-center">
                     <p className="text-3xl mb-4">:(</p>
                     <p className="text-gray-500">
-                        No tienes proyectos desbloqueados. Crea un nuevo proyecto o ingresa una clave API para ver los proyectos existentes.
+                        No tienes proyectos creados. Crea un nuevo proyecto o ingresa una clave API para ver los proyectos existentes.
                     </p>
                 </div>
             )}
