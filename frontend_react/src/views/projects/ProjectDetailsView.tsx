@@ -179,7 +179,7 @@ function ProjectDetailsView() {
                     </button>
                 </div>
                 
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="rounded-lg p-4">
                     <BoardsList boards={data.boards} />
                 </div>
             </div>
@@ -195,7 +195,7 @@ function ProjectDetailsView() {
                     </h2>
                 </div>
                 
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="rounded-lg p-4">
                     <DataVarList dataVars={data.dataVars} />
                 </div>
             </div>
