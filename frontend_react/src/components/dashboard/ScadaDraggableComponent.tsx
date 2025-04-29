@@ -45,7 +45,7 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   const [resizeStart, setResizeStart] = useState<Position>({ x: 0, y: 0 });
   const [initialSize, setInitialSize] = useState<Size>({ width: 150, height: 100 });
   const componentRef = useRef<HTMLDivElement>(null);
-  const parentRef = useRef<HTMLDivElement | null>(null);
+  const parentRef = useRef<HTMLElement | null>(null);
 
   // Solo sincronizar posición desde props en el primer renderizado
   useEffect(() => {
@@ -58,18 +58,27 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     }
   }, []);
 
-  // Calcula la escala de fuente basada en el ancho del componente
-  const getFontSize = () => {
-    const baseSize = 13;
-    const scaleFactor = Math.max(0.7, Math.min(1.7, size.width / 150));
-    return `${baseSize * scaleFactor}px`;
+  // Calcular factores de escala basados en el tamaño del componente
+  const getScaleFactor = () => {
+    const widthFactor = Math.max(0.7, Math.min(2.0, size.width / 150));
+    const heightFactor = typeof size.height === 'number' 
+      ? Math.max(0.7, Math.min(2.0, size.height / 100))
+      : 1;
+      
+    // Usar el factor menor para mantener proporciones
+    return Math.min(widthFactor, heightFactor);
   };
   
-  // Calcula el tamaño del título
+  // Escala de fuente para texto normal
+  const getFontSize = () => {
+    const baseSize = 13;
+    return `${baseSize * getScaleFactor()}px`;
+  };
+  
+  // Escala de fuente para título
   const getTitleFontSize = () => {
     const baseSize = 11;
-    const scaleFactor = Math.max(0.7, Math.min(1.7, size.width / 150));
-    return `${baseSize * scaleFactor}px`;
+    return `${baseSize * getScaleFactor()}px`;
   };
 
   // Inicio de arrastre
@@ -191,6 +200,9 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
 
   // Preparar el valor de altura para CSS
   const heightStyle = size.height === 'auto' ? 'auto' : `${size.height}px`;
+  
+  // Calcular la escala para transformar el contenido
+  const contentScale = getScaleFactor();
 
   return (
     <div
@@ -212,27 +224,34 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       onMouseDown={handleMouseDown}
     >
-      {/* Variable name (centered) */}
-      <div className="p-2 flex flex-col items-center">
-        <div 
-          className="text-yellow-400 font-medium truncate w-full text-center" 
+      {/* Contenedor principal con transformación para escalar todo el contenido */}
+      <div 
+        className="w-full h-full flex flex-col items-center justify-center"
+        style={{
+          transform: `scale(${contentScale})`,
+          transformOrigin: 'center center',
+          transition: 'transform 0.1s ease-out'
+        }}
+      >
+        {/* Variable name (centered) */}
+        <div className="text-yellow-400 font-medium truncate w-full text-center mb-2" 
           style={{ fontSize: getTitleFontSize() }}
         >
           {varName}
         </div>
         
         {/* Component content (children) with dynamic sizing */}
-        <div className="w-full flex justify-center mt-1" style={{ fontSize: getFontSize() }}>
+        <div className="w-full flex justify-center">
           {children}
         </div>
       </div>
       
       {/* Resize handle (bottom right corner) */}
       <div
-        className="absolute bottom-0 right-0 w-4 h-4 bg-yellow-500 opacity-40 hover:opacity-100 cursor-se-resize flex items-center justify-center"
+        className="absolute bottom-0 right-0 w-5 h-5 bg-yellow-500 opacity-40 hover:opacity-100 cursor-se-resize flex items-center justify-center"
         onMouseDown={handleResizeStart}
       >
-        <svg width="6" height="6" viewBox="0 0 6 6">
+        <svg width="8" height="8" viewBox="0 0 6 6">
           <path d="M0 6L6 6L6 0" fill="white" opacity="0.8" />
         </svg>
       </div>
