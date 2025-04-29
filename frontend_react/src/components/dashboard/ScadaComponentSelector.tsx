@@ -17,13 +17,16 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
     );
   }
   
-  // Determinar el tipo de variable seleccionada
+  // Determinar el tipo de variable seleccionada - corregido para detectar booleanos correctamente
   const getVarType = (varName: string) => {
-    if (!varName || !gVarData[varName]) return null;
+    if (!varName || gVarData[varName] === undefined) return null;
     
     const value = gVarData[varName];
     if (Array.isArray(value)) return 'arrayValue';
+    
+    // Corrección: Verificar explícitamente si es booleano usando typeof
     if (typeof value === 'boolean') return 'toggle';
+    
     if (typeof value === 'number' || typeof value === 'string') return ['label', 'input'];
     
     return null;
@@ -45,7 +48,7 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
             <option value="">-- Seleccione una variable --</option>
             {Object.keys(gVarData).map(varName => (
               <option key={varName} value={varName}>
-                {varName}
+                {varName} ({typeof gVarData[varName]})
               </option>
             ))}
           </select>
@@ -74,7 +77,7 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
                 onClick={() => onAddComponent('toggle', selectedVar)}
                 disabled={!selectedVar}
               >
-                Interruptor
+                Interruptor {gVarData[selectedVar] ? "(ON)" : "(OFF)"}
               </button>
             )}
             
@@ -99,6 +102,17 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
           </div>
         </div>
       </div>
+      
+      {/* Información de debug para ver el tipo detectado */}
+      {selectedVar && (
+        <div className="mt-3 p-2 bg-gray-800 rounded-md text-xs">
+          <p className="text-gray-400">
+            Variable: {selectedVar}, 
+            Valor: {String(gVarData[selectedVar])}, 
+            Tipo: {typeof gVarData[selectedVar]}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import DraggableComponent from './DraggableComponent';
-import Input from './Input';
-import Label from './Label';
-import Toggle from './Toggle';
-import ArrayValueDisplay from './ArrayValueDisplay';
+import ScadaDraggableComponent from './ScadaDraggableComponent';
+import ScadaLabelComponent from './scada/ScadaLabelComponent';
+import ScadaToggleComponent from './scada/ScadaToggleComponent';
+import ScadaInputComponent from './scada/ScadaInputComponent';
+import ScadaArrayDisplayComponent from './scada/ScadaArrayDisplayComponent';
 
 interface ScadaComponent {
   id: string;
@@ -71,27 +71,39 @@ const ScadaBackground = ({
       >
         {/* Componentes SCADA */}
         {scadaComponents.map(component => (
-          <DraggableComponent
+          <ScadaDraggableComponent
             key={component.id}
             id={component.id}
             initialPosition={component.position}
             onPositionChange={onUpdatePosition}
             onRemove={onRemoveComponent}
-            title={component.title}
+            varName={component.selectedVar}
           >
             {component.type === 'input' && (
-              <Input selectedVar={component.selectedVar} gVar={gVarData} />
+              <ScadaInputComponent 
+                selectedVar={component.selectedVar}
+                gVar={gVarData}
+              />
             )}
             {component.type === 'label' && (
-              <Label selectedVar={component.selectedVar} gVar={gVarData} />
+              <ScadaLabelComponent 
+                selectedVar={component.selectedVar}
+                gVar={gVarData}
+              />
             )}
             {component.type === 'toggle' && (
-              <Toggle selectedVar={component.selectedVar} gVar={gVarData} />
+              <ScadaToggleComponent 
+                selectedVar={component.selectedVar}
+                gVar={gVarData}
+              />
             )}
             {component.type === 'arrayValue' && (
-              <ArrayValueDisplay selectedVar={component.selectedVar} gVar={gVarData} />
+              <ScadaArrayDisplayComponent 
+                selectedVar={component.selectedVar}
+                gVar={gVarData}
+              />
             )}
-          </DraggableComponent>
+          </ScadaDraggableComponent>
         ))}
         
         {!backgroundUrl && (
