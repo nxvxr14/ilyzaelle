@@ -17,6 +17,9 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
     );
   }
   
+  // Filtrar variables que terminan con "_time"
+  const filteredVarNames = Object.keys(gVarData).filter(varName => !varName.endsWith('_time'));
+  
   // Determinar el tipo de variable seleccionada - corregido para detectar booleanos correctamente
   const getVarType = (varName: string) => {
     if (!varName || gVarData[varName] === undefined) return null;
@@ -46,9 +49,9 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
             onChange={(e) => setSelectedVar(e.target.value)}
           >
             <option value="">-- Seleccione una variable --</option>
-            {Object.keys(gVarData).map(varName => (
+            {filteredVarNames.map(varName => (
               <option key={varName} value={varName}>
-                {varName} ({typeof gVarData[varName]})
+                {varName} 
               </option>
             ))}
           </select>
@@ -67,7 +70,7 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
                 onClick={() => onAddComponent('arrayValue', selectedVar)}
                 disabled={!selectedVar}
               >
-                Valor de Array
+                Etiqueta
               </button>
             )}
             
@@ -77,7 +80,7 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
                 onClick={() => onAddComponent('toggle', selectedVar)}
                 disabled={!selectedVar}
               >
-                Interruptor {gVarData[selectedVar] ? "(ON)" : "(OFF)"}
+                Toggle
               </button>
             )}
             
@@ -104,7 +107,7 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
       </div>
       
       {/* Información de debug para ver el tipo detectado */}
-      {selectedVar && (
+      {/* {selectedVar && (
         <div className="mt-3 p-2 bg-gray-800 rounded-md text-xs">
           <p className="text-gray-400">
             Variable: {selectedVar}, 
@@ -112,7 +115,7 @@ const ScadaComponentSelector: React.FC<ScadaComponentSelectorProps> = ({ gVarDat
             Tipo: {typeof gVarData[selectedVar]}
           </p>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
