@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { SocketContext } from '@/context/SocketContext';
 import { useParams } from 'react-router-dom';
 
@@ -16,25 +16,48 @@ const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({ selectedVar, 
   const [inputValue, setInputValue] = useState<number>(
     typeof gVar[selectedVar] === 'number' ? gVar[selectedVar] : 0
   );
+  
+  // Estado para controlar si el usuario está editando activamente
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Referencia del último valor emitido
+  const lastSyncedValue = useRef(inputValue);
 
-  // Actualizar el estado local cuando cambie el valor en gVar
+  // Actualizar el estado local cuando cambie el valor en gVar, SOLO si el usuario NO está editando
   useEffect(() => {
-    if (typeof gVar[selectedVar] === 'number') {
+    if (!isEditing && typeof gVar[selectedVar] === 'number' && lastSyncedValue.current !== gVar[selectedVar]) {
       setInputValue(gVar[selectedVar]);
+      lastSyncedValue.current = gVar[selectedVar];
     }
-  }, [gVar, selectedVar]);
+  }, [gVar, selectedVar, isEditing]);
 
-  // Función para enviar el nuevo valor - CORREGIDA
+  // Función para enviar el nuevo valor
   const handleSendValue = () => {
     if (socket) {
-      // Usar exactamente el mismo evento que en el componente Input original
       socket.emit("request-gVariable-change-f-b", selectedVar, inputValue, projectId, (response: any) => {
-        // Callback para confirmar que el servidor recibió el evento
         console.log("Server acknowledged input update:", response);
       });
       
       console.log(`Input: Sending value change for ${selectedVar} to ${inputValue}`);
+      lastSyncedValue.current = inputValue;
+      setIsEditing(false); // Ya no estamos editando después de enviar
     }
+  };
+  
+  // Manejar el inicio de la edición
+  const handleFocus = () => {
+    setIsEditing(true);
+  };
+  
+  // Manejar cuando el usuario termina de editar sin presionar el botón
+  const handleBlur = () => {
+    // Opcional: Si quieres que el valor se sincronice cuando el usuario quita el foco sin presionar el botón
+    // setIsEditing(false);
+  };
+  
+  // Manejar cambio de valor en el input
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(Number(e.target.value));
   };
 
   return (
@@ -42,7 +65,9 @@ const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({ selectedVar, 
       <input
         type="number"
         value={inputValue}
-        onChange={(e) => setInputValue(Number(e.target.value))}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         className="w-12 p-1 text-xs bg-gray-800 border border-gray-600 rounded text-white"
       />
       <button
