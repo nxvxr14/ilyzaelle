@@ -25,6 +25,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
   const [toggles, setToggles] = useState<Component[]>([]); // New state for toggles
   const [selectedVar, setSelectedVar] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [scadaBackgroundUrl, setScadaBackgroundUrl] = useState<string>('');
 
   // Load from localStorage and validate with gVarData
   useEffect(() => {
@@ -44,6 +45,12 @@ export function useComponentManager(projectId: string, gVarData: any) {
         const storedInputs = loadComponents(projectId, 'inputs');
         const storedLabels = loadComponents(projectId, 'labels');
         const storedToggles = loadComponents(projectId, 'toggles'); // Load stored toggles
+        
+        // Load SCADA background URL
+        const storedScadaBackground = localStorage.getItem(`${projectId}_scada_background`);
+        if (storedScadaBackground) {
+          setScadaBackgroundUrl(storedScadaBackground);
+        }
         
         // Filter and validate charts
         const validCharts = storedCharts.filter(chart => {
@@ -94,6 +101,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
         setInputs([]);
         setLabels([]);
         setToggles([]);
+        setScadaBackgroundUrl('');
         setIsInitialized(true);
       }
     };
@@ -122,6 +130,17 @@ export function useComponentManager(projectId: string, gVarData: any) {
     if (!projectId || !isInitialized) return;
     saveComponents(projectId, 'toggles', toggles);
   }, [toggles, projectId, isInitialized]);
+
+  // Save SCADA background to localStorage
+  useEffect(() => {
+    if (!projectId || !isInitialized) return;
+    
+    if (scadaBackgroundUrl) {
+      localStorage.setItem(`${projectId}_scada_background`, scadaBackgroundUrl);
+    } else {
+      localStorage.removeItem(`${projectId}_scada_background`);
+    }
+  }, [scadaBackgroundUrl, projectId, isInitialized]);
 
   // Component management functions
   const addChart = (varName: string) => {
@@ -252,7 +271,9 @@ export function useComponentManager(projectId: string, gVarData: any) {
     setInputs([]);
     setLabels([]);
     setToggles([]);
+    setScadaBackgroundUrl('');
     clearAllComponents(projectId);
+    localStorage.removeItem(`${projectId}_scada_background`);
   };
 
   return {
@@ -274,6 +295,8 @@ export function useComponentManager(projectId: string, gVarData: any) {
     addToggle,
     removeToggle,
     updateToggleTitle,
+    scadaBackgroundUrl,
+    setScadaBackgroundUrl,
     clearAllComponents: handleClearAllComponents
   };
 }
