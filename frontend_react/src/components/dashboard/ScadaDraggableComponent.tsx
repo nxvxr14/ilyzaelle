@@ -208,17 +208,18 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     <div
       ref={componentRef}
       className={`absolute rounded-md overflow-hidden ${
-        isDragging ? 'cursor-grabbing opacity-90' : 'opacity-100'
-      } shadow-lg transition-colors`}
+        isDragging ? 'cursor-grabbing' : ''
+      } transition-all duration-200`}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
         width: `${size.width}px`,
-        height: heightStyle, // Usar el valor formateado
+        height: heightStyle,
         zIndex: isDragging || isResizing ? 10 : 1,
-        background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(4px)',
-        border: isHovered ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+        // Fondo y borde solo visibles al hacer hover o cuando se arrastra/redimensiona
+        background: isHovered || isDragging || isResizing ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+        border: isHovered || isDragging || isResizing ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
+        boxShadow: isHovered || isDragging || isResizing ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -230,33 +231,50 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
         style={{
           transform: `scale(${contentScale})`,
           transformOrigin: 'center center',
-          transition: 'transform 0.1s ease-out'
+          transition: 'transform 0.1s ease-out',
+          // Padding reducido para hacer el componente más compacto
+          padding: isHovered || isDragging || isResizing ? '8px' : '4px'
         }}
       >
-        {/* Variable name (centered) */}
-        <div className="text-yellow-400 font-medium truncate w-full text-center mb-2" 
-          style={{ fontSize: getTitleFontSize() }}
+        {/* Variable name (centrado) */}
+        <div 
+          className="font-bold truncate w-full text-center" 
+          style={{ 
+            fontSize: getTitleFontSize(),
+            color: 'black',
+            textShadow: '0px 0px 2px white, 0px 0px 3px white', // Sombra de texto blanca para legibilidad
+            marginBottom: '2px' // Margen reducido entre título y valor
+          }}
         >
           {varName}
         </div>
         
-        {/* Component content (children) with dynamic sizing */}
-        <div className="w-full flex justify-center">
+        {/* Componente hijo con estilo de valor */}
+        <div 
+          className="w-full flex justify-center font-bold" 
+          style={{ 
+            fontSize: getFontSize(),
+            color: 'black',
+            textShadow: '0px 0px 2px white, 0px 0px 3px white' // Sombra de texto blanca para legibilidad
+          }}
+        >
           {children}
         </div>
       </div>
       
-      {/* Resize handle (bottom right corner) */}
-      <div
-        className="absolute bottom-0 right-0 w-5 h-5 bg-yellow-500 opacity-40 hover:opacity-100 cursor-se-resize flex items-center justify-center"
-        onMouseDown={handleResizeStart}
-      >
-        <svg width="8" height="8" viewBox="0 0 6 6">
-          <path d="M0 6L6 6L6 0" fill="white" opacity="0.8" />
-        </svg>
-      </div>
+      {/* Resize handle (solo visible al hacer hover) */}
+      {(isHovered || isResizing) && (
+        <div
+          className="absolute bottom-0 right-0 w-5 h-5 bg-yellow-500 opacity-40 hover:opacity-100 cursor-se-resize flex items-center justify-center"
+          onMouseDown={handleResizeStart}
+        >
+          <svg width="8" height="8" viewBox="0 0 6 6">
+            <path d="M0 6L6 6L6 0" fill="white" opacity="0.8" />
+          </svg>
+        </div>
+      )}
       
-      {/* Remove button (appears on hover) */}
+      {/* Remove button (aparece solo al hacer hover) */}
       {isHovered && (
         <button 
           className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full opacity-70 hover:opacity-100 transition-opacity"
