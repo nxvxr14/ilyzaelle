@@ -175,7 +175,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
   // Guardar componentes de SCADA en el localStorage
   useEffect(() => {
     if (!projectId || !isInitialized) return;
-    localStorage.setItem(`${projectId}_scada_components`, JSON.stringify(scadaComponents));
+    saveScadaComponentsToStorage(scadaComponents);
   }, [scadaComponents, projectId, isInitialized]);
 
   // Component management functions
@@ -314,12 +314,18 @@ export function useComponentManager(projectId: string, gVarData: any) {
       type = 'arrayValue';
     }
   
-    // Crear el nuevo componente
+    // Posición inicial con offset aleatorio para evitar superposición
+    const randomOffset = {
+      x: Math.floor(Math.random() * 100), // Valor aleatorio entre 0-100
+      y: Math.floor(Math.random() * 100)  // Valor aleatorio entre 0-100
+    };
+    
+    // Crear el nuevo componente con posición inicial aleatoria
     const newComponent: ScadaComponent = {
       id: `scada-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type,
       selectedVar: varName,
-      position: { x: 50, y: 50 }, // Posición inicial
+      position: { x: 50 + randomOffset.x, y: 50 + randomOffset.y }, // Posición inicial con offset
       title: `${varName} (${type})`
     };
     
@@ -331,9 +337,35 @@ export function useComponentManager(projectId: string, gVarData: any) {
   };
   
   const updateScadaComponentPosition = (id: string, position: { x: number, y: number }) => {
-    setScadaComponents(prev => prev.map(comp => 
-      comp.id === id ? { ...comp, position } : comp
-    ));
+    // Asegurar que la posición tiene valores válidos
+    if (!position || typeof position.x !== 'number' || typeof position.y !== 'number') {
+      console.error('Invalid position:', position);
+      return;
+    }
+    
+    // Actualizar estado con la nueva posición
+    setScadaComponents(prev => {
+      // Crear un nuevo array con la posición actualizada
+      const updated = prev.map(comp => {
+        if (comp.id === id) {
+          // Crear un nuevo objeto de componente con la nueva posición
+          return {
+            ...comp,
+            position: { 
+              x: position.x,
+              y: position.y
+            }
+          };
+        }
+        return comp;
+      });
+      
+      // Guardar el estado actualizado en localStorage
+      const storageKey = `${projectId}_scada_components`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      
+      return updated;
+    });
   };
   
   const updateScadaComponentTitle = (id: string, title: string) => {
@@ -352,6 +384,65 @@ export function useComponentManager(projectId: string, gVarData: any) {
     clearAllComponents(projectId);
     localStorage.removeItem(`${projectId}_scada_background`);
     localStorage.removeItem(`${projectId}_scada_components`);
+  };
+
+  useEffect(() => {
+    if (!projectId || !gVarData) return;
+    
+    try {
+      console.log('Loading SCADA components from localStorage');
+      const storedComponentsJson = localStorage.getItem(`${projectId}_scada_components`);
+      
+      if (storedComponentsJson) {
+        const parsedComponents = JSON.parse(storedComponentsJson);
+        
+        // Validar componentes y sus posiciones
+        const validComponents = parsedComponents.filter((comp: ScadaComponent) => {
+          // Verificar que el componente tenga todos los campos necesarios
+          const isValid = comp && 
+                         comp.selectedVar && 
+                         comp.id && 
+                         comp.position && 
+                         typeof comp.position.x === 'number' &&
+                         typeof comp.position.y === 'number' &&
+                         gVarData[comp.selectedVar] !== undefined;
+          
+          if (!isValid) {
+            console.warn(`Skipping invalid SCADA component:`, comp);
+          }
+          
+          return isValid;
+        });
+        
+        console.log(`Loaded ${validComponents.length} valid SCADA components`);
+        
+        // Solo actualizar si hay componentes válidos
+        if (validComponents.length > 0) {
+          setScadaComponents(validComponents);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading SCADA components from localStorage:', error);
+    }
+  }, [projectId, gVarData, isInitialized]);
+
+  // Función robusta para guardar componentes en localStorage
+  const saveScadaComponentsToStorage = (components: ScadaComponent[]) => {
+    if (!projectId || !isInitialized) return;
+    
+    try {
+      const storageKey = `${projectId}_scada_components`;
+      localStorage.setItem(storageKey, JSON.stringify(components));
+      console.log(`Successfully saved ${components.length} SCADA components to localStorage`);
+      
+      // Verificar que se guardó correctamente
+      const savedData = localStorage.getItem(storageKey);
+      if (!savedData) {
+        console.error('Failed to verify saved SCADA components');
+      }
+    } catch (error) {
+      console.error('Error saving SCADA components to localStorage:', error);
+    }
   };
 
   return {

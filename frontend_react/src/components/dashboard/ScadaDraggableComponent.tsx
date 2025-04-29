@@ -27,7 +27,13 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   children,
   varName
 }) => {
-  const [position, setPosition] = useState<Position>(initialPosition);
+  // IMPORTANTE: Usar un useRef para mantener la posición inicial solo al montar el componente
+  const initialLoadDone = useRef(false);
+
+  const [position, setPosition] = useState<Position>({
+    x: initialPosition?.x || 50,
+    y: initialPosition?.y || 50
+  });
   const [size, setSize] = useState<Size>({ width: 150, height: 'auto' });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -37,8 +43,17 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   const [initialSize, setInitialSize] = useState<Size>({ width: 150, height: 100 });
   const componentRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement | null>(null);
-  const [parentSize, setParentSize] = useState<{ width: number, height: number } | null>(null);
-  const [relativePosition, setRelativePosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+
+  // Solo sincronizar posición desde props en el primer renderizado
+  useEffect(() => {
+    if (!initialLoadDone.current && initialPosition) {
+      setPosition({
+        x: initialPosition.x,
+        y: initialPosition.y
+      });
+      initialLoadDone.current = true;
+    }
+  }, []);
 
   // Calcula la escala de fuente basada en el ancho del componente
   const getFontSize = () => {
@@ -54,54 +69,9 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     return `${baseSize * scaleFactor}px`;
   };
 
-  // Efecto para manejar el mantenimiento de posición relativa
-  useEffect(() => {
-    if (componentRef.current) {
-      parentRef.current = componentRef.current.parentElement;
-      if (parentRef.current) {
-        const parentWidth = parentRef.current.clientWidth;
-        const parentHeight = parentRef.current.clientHeight;
-        setParentSize({ width: parentWidth, height: parentHeight });
-        
-        // Calcula la posición relativa (porcentaje)
-        setRelativePosition({
-          x: position.x / parentWidth,
-          y: position.y / parentHeight
-        });
-      }
-    }
-  }, [position]);
-
-  // Actualiza la posición cuando cambia el tamaño del padre
-  useEffect(() => {
-    const handleResize = () => {
-      if (parentRef.current) {
-        const newParentWidth = parentRef.current.clientWidth;
-        const newParentHeight = parentRef.current.clientHeight;
-        
-        if (parentSize && (parentSize.width !== newParentWidth || parentSize.height !== newParentHeight)) {
-          const newX = relativePosition.x * newParentWidth;
-          const newY = relativePosition.y * newParentHeight;
-          
-          setPosition({
-            x: newX,
-            y: newY
-          });
-          
-          setParentSize({ width: newParentWidth, height: newParentHeight });
-        }
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [relativePosition, parentSize]);
-
+  // Inicio de arrastre
   const handleMouseDown = (e: React.MouseEvent) => {
-    // No iniciar arrastre si el clic fue en un input o elemento interactivo
+    // No permitir arrastrar cuando se hace clic en elementos interactivos
     if (
       e.target instanceof HTMLInputElement || 
       e.target instanceof HTMLButtonElement ||
@@ -110,26 +80,32 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
       (e.target as HTMLElement).closest('button') ||
       (e.target as HTMLElement).closest('textarea')
     ) {
-      // No hacer nada si el clic fue en un elemento interactivo
       return;
     }
 
     e.preventDefault();
+    
     if (componentRef.current) {
+      parentRef.current = componentRef.current.parentElement;
+      
       const rect = componentRef.current.getBoundingClientRect();
       setDragOffset({
         x: e.clientX - rect.left,
         y: e.clientY - rect.top
       });
+      
       setIsDragging(true);
     }
   };
 
+  // Inicio de redimensionamiento
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
     setIsResizing(true);
     setResizeStart({ x: e.clientX, y: e.clientY });
+    
     if (componentRef.current) {
       setInitialSize({ 
         width: componentRef.current.offsetWidth,
@@ -138,13 +114,16 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     }
   };
 
+  // Manejo de movimiento de ratón para arrastre o redimensionamiento
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging && componentRef.current && parentRef.current) {
       const parentRect = parentRef.current.getBoundingClientRect();
+      
+      // Calcular la nueva posición
       const newX = e.clientX - parentRect.left - dragOffset.x;
       const newY = e.clientY - parentRect.top - dragOffset.y;
       
-      // Ensure component stays within parent bounds
+      // Asegurar que el componente permanece dentro de los límites del padre
       const compWidth = componentRef.current.offsetWidth;
       const compHeight = componentRef.current.offsetHeight;
       
@@ -155,27 +134,39 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
         x: boundedX,
         y: boundedY
       });
-    } else if (isResizing) {
+    } 
+    else if (isResizing && componentRef.current) {
+      // Redimensionar el componente
       const deltaX = e.clientX - resizeStart.x;
       const newWidth = Math.max(100, initialSize.width + deltaX);
       
       setSize({
         width: newWidth,
-        height: 'auto' // Let height adjust automatically
+        height: 'auto' 
       });
     }
   };
 
+  // Finalización de arrastre o redimensionamiento
   const handleMouseUp = () => {
     if (isDragging) {
+      // Notificar la posición final al padre - clonar el objeto para evitar referencia
+      const finalPosition = { 
+        x: position.x,
+        y: position.y
+      };
+      
       setIsDragging(false);
-      onPositionChange(id, position);
+      // Notificar cambio inmediatamente
+      onPositionChange(id, finalPosition);
     }
+    
     if (isResizing) {
       setIsResizing(false);
     }
   };
 
+  // Agregar y quitar event listeners según el estado
   useEffect(() => {
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -186,14 +177,14 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, isResizing]);
+  }, [isDragging, isResizing, position]);
 
   return (
     <div
       ref={componentRef}
       className={`absolute rounded-md overflow-hidden ${
         isDragging ? 'cursor-grabbing opacity-90' : 'opacity-100'
-      } shadow-lg transition-all`}
+      } shadow-lg transition-colors`}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,

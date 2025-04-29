@@ -39,6 +39,18 @@ const ScadaBackground = ({
     setBackgroundUrl(inputUrl);
   };
 
+  // Agregar un log para depuración
+  console.log('ScadaBackground rendering with components:', scadaComponents);
+
+  // Asegurar que la posición se pase correctamente sin modificaciones intermedias
+  const handlePositionChange = (id: string, newPosition: { x: number; y: number }) => {
+    // Llamada directa sin timeouts ni modificaciones
+    onUpdatePosition(id, {
+      x: newPosition.x,
+      y: newPosition.y
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="mb-4">
@@ -74,8 +86,8 @@ const ScadaBackground = ({
           <ScadaDraggableComponent
             key={component.id}
             id={component.id}
-            initialPosition={component.position}
-            onPositionChange={onUpdatePosition}
+            initialPosition={component.position} // Asegurar que esto se pasa correctamente
+            onPositionChange={handlePositionChange}
             onRemove={onRemoveComponent}
             varName={component.selectedVar}
           >
