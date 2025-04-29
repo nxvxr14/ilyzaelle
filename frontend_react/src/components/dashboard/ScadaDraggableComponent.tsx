@@ -5,9 +5,10 @@ type Position = {
   y: number;
 };
 
+// Modificar el tipo Size para permitir tanto números como 'auto'
 type Size = {
   width: number;
-  height: number;
+  height: number | 'auto'; // Permitir 'auto' como valor válido
 };
 
 interface ScadaDraggableComponentProps {
@@ -34,7 +35,9 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     x: initialPosition?.x || 50,
     y: initialPosition?.y || 50
   });
-  const [size, setSize] = useState<Size>({ width: 150, height: 'auto' });
+  
+  // Estado para el tamaño con altura inicial como número
+  const [size, setSize] = useState<Size>({ width: 150, height: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -107,6 +110,7 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     setResizeStart({ x: e.clientX, y: e.clientY });
     
     if (componentRef.current) {
+      // Guardar el tamaño actual como números para poder redimensionar
       setInitialSize({ 
         width: componentRef.current.offsetWidth,
         height: componentRef.current.offsetHeight 
@@ -136,13 +140,20 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
       });
     } 
     else if (isResizing && componentRef.current) {
-      // Redimensionar el componente
+      // Redimensionar el componente en ambas dimensiones
       const deltaX = e.clientX - resizeStart.x;
-      const newWidth = Math.max(100, initialSize.width + deltaX);
+      const deltaY = e.clientY - resizeStart.y;
       
+      // Calcular nuevas dimensiones con límites mínimos
+      const newWidth = Math.max(100, initialSize.width + deltaX);
+      const newHeight = Math.max(50, 
+        typeof initialSize.height === 'number' ? initialSize.height + deltaY : 100 + deltaY
+      );
+      
+      // Actualizar el tamaño
       setSize({
         width: newWidth,
-        height: 'auto' 
+        height: newHeight // Ahora usamos el alto calculado
       });
     }
   };
@@ -150,14 +161,13 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   // Finalización de arrastre o redimensionamiento
   const handleMouseUp = () => {
     if (isDragging) {
-      // Notificar la posición final al padre - clonar el objeto para evitar referencia
+      // Notificar la posición final al padre
       const finalPosition = { 
         x: position.x,
         y: position.y
       };
       
       setIsDragging(false);
-      // Notificar cambio inmediatamente
       onPositionChange(id, finalPosition);
     }
     
@@ -179,6 +189,9 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     };
   }, [isDragging, isResizing, position]);
 
+  // Preparar el valor de altura para CSS
+  const heightStyle = size.height === 'auto' ? 'auto' : `${size.height}px`;
+
   return (
     <div
       ref={componentRef}
@@ -189,7 +202,7 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
         left: `${position.x}px`,
         top: `${position.y}px`,
         width: `${size.width}px`,
-        height: size.height !== 'auto' ? `${size.height}px` : 'auto',
+        height: heightStyle, // Usar el valor formateado
         zIndex: isDragging || isResizing ? 10 : 1,
         background: 'rgba(0, 0, 0, 0.7)',
         backdropFilter: 'blur(4px)',
@@ -216,9 +229,13 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
       
       {/* Resize handle (bottom right corner) */}
       <div
-        className="absolute bottom-0 right-0 w-3 h-3 bg-yellow-500 opacity-40 hover:opacity-100 cursor-se-resize"
+        className="absolute bottom-0 right-0 w-4 h-4 bg-yellow-500 opacity-40 hover:opacity-100 cursor-se-resize flex items-center justify-center"
         onMouseDown={handleResizeStart}
-      ></div>
+      >
+        <svg width="6" height="6" viewBox="0 0 6 6">
+          <path d="M0 6L6 6L6 0" fill="white" opacity="0.8" />
+        </svg>
+      </div>
       
       {/* Remove button (appears on hover) */}
       {isHovered && (
