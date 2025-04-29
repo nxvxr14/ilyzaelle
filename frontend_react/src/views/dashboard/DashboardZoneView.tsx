@@ -68,15 +68,13 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                     </div>
                 </div>
                 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-6">
-                    <GlobalVarList
-                        gVarData={gVarData}
-                        onAddChart={addChart}
-                        onAddLabel={addLabel}
-                        onAddInput={addInput}
-                        onAddToggle={addToggle}
-                    />
-                </div>
+                <GlobalVarList
+                    gVarData={gVarData}
+                    onAddChart={addChart}
+                    onAddLabel={addLabel}
+                    onAddInput={addInput}
+                    onAddToggle={addToggle}
+                />
             </div>
 
             <AddGlobalVarModal />
