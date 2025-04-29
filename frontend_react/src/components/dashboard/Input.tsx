@@ -30,7 +30,7 @@ function InputVar({ selectedVar, gVar }: varProps) {
 
     return (
         <div className="space-y-5">
-            {gVar[selectedVar]}
+            {/* {gVar[selectedVar]} */}
             <input
                 className="w-full p-3 border-gray-300 border rounded-2xl"
                 type="number"

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useContext, useRef, useEffect } from 'react';
 import { SocketContext } from '@/context/SocketContext';
 import { useParams } from 'react-router-dom';
 
@@ -11,72 +11,68 @@ const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({ selectedVar, 
   const { socket } = useContext(SocketContext);
   const params = useParams();
   const projectId = params.projectId!;
+  const inputRef = useRef<HTMLInputElement>(null);
   
-  // Obtener el valor actual y guardarlo en el estado local
-  const [inputValue, setInputValue] = useState<number>(
-    typeof gVar[selectedVar] === 'number' ? gVar[selectedVar] : 0
-  );
-  
-  // Estado para controlar si el usuario está editando activamente
-  const [isEditing, setIsEditing] = useState(false);
-  
-  // Referencia del último valor emitido
-  const lastSyncedValue = useRef(inputValue);
+  // Usamos ref en lugar de estado para evitar actualizaciones innecesarias
+  const valueRef = useRef<number>(typeof gVar[selectedVar] === 'number' ? gVar[selectedVar] : 0);
 
-  // Actualizar el estado local cuando cambie el valor en gVar, SOLO si el usuario NO está editando
+  // Actualiza el valor mostrado cuando cambia gVar
   useEffect(() => {
-    if (!isEditing && typeof gVar[selectedVar] === 'number' && lastSyncedValue.current !== gVar[selectedVar]) {
-      setInputValue(gVar[selectedVar]);
-      lastSyncedValue.current = gVar[selectedVar];
+    if (typeof gVar[selectedVar] === 'number' && inputRef.current) {
+      // Solo actualizamos si no estamos editando
+      if (document.activeElement !== inputRef.current) {
+        inputRef.current.value = gVar[selectedVar].toString();
+        valueRef.current = gVar[selectedVar];
+      }
     }
-  }, [gVar, selectedVar, isEditing]);
+  }, [gVar, selectedVar]);
 
-  // Función para enviar el nuevo valor
-  const handleSendValue = () => {
-    if (socket) {
-      socket.emit("request-gVariable-change-f-b", selectedVar, inputValue, projectId, (response: any) => {
-        console.log("Server acknowledged input update:", response);
-      });
+  // Enviar el valor cuando se presiona Enter
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const numValue = parseFloat(inputRef.current?.value || '0');
+      valueRef.current = numValue;
       
-      console.log(`Input: Sending value change for ${selectedVar} to ${inputValue}`);
-      lastSyncedValue.current = inputValue;
-      setIsEditing(false); // Ya no estamos editando después de enviar
+      if (socket && !isNaN(numValue)) {
+        socket.emit("request-gVariable-change-f-b", selectedVar, numValue, projectId);
+      }
+      
+      // Quitar el foco del input
+      inputRef.current?.blur();
     }
   };
-  
-  // Manejar el inicio de la edición
-  const handleFocus = () => {
-    setIsEditing(true);
+
+  // Función para asegurar que el input obtiene el foco al hacer clic
+  const handleForceFocus = () => {
+    inputRef.current?.focus();
   };
-  
-  // Manejar cuando el usuario termina de editar
+
+  // También enviar al perder el foco
   const handleBlur = () => {
-    setIsEditing(false);
-  };
-  
-  // Manejar cambio de valor en el input
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(Number(e.target.value));
-  };
-  
-  // Manejar la tecla Enter
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSendValue();
-      e.currentTarget.blur(); // Quitar el foco después de enviar
+    const numValue = parseFloat(inputRef.current?.value || '0');
+    if (!isNaN(numValue) && socket) {
+      socket.emit("request-gVariable-change-f-b", selectedVar, numValue, projectId);
     }
   };
 
   return (
-    <div className="flex w-full justify-center">
+    <div className="w-full" onClick={handleForceFocus}>
       <input
-        type="number"
-        value={inputValue}
-        onChange={handleChange}
-        onFocus={handleFocus}
+        ref={inputRef}
+        type="text"
+        inputMode="numeric"
+        defaultValue={valueRef.current}
+        onKeyDown={handleKeyPress}
         onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        className="w-full py-1 px-2 text-center bg-gray-800 border border-gray-600 hover:border-gray-400 focus:border-blue-500 rounded text-white outline-none"
+        className="w-full text-center bg-gray-800 text-white border border-gray-600 rounded p-1 text-sm outline-none focus:border-yellow-400"
+        style={{ 
+          cursor: 'text', 
+          pointerEvents: 'auto', 
+          touchAction: 'auto' 
+        }}
+        tabIndex={0}
+        autoComplete="off"
+        readOnly={false}
       />
     </div>
   );

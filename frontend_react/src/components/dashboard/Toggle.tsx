@@ -48,7 +48,7 @@ function Toggle({ selectedVar, gVar }: varProps) {
             </div>
             
             <div className="mt-2 text-sm text-gray-400">
-                Value: {isOn ? "true" : "false"}
+                {isOn ? "true" : "false"}
             </div>
         </div>
     );

@@ -101,6 +101,19 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   }, [relativePosition, parentSize]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // No iniciar arrastre si el clic fue en un input o elemento interactivo
+    if (
+      e.target instanceof HTMLInputElement || 
+      e.target instanceof HTMLButtonElement ||
+      e.target instanceof HTMLTextAreaElement ||
+      (e.target as HTMLElement).closest('input') ||
+      (e.target as HTMLElement).closest('button') ||
+      (e.target as HTMLElement).closest('textarea')
+    ) {
+      // No hacer nada si el clic fue en un elemento interactivo
+      return;
+    }
+
     e.preventDefault();
     if (componentRef.current) {
       const rect = componentRef.current.getBoundingClientRect();
