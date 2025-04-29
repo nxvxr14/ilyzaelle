@@ -18,11 +18,21 @@ interface Component {
   title: string;
 }
 
+// Definir nuevas interfaces para componentes SCADA
+interface ScadaComponent {
+  id: string;
+  type: 'input' | 'label' | 'toggle' | 'arrayValue';
+  selectedVar: string;
+  position: { x: number; y: number };
+  title: string;
+}
+
 export function useComponentManager(projectId: string, gVarData: any) {
   const [charts, setCharts] = useState<Component[]>([]);
   const [inputs, setInputs] = useState<Component[]>([]);
   const [labels, setLabels] = useState<Component[]>([]);
   const [toggles, setToggles] = useState<Component[]>([]); // New state for toggles
+  const [scadaComponents, setScadaComponents] = useState<ScadaComponent[]>([]); // New state for SCADA components
   const [selectedVar, setSelectedVar] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [scadaBackgroundUrl, setScadaBackgroundUrl] = useState<string>('');
@@ -141,6 +151,32 @@ export function useComponentManager(projectId: string, gVarData: any) {
       localStorage.removeItem(`${projectId}_scada_background`);
     }
   }, [scadaBackgroundUrl, projectId, isInitialized]);
+
+  // Cargar componentes de SCADA del localStorage
+  useEffect(() => {
+    if (!projectId || !isInitialized) return;
+    
+    try {
+      const storedComponents = localStorage.getItem(`${projectId}_scada_components`);
+      if (storedComponents) {
+        const parsedComponents = JSON.parse(storedComponents);
+        // Validar componentes (asegurarse de que las variables existen)
+        const validComponents = parsedComponents.filter((comp: ScadaComponent) => 
+          comp.selectedVar && gVarData && gVarData[comp.selectedVar] !== undefined
+        );
+        setScadaComponents(validComponents);
+      }
+    } catch (error) {
+      console.error('Error loading SCADA components:', error);
+      setScadaComponents([]);
+    }
+  }, [projectId, gVarData, isInitialized]);
+
+  // Guardar componentes de SCADA en el localStorage
+  useEffect(() => {
+    if (!projectId || !isInitialized) return;
+    localStorage.setItem(`${projectId}_scada_components`, JSON.stringify(scadaComponents));
+  }, [scadaComponents, projectId, isInitialized]);
 
   // Component management functions
   const addChart = (varName: string) => {
@@ -266,14 +302,56 @@ export function useComponentManager(projectId: string, gVarData: any) {
     ));
   };
 
+  // Funciones para manejar componentes de SCADA
+  const addScadaComponent = (type: 'input' | 'label' | 'toggle' | 'arrayValue', varName: string) => {
+    if (!varName || !gVarData || gVarData[varName] === undefined) {
+      console.warn(`Cannot add SCADA component: Variable "${varName}" does not exist`);
+      return;
+    }
+    
+    // Para arrays, usar arrayValue en lugar de chart
+    if (Array.isArray(gVarData[varName]) && type !== 'arrayValue') {
+      type = 'arrayValue';
+    }
+  
+    // Crear el nuevo componente
+    const newComponent: ScadaComponent = {
+      id: `scada-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      selectedVar: varName,
+      position: { x: 50, y: 50 }, // Posición inicial
+      title: `${varName} (${type})`
+    };
+    
+    setScadaComponents(prev => [...prev, newComponent]);
+  };
+  
+  const removeScadaComponent = (id: string) => {
+    setScadaComponents(prev => prev.filter(comp => comp.id !== id));
+  };
+  
+  const updateScadaComponentPosition = (id: string, position: { x: number, y: number }) => {
+    setScadaComponents(prev => prev.map(comp => 
+      comp.id === id ? { ...comp, position } : comp
+    ));
+  };
+  
+  const updateScadaComponentTitle = (id: string, title: string) => {
+    setScadaComponents(prev => prev.map(comp => 
+      comp.id === id ? { ...comp, title } : comp
+    ));
+  };
+
   const handleClearAllComponents = () => {
     setCharts([]);
     setInputs([]);
     setLabels([]);
     setToggles([]);
     setScadaBackgroundUrl('');
+    setScadaComponents([]);
     clearAllComponents(projectId);
     localStorage.removeItem(`${projectId}_scada_background`);
+    localStorage.removeItem(`${projectId}_scada_components`);
   };
 
   return {
@@ -281,6 +359,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
     inputs,
     labels,
     toggles,
+    scadaComponents,
     selectedVar,
     setSelectedVar,
     addChart,
@@ -295,6 +374,10 @@ export function useComponentManager(projectId: string, gVarData: any) {
     addToggle,
     removeToggle,
     updateToggleTitle,
+    addScadaComponent,
+    removeScadaComponent,
+    updateScadaComponentPosition,
+    updateScadaComponentTitle,
     scadaBackgroundUrl,
     setScadaBackgroundUrl,
     clearAllComponents: handleClearAllComponents

@@ -9,6 +9,7 @@ import { useComponentManager } from "@/hooks/useComponentManager";
 import RemovableComponent from "@/components/dashboard/RemovableComponent";
 import ClearDashboardButton from "@/components/dashboard/ClearDashboardButton";
 import ScadaBackground from "@/components/dashboard/ScadaBackground";
+import ScadaComponentSelector from "@/components/dashboard/ScadaComponentSelector";
 import { useState } from "react";
 
 function DashboardZoneView({ gVarData }: { gVarData: any }) {
@@ -36,7 +37,12 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
         updateToggleTitle,
         scadaBackgroundUrl,
         setScadaBackgroundUrl,
-        clearAllComponents
+        clearAllComponents,
+        scadaComponents,
+        addScadaComponent,
+        removeScadaComponent,
+        updateScadaComponentPosition,
+        updateScadaComponentTitle,
     } = useComponentManager(projectId, gVarData);
 
     if (!gVarData) {
@@ -213,9 +219,21 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                             Panel SCADA
                         </h2>
                         
+                        <div className="mb-6">
+                            <ScadaComponentSelector 
+                                gVarData={gVarData}
+                                onAddComponent={addScadaComponent}
+                            />
+                        </div>
+                        
                         <ScadaBackground 
                             backgroundUrl={scadaBackgroundUrl} 
-                            setBackgroundUrl={setScadaBackgroundUrl} 
+                            setBackgroundUrl={setScadaBackgroundUrl}
+                            scadaComponents={scadaComponents}
+                            onRemoveComponent={removeScadaComponent}
+                            onUpdatePosition={updateScadaComponentPosition}
+                            onUpdateTitle={updateScadaComponentTitle}
+                            gVarData={gVarData}
                         />
                     </>
                 )}

@@ -1,11 +1,37 @@
 import { useState } from 'react';
+import DraggableComponent from './DraggableComponent';
+import Input from './Input';
+import Label from './Label';
+import Toggle from './Toggle';
+import ArrayValueDisplay from './ArrayValueDisplay';
+
+interface ScadaComponent {
+  id: string;
+  type: 'input' | 'label' | 'toggle' | 'arrayValue';
+  selectedVar: string;
+  position: { x: number; y: number };
+  title: string;
+}
 
 interface ScadaBackgroundProps {
   backgroundUrl: string;
   setBackgroundUrl: (url: string) => void;
+  scadaComponents: ScadaComponent[];
+  onRemoveComponent: (id: string) => void;
+  onUpdatePosition: (id: string, position: { x: number; y: number }) => void;
+  onUpdateTitle: (id: string, title: string) => void;
+  gVarData: any;
 }
 
-const ScadaBackground = ({ backgroundUrl, setBackgroundUrl }: ScadaBackgroundProps) => {
+const ScadaBackground = ({ 
+  backgroundUrl, 
+  setBackgroundUrl, 
+  scadaComponents,
+  onRemoveComponent,
+  onUpdatePosition,
+  onUpdateTitle,
+  gVarData
+}: ScadaBackgroundProps) => {
   const [inputUrl, setInputUrl] = useState(backgroundUrl || '');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,6 +69,31 @@ const ScadaBackground = ({ backgroundUrl, setBackgroundUrl }: ScadaBackgroundPro
           minHeight: '70vh'
         }}
       >
+        {/* Componentes SCADA */}
+        {scadaComponents.map(component => (
+          <DraggableComponent
+            key={component.id}
+            id={component.id}
+            initialPosition={component.position}
+            onPositionChange={onUpdatePosition}
+            onRemove={onRemoveComponent}
+            title={component.title}
+          >
+            {component.type === 'input' && (
+              <Input selectedVar={component.selectedVar} gVar={gVarData} />
+            )}
+            {component.type === 'label' && (
+              <Label selectedVar={component.selectedVar} gVar={gVarData} />
+            )}
+            {component.type === 'toggle' && (
+              <Toggle selectedVar={component.selectedVar} gVar={gVarData} />
+            )}
+            {component.type === 'arrayValue' && (
+              <ArrayValueDisplay selectedVar={component.selectedVar} gVar={gVarData} />
+            )}
+          </DraggableComponent>
+        ))}
+        
         {!backgroundUrl && (
           <div className="absolute inset-0 flex items-center justify-center text-gray-500">
             <div className="text-center p-8">
