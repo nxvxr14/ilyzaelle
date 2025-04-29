@@ -14,6 +14,8 @@ type BoardsListProps = {
 const boardNames: { [key: number]: string } = {
     1: 'Arduino Uno',
     2: 'Xelorium',
+    3: 'PLC328P',
+    4: 'FactoryIO',
 };
 
 const groupNames: { [key: string]: string } = {

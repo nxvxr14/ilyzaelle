@@ -65,7 +65,7 @@ export default function EditTaskModal({ data, boardId }: EditBoardModalProps) {
     return (
         <Transition appear show={true} as={Fragment}>
             {/* con pathname quitamos los query paramtros  */}
-            <Dialog as="div" className="relative z-10" onClose={() => navigate(location.pathname, { replace: true })}>
+            <Dialog as="div" className="relative z-50" onClose={() => navigate(location.pathname, { replace: true })}>
                 <Transition.Child
                     as={Fragment}
                     enter="ease-out duration-300"
@@ -75,7 +75,7 @@ export default function EditTaskModal({ data, boardId }: EditBoardModalProps) {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="fixed inset-0 bg-black/60" />
+                    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 overflow-y-auto">
@@ -89,32 +89,34 @@ export default function EditTaskModal({ data, boardId }: EditBoardModalProps) {
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                         >
-                            <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all p-16">
-                                <Dialog.Title
-                                    as="h3"
-                                    className="font-black text-4xl  my-5"
-                                >
-                                    Editar Tarea
-                                </Dialog.Title>
-
-                                <p className="text-xl font-bold">Realiza cambios a una board en {''}
-                                    {/* <span className="text-fuchsia-600">este formulario</span> */}
-                                </p>
+                            <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-3xl bg-white text-left align-middle shadow-2xl transition-all p-8 md:p-12 border border-gray-100">
+                                <div className="border-l-8 border-yellow-400 pl-5 mb-8">
+                                    <Dialog.Title
+                                        as="h3"
+                                        className="font-black text-3xl md:text-4xl text-gray-900 mb-2"
+                                    >
+                                        Editar Controlador
+                                    </Dialog.Title>
+                                    <p className="text-lg text-gray-600">
+                                        Realiza cambios a la configuración del controlador
+                                    </p>
+                                </div>
 
                                 <form
-                                    className="mt-10 space-y-3"
+                                    className="mt-8 space-y-5"
                                     noValidate
                                     onSubmit={handleSubmit(handleEditBoard)}
                                 >
-
                                     {/* en useForm se recibe la data y en el form se envia como register */}
                                     <BoardForm register={register} errors={errors} />
 
-                                    <input
-                                        type="submit"
-                                        className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3  font-bold cursor-pointer transition-color rounded-2xl'
-                                        value='Guardar Tarea'
-                                    />
+                                    <div className="pt-4">
+                                        <input
+                                            type="submit"
+                                            className='bg-black hover:bg-yellow-400 text-white hover:text-black w-full p-4 font-bold cursor-pointer transition-all duration-300 rounded-xl shadow-md hover:shadow-lg text-lg uppercase tracking-wide'
+                                            value='Guardar Cambios'
+                                        />
+                                    </div>
                                 </form>
                             </Dialog.Panel>
                         </Transition.Child>

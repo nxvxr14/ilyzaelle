@@ -134,7 +134,7 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
     return (
         <>
             <Transition appear show={show} as={Fragment}>
-                <Dialog as="div" className="relative z-10" onClose={() => navigate(location.pathname, { replace: true })}>
+                <Dialog as="div" className="relative z-50" onClose={() => navigate(location.pathname, { replace: true })}>
                     <Transition.Child
                         as={Fragment}
                         enter="ease-out duration-300"
@@ -144,7 +144,7 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
                         leaveFrom="opacity-100"
                         leaveTo="opacity-0"
                     >
-                        <div className="fixed inset-0 bg-black/60" />
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
                     </Transition.Child>
 
                     <div className="fixed inset-0 overflow-y-auto">
@@ -158,31 +158,41 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all p-16">
-                                    <Dialog.Title
-                                        as="h3"
-                                        className="font-black text-4xl  my-5"
-                                    >
-                                        nueva variable
-                                    </Dialog.Title>
-
-                                    <p className="text-xl font-bold">
-                                        Llena el formulario y crea {''}
-                                        {Array.isArray(gVar) && (
-                                            <span className="text-green-600">
-                                                (Se guardará automáticamente el vector de tiempo asociado)
-                                            </span>
-                                        )}
-                                    </p>
+                                <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-3xl bg-white text-left align-middle shadow-2xl transition-all p-8 md:p-12 border border-gray-100">
+                                    <div className="border-l-8 border-yellow-400 pl-5 mb-8">
+                                        <Dialog.Title
+                                            as="h3"
+                                            className="font-black text-3xl md:text-4xl text-gray-900 mb-2"
+                                        >
+                                            Guardar Variable
+                                        </Dialog.Title>
+                                        <p className="text-lg text-gray-600">
+                                            Completa la información para guardar esta variable
+                                            {Array.isArray(gVar) && (
+                                                <span className="text-green-600 block mt-1">
+                                                    (Se guardará automáticamente el vector de tiempo asociado)
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
 
                                     {saveError && (
-                                        <div className="mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                                            {saveError}
+                                        <div className="mt-3 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-md mb-6">
+                                            <div className="flex">
+                                                <div className="flex-shrink-0">
+                                                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                                <div className="ml-3">
+                                                    <p className="text-sm">{saveError}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
 
                                     <form
-                                        className='mt-10 space-y-3'
+                                        className='mt-8 space-y-5'
                                         onSubmit={handleSubmit(handleSaveGlobalVar)}
                                         noValidate
                                     >
@@ -191,13 +201,14 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
                                             register={register}
                                             errors={errors}
                                         />
-                                        <input
-                                            type="submit"
-                                            value='agregar'
-                                            className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3  font-bold cursor-pointer transition-color rounded-2xl'
-                                        />
+                                        <div className="pt-4">
+                                            <input
+                                                type="submit"
+                                                value='Guardar Variable'
+                                                className='bg-black hover:bg-yellow-400 text-white hover:text-black w-full p-4 font-bold cursor-pointer transition-all duration-300 rounded-xl shadow-md hover:shadow-lg text-lg uppercase tracking-wide'
+                                            />
+                                        </div>
                                     </form>
-
                                 </Dialog.Panel>
                             </Transition.Child>
                         </div>

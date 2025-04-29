@@ -10,15 +10,15 @@ type BoardFormProps = {
 export default function BoardForm({ errors, register }: BoardFormProps) {
     return (
         <>
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-3 mb-5">
                 <label
-                    className="font-normal text-2xl"
+                    className="font-medium text-xl text-gray-700"
                     htmlFor="boardName"
-                >nombre</label>
+                >Nombre</label>
                 <input
                     id="boardName"
                     placeholder="ej. arduino laboratorio"
-                    className="w-full p-3  border-gray-300 border rounded-2xl"
+                    className="w-full p-3.5 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/50 hover:bg-white"
                     {...register("boardName", {
                         required: "el nombre del controlador es obligatorio"
                     })}
@@ -28,31 +28,22 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                 )}
             </div>
 
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-3 mb-5">
                 <label
-                    className="font-normal text-2xl"
+                    className="font-medium text-xl text-gray-700"
                     htmlFor="boardType"
-                >tipo</label>
-                {/* <input
-                    id="boardType"
-                    type="text"
-                    placeholder="ej. arduino"
-                    className="w-full p-3  border-gray-300 border rounded-2xl"
-                    {...register("boardType", {
-                        required: "el tipo de controlador es obligatorio",
-                    })}
-                /> */}
+                >Marca</label>
                 <select
                     id="boardType"
-                    className="w-full p-3 border-gray-300 border rounded-2xl"
+                    className="w-full p-3.5 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/50 hover:bg-white appearance-none cursor-pointer"
                     {...register("boardType", {
                         required: "La conexión es obligatoria",
                     })}
                 >
-                    <option value="1">arduino uno</option>
-                    <option value="2">plc328p</option>
-                    <option value="3">esp32</option>
-                    <option value="4">factoryIO</option>
+                    <option value="1">Arduino UNO</option>
+                    <option value="2">Xelorium</option>
+                    <option value="3">PLC328P</option>
+                    <option value="4">FactoryIO</option>
                 </select>
                 {errors.boardType && (
                     <ErrorMessage>{errors.boardType.message}</ErrorMessage>
@@ -60,39 +51,39 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
             </div>
 
 
-            <div className="flex flex-col gap-5">
-                <label className="font-normal text-2xl" htmlFor="boardConnect">
-                    conexión
+            <div className="flex flex-col gap-3 mb-5">
+                <label className="font-medium text-xl text-gray-700" htmlFor="boardConnect">
+                   Tipo de conexión 
                 </label>
                 <select
                     id="boardConnect"
-                    className="w-full p-3 border-gray-300 border rounded-2xl"
+                    className="w-full p-3.5 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/50 hover:bg-white appearance-none cursor-pointer"
                     {...register("boardConnect", {
                         required: "La conexión es obligatoria",
                     })}
                 >
-                    <option value="1">usb</option>
-                    <option value="2">wifi</option>
-                    <option value="3">ethernet</option>
+                    <option value="1">USB</option>
+                    <option value="2">Wi-Fi</option>
+                    <option value="3">Ethernet</option>
                 </select>
                 {errors.boardConnect && (
                     <ErrorMessage>{errors.boardConnect.message}</ErrorMessage>
                 )}
             </div>
 
-            <div className="flex flex-col gap-5">
-                <h3 className="font-normal text-2xl">información</h3>
-                <div className="flex gap-5">
+            <div className="flex flex-col gap-3 mb-5 bg-gray-50 p-5 rounded-xl border border-gray-200">
+                <h3 className="font-semibold text-xl text-gray-800 mb-2">Datos de conexión</h3>
+                <div className="flex flex-col md:flex-row gap-5">
                     {/* Host */}
                     <div className="flex-1">
-                        <label className="font-normal text-lg" htmlFor="host">
-                            host
+                        <label className="font-medium text-gray-700 mb-1.5 block" htmlFor="host">
+                           Host 
                         </label>
                         <input
                             id="host"
                             type="text"
-                            placeholder=""
-                            className="w-full p-3 border-gray-300 border rounded-2xl"
+                            placeholder="Ingrese el host"
+                            className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/80 hover:bg-white"
                             {...register("boardInfo.host", {
                             })}
                         />
@@ -103,14 +94,14 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
 
                     {/* Port */}
                     <div className="flex-1">
-                        <label className="font-normal text-lg" htmlFor="port">
-                            port
+                        <label className="font-medium text-gray-700 mb-1.5 block" htmlFor="port">
+                            Puerto
                         </label>
                         <input
                             id="port"
                             type="text"
                             placeholder="Ingrese el puerto"
-                            className="w-full p-3 border-gray-300 border rounded-2xl"
+                            className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/80 hover:bg-white"
                             {...register("boardInfo.port", {
                                 required: "El campo 'port' es obligatorio",
                             })}
@@ -122,20 +113,17 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
 
                     {/* Type */}
                     <div className="flex-1">
-                        <label className="font-normal text-lg" htmlFor="type">
-                            Type
+                        <label className="font-medium text-gray-700 mb-1.5 block" htmlFor="type">
+                            Tipo
                         </label>
                         <input
                             id="type"
                             type="text"
                             placeholder="Ingrese el tipo"
-                            className="w-full p-3 border-gray-300 border rounded-2xl"
+                            className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/80 hover:bg-white"
                             {...register("boardInfo.type", {
                             })}
                         />
-                        {/* {errors.boardInfo?.type && (
-                            <ErrorMessage>{errors.boardInfo.type.message}</ErrorMessage>
-                        )} */}
                     </div>
                 </div>
             </div>

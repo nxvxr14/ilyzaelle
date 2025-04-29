@@ -25,12 +25,17 @@ export default function AddGlobalVarForm({ errors, register, setValue }: GlobalV
 
     return (
         <>
-            <div className="flex flex-col gap-5">
-                <label className="font-normal text-2xl" htmlFor="nameGlobalVar">Nombre</label>
+            <div className="flex flex-col gap-3 mb-5">
+                <label 
+                    className="font-medium text-xl text-gray-700" 
+                    htmlFor="nameGlobalVar"
+                >
+                    Nombre
+                </label>
                 <input
                     id="nameGlobalVar"
-                    placeholder="Ej. Arduino laboratorio"
-                    className="w-full p-3 border-gray-300 border rounded-2xl"
+                    placeholder="Ej. temperatura_sensor"
+                    className="w-full p-3.5 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/50 hover:bg-white"
                     {...register("nameGlobalVar", {
                         required: "El nombre del controlador es obligatorio"
                     })}
@@ -40,11 +45,16 @@ export default function AddGlobalVarForm({ errors, register, setValue }: GlobalV
                 )}
             </div>
 
-            <div className="flex flex-col gap-5">
-                <label className="font-normal text-2xl" htmlFor="typeGlobalVar">Tipo</label>
+            <div className="flex flex-col gap-3 mb-5">
+                <label 
+                    className="font-medium text-xl text-gray-700" 
+                    htmlFor="typeGlobalVar"
+                >
+                    Tipo
+                </label>
                 <select
                     id="typeGlobalVar"
-                    className="w-full p-3 border-gray-300 border rounded-2xl"
+                    className="w-full p-3.5 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/50 hover:bg-white appearance-none cursor-pointer"
                     onChange={handleTypeChange}
                 >
                     <option value="number">Número</option>
