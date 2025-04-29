@@ -12,8 +12,8 @@ const ScadaLabelComponent: React.FC<ScadaLabelComponentProps> = ({ selectedVar, 
   const displayValue = value !== undefined && value !== null ? value : 'N/A';
   
   return (
-    <div className="flex items-center justify-center p-1">
-      <span className="text-white font-mono text-base">
+    <div className="flex items-center justify-center w-full">
+      <span className="text-white font-mono">
         {String(displayValue)}
       </span>
     </div>

@@ -49,33 +49,35 @@ const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({ selectedVar, 
     setIsEditing(true);
   };
   
-  // Manejar cuando el usuario termina de editar sin presionar el botón
+  // Manejar cuando el usuario termina de editar
   const handleBlur = () => {
-    // Opcional: Si quieres que el valor se sincronice cuando el usuario quita el foco sin presionar el botón
-    // setIsEditing(false);
+    setIsEditing(false);
   };
   
   // Manejar cambio de valor en el input
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(Number(e.target.value));
   };
+  
+  // Manejar la tecla Enter
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendValue();
+      e.currentTarget.blur(); // Quitar el foco después de enviar
+    }
+  };
 
   return (
-    <div className="flex items-center space-x-1">
+    <div className="flex w-full justify-center">
       <input
         type="number"
         value={inputValue}
         onChange={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className="w-12 p-1 text-xs bg-gray-800 border border-gray-600 rounded text-white"
+        onKeyDown={handleKeyDown}
+        className="w-full py-1 px-2 text-center bg-gray-800 border border-gray-600 hover:border-gray-400 focus:border-blue-500 rounded text-white outline-none"
       />
-      <button
-        onClick={handleSendValue}
-        className="bg-yellow-500 hover:bg-yellow-600 text-black rounded px-2 py-1 text-xs"
-      >
-        →
-      </button>
     </div>
   );
 };

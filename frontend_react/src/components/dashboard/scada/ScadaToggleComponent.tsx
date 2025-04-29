@@ -15,7 +15,7 @@ const ScadaToggleComponent: React.FC<ScadaToggleComponentProps> = ({ selectedVar
   // Obtener el valor actual del toggle
   const isOn = Boolean(gVar[selectedVar]);
 
-  // Función para cambiar el estado del toggle - CORREGIDA
+  // Función para cambiar el estado del toggle
   const toggleValue = () => {
     if (socket) {
       // Usar exactamente el mismo evento que en el componente Toggle original
@@ -29,7 +29,7 @@ const ScadaToggleComponent: React.FC<ScadaToggleComponentProps> = ({ selectedVar
   };
 
   return (
-    <div className="flex items-center justify-center p-1">
+    <div className="flex items-center justify-center w-full">
       <button
         onClick={toggleValue}
         className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${

@@ -18,8 +18,8 @@ const ScadaArrayDisplayComponent: React.FC<ScadaArrayDisplayComponentProps> = ({
   const lastValue = array[array.length - 1];
   
   return (
-    <div className="flex flex-col items-center p-1">
-      <div className="text-yellow-400 font-mono text-xl">
+    <div className="flex justify-center w-full">
+      <div className="text-yellow-400 font-mono">
         {lastValue !== undefined ? lastValue : 'N/A'}
       </div>
     </div>
