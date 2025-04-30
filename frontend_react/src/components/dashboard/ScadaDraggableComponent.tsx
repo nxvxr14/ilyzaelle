@@ -28,6 +28,20 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const componentRef = useRef<HTMLDivElement>(null);
+  
+  // Nuevo estado para el factor de escala del texto
+  const [fontSizeFactor, setFontSizeFactor] = useState<number>(1.0);
+
+  // Funciones para incrementar y decrementar el tamaño de la fuente
+  const increaseFontSize = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevenir que se inicie el arrastre
+    setFontSizeFactor(prev => Math.min(prev + 0.2, 2.0)); // Limitar el máximo a 2.0
+  };
+
+  const decreaseFontSize = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevenir que se inicie el arrastre
+    setFontSizeFactor(prev => Math.max(prev - 0.2, 0.6)); // Limitar el mínimo a 0.6
+  };
 
   // Inicio de arrastre - lógica simplificada
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -102,6 +116,10 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
 
   // Tamaño fijo para todos los componentes
   const fixedWidth = 150;
+  
+  // Calcular tamaños de fuente basados en el factor
+  const titleFontSize = `${13 * fontSizeFactor}px`;
+  const valueFontSize = `${14 * fontSizeFactor}px`;
 
   return (
     <div
@@ -131,7 +149,8 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
           style={{
             color: 'black',
             textShadow: '0px 0px 2px white, 0px 0px 3px white',
-            marginBottom: '2px'
+            marginBottom: '2px',
+            fontSize: titleFontSize // Usar el tamaño calculado
           }}
         >
           {varName}
@@ -142,23 +161,50 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
           className="w-full flex justify-center font-bold" 
           style={{
             color: 'black',
-            textShadow: '0px 0px 2px white, 0px 0px 3px white'
+            textShadow: '0px 0px 2px white, 0px 0px 3px white',
+            fontSize: valueFontSize // Usar el tamaño calculado
           }}
         >
           {children}
         </div>
       </div>
       
-      {/* Botón de eliminar (aparece solo al hover) */}
+      {/* Controles que aparecen al hacer hover */}
       {isHovered && (
-        <button 
-          className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full opacity-70 hover:opacity-100 transition-opacity"
-          onClick={() => onRemove(id)}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="absolute top-1 right-1 flex gap-1">
+          {/* Botón de disminuir fuente */}
+          <button 
+            className="w-5 h-5 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-full opacity-70 hover:opacity-100 transition-opacity"
+            onClick={decreaseFontSize}
+            title="Reducir tamaño de texto"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+          </button>
+          
+          {/* Botón de aumentar fuente */}
+          <button 
+            className="w-5 h-5 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-full opacity-70 hover:opacity-100 transition-opacity"
+            onClick={increaseFontSize}
+            title="Aumentar tamaño de texto"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+          </button>
+          
+          {/* Botón de eliminar */}
+          <button 
+            className="w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full opacity-70 hover:opacity-100 transition-opacity"
+            onClick={() => onRemove(id)}
+            title="Eliminar componente"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       )}
     </div>
   );
