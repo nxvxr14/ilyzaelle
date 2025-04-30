@@ -5,10 +5,9 @@ type Position = {
   y: number;
 };
 
-// Modificar el tipo Size para permitir tanto números como 'auto'
 type Size = {
   width: number;
-  height: number | 'auto'; // Permitir 'auto' como valor válido
+  height: number | 'auto';
 };
 
 interface ScadaDraggableComponentProps {
@@ -28,15 +27,8 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   children,
   varName
 }) => {
-  // IMPORTANTE: Usar un useRef para mantener la posición inicial solo al montar el componente
-  const initialLoadDone = useRef(false);
-
-  const [position, setPosition] = useState<Position>({
-    x: initialPosition?.x || 50,
-    y: initialPosition?.y || 50
-  });
-  
-  // Estado para el tamaño con altura inicial como número
+  // Simplificando estados para mejorar rendimiento
+  const [position, setPosition] = useState<Position>(initialPosition);
   const [size, setSize] = useState<Size>({ width: 150, height: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -45,43 +37,8 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   const [resizeStart, setResizeStart] = useState<Position>({ x: 0, y: 0 });
   const [initialSize, setInitialSize] = useState<Size>({ width: 150, height: 100 });
   const componentRef = useRef<HTMLDivElement>(null);
-  const parentRef = useRef<HTMLElement | null>(null);
 
-  // Solo sincronizar posición desde props en el primer renderizado
-  useEffect(() => {
-    if (!initialLoadDone.current && initialPosition) {
-      setPosition({
-        x: initialPosition.x,
-        y: initialPosition.y
-      });
-      initialLoadDone.current = true;
-    }
-  }, []);
-
-  // Calcular factores de escala basados en el tamaño del componente
-  const getScaleFactor = () => {
-    const widthFactor = Math.max(0.7, Math.min(2.0, size.width / 150));
-    const heightFactor = typeof size.height === 'number' 
-      ? Math.max(0.7, Math.min(2.0, size.height / 100))
-      : 1;
-      
-    // Usar el factor menor para mantener proporciones
-    return Math.min(widthFactor, heightFactor);
-  };
-  
-  // Escala de fuente para texto normal
-  const getFontSize = () => {
-    const baseSize = 13;
-    return `${baseSize * getScaleFactor()}px`;
-  };
-  
-  // Escala de fuente para título
-  const getTitleFontSize = () => {
-    const baseSize = 11;
-    return `${baseSize * getScaleFactor()}px`;
-  };
-
-  // Inicio de arrastre
+  // Inicio de arrastre - lógica simplificada
   const handleMouseDown = (e: React.MouseEvent) => {
     // No permitir arrastrar cuando se hace clic en elementos interactivos
     if (
@@ -97,9 +54,7 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
 
     e.preventDefault();
     
-    if (componentRef.current) {
-      parentRef.current = componentRef.current.parentElement;
-      
+    if (componentRef.current) {      
       const rect = componentRef.current.getBoundingClientRect();
       setDragOffset({
         x: e.clientX - rect.left,
@@ -119,7 +74,6 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     setResizeStart({ x: e.clientX, y: e.clientY });
     
     if (componentRef.current) {
-      // Guardar el tamaño actual como números para poder redimensionar
       setInitialSize({ 
         width: componentRef.current.offsetWidth,
         height: componentRef.current.offsetHeight 
@@ -127,12 +81,12 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     }
   };
 
-  // Manejo de movimiento de ratón para arrastre o redimensionamiento
+  // Manejo de movimiento - versión más simple y fluida
   const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging && componentRef.current && parentRef.current) {
-      const parentRect = parentRef.current.getBoundingClientRect();
+    if (isDragging && componentRef.current) {
+      const parentRect = componentRef.current.parentElement?.getBoundingClientRect();
+      if (!parentRect) return;
       
-      // Calcular la nueva posición
       const newX = e.clientX - parentRect.left - dragOffset.x;
       const newY = e.clientY - parentRect.top - dragOffset.y;
       
@@ -149,35 +103,26 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
       });
     } 
     else if (isResizing && componentRef.current) {
-      // Redimensionar el componente en ambas dimensiones
       const deltaX = e.clientX - resizeStart.x;
       const deltaY = e.clientY - resizeStart.y;
       
-      // Calcular nuevas dimensiones con límites mínimos
       const newWidth = Math.max(100, initialSize.width + deltaX);
       const newHeight = Math.max(50, 
         typeof initialSize.height === 'number' ? initialSize.height + deltaY : 100 + deltaY
       );
       
-      // Actualizar el tamaño
       setSize({
         width: newWidth,
-        height: newHeight // Ahora usamos el alto calculado
+        height: newHeight
       });
     }
   };
 
-  // Finalización de arrastre o redimensionamiento
+  // Finalización de arrastre - simplificada para más fluidez
   const handleMouseUp = () => {
     if (isDragging) {
-      // Notificar la posición final al padre
-      const finalPosition = { 
-        x: position.x,
-        y: position.y
-      };
-      
       setIsDragging(false);
-      onPositionChange(id, finalPosition);
+      onPositionChange(id, position);
     }
     
     if (isResizing) {
@@ -185,7 +130,7 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     }
   };
 
-  // Agregar y quitar event listeners según el estado
+  // Event listeners simplificados
   useEffect(() => {
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -198,71 +143,54 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     };
   }, [isDragging, isResizing, position]);
 
-  // Preparar el valor de altura para CSS
-  const heightStyle = size.height === 'auto' ? 'auto' : `${size.height}px`;
-  
-  // Calcular la escala para transformar el contenido
-  const contentScale = getScaleFactor();
-
   return (
     <div
       ref={componentRef}
-      className={`absolute rounded-md overflow-hidden ${
-        isDragging ? 'cursor-grabbing' : ''
-      } transition-all duration-200`}
+      className="absolute"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
         width: `${size.width}px`,
-        height: heightStyle,
+        height: typeof size.height === 'number' ? `${size.height}px` : 'auto',
         zIndex: isDragging || isResizing ? 10 : 1,
-        // Fondo y borde solo visibles al hacer hover o cuando se arrastra/redimensiona
-        background: isHovered || isDragging || isResizing ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+        // Solo el fondo visible en hover o durante interacciones
+        backgroundColor: isHovered || isDragging || isResizing ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
         border: isHovered || isDragging || isResizing ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
-        boxShadow: isHovered || isDragging || isResizing ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none'
+        borderRadius: '6px',
+        transition: isDragging ? 'none' : 'background-color 0.2s, border 0.2s',
+        overflow: 'hidden'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseDown={handleMouseDown}
     >
-      {/* Contenedor principal con transformación para escalar todo el contenido */}
-      <div 
-        className="w-full h-full flex flex-col items-center justify-center"
-        style={{
-          transform: `scale(${contentScale})`,
-          transformOrigin: 'center center',
-          transition: 'transform 0.1s ease-out',
-          // Padding reducido para hacer el componente más compacto
-          padding: isHovered || isDragging || isResizing ? '8px' : '4px'
-        }}
-      >
-        {/* Variable name (centrado) */}
+      {/* Contenido del componente */}
+      <div className="p-2 flex flex-col items-center justify-center">
+        {/* Nombre de la variable en negro negrita */}
         <div 
           className="font-bold truncate w-full text-center" 
-          style={{ 
-            fontSize: getTitleFontSize(),
+          style={{
             color: 'black',
-            textShadow: '0px 0px 2px white, 0px 0px 3px white', // Sombra de texto blanca para legibilidad
-            marginBottom: '2px' // Margen reducido entre título y valor
+            textShadow: '0px 0px 2px white, 0px 0px 3px white',
+            marginBottom: '2px'
           }}
         >
           {varName}
         </div>
         
-        {/* Componente hijo con estilo de valor */}
+        {/* Valor del componente */}
         <div 
           className="w-full flex justify-center font-bold" 
-          style={{ 
-            fontSize: getFontSize(),
+          style={{
             color: 'black',
-            textShadow: '0px 0px 2px white, 0px 0px 3px white' // Sombra de texto blanca para legibilidad
+            textShadow: '0px 0px 2px white, 0px 0px 3px white'
           }}
         >
           {children}
         </div>
       </div>
       
-      {/* Resize handle (solo visible al hacer hover) */}
+      {/* Resize handle (solo visible al hover) */}
       {(isHovered || isResizing) && (
         <div
           className="absolute bottom-0 right-0 w-5 h-5 bg-yellow-500 opacity-40 hover:opacity-100 cursor-se-resize flex items-center justify-center"
@@ -274,7 +202,7 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
         </div>
       )}
       
-      {/* Remove button (aparece solo al hacer hover) */}
+      {/* Botón de eliminar (aparece solo al hover) */}
       {isHovered && (
         <button 
           className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full opacity-70 hover:opacity-100 transition-opacity"
