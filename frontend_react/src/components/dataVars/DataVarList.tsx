@@ -105,90 +105,120 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
     }
 
     if (!filteredDataVars || filteredDataVars.length === 0) return (
-        <div className="w-full p-4 text-center text-gray-500">vacio...</div>
+        <div className="w-full p-8 text-center text-gray-500 bg-gray-50 rounded-xl border border-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <p className="text-xl font-medium">No hay variables almacenadas</p>
+        </div>
     )
 
     return (
         <div className="w-full flex flex-col">
-            <div className="overflow-x-auto shadow-md rounded-lg">
-                <table className="min-w-full table-auto">
+            <div className="overflow-hidden shadow-lg rounded-xl border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 Nombre
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 Variable
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 Fecha Creación
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 Tamaño
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 Acciones
                             </th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {currentItems.map((item) => (
-                            <tr key={item._id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {item.nameData}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.nameGlobalVar}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {new Date(item.createdAt).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.gVar.length}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                    <div className="flex justify-center space-x-2">
-                                        <button
-                                            onClick={() => handleShowChart(item)}
-                                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200"
-                                            title="Mostrar gráfico"
-                                        >
-                                            <span className="text-orange-600 font-semibold">S</span>
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(item)}
-                                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition-colors duration-200"
-                                            title="Eliminar variable y su vector de tiempo"
-                                        >
-                                            <span className="text-red-600 font-semibold">X</span>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {currentItems.map((item) => {
+                            // Find time vector if it exists
+                            const timeVector = findTimeVector(item.nameData);
+                            
+                            return (
+                                <tr key={item._id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="font-medium text-gray-900">{item.nameData}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {item.nameGlobalVar}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-700">
+                                            {new Date(item.createdAt).toLocaleString()}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-700">
+                                            {Array.isArray(item.gVar) ? item.gVar.length : '-'}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex justify-center gap-2">
+                                            <button
+                                                onClick={() => handleShowChart(item)}
+                                                className="inline-flex items-center px-3 py-1.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium transition-colors"
+                                                title="Ver gráfico"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                </svg>
+                                                Ver gráfico
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item)}
+                                                className="inline-flex items-center px-3 py-1.5 rounded bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium transition-colors"
+                                                title="Eliminar variable"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
 
-            {/* Pagination controls */}
+            {/* Pagination controls mejorados */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center space-x-2 mt-4 pb-4">
+                <div className="flex justify-center items-center space-x-3 mt-6 pb-2">
                     <button
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 transition-colors duration-200"
+                        className="px-4 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
                     >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
                         Anterior
                     </button>
-                    <span className="text-sm text-gray-600">
+                    
+                    <span className="text-sm text-gray-700 font-medium">
                         Página {currentPage} de {totalPages}
                     </span>
+                    
                     <button
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 transition-colors duration-200"
+                        className="px-4 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
                     >
                         Siguiente
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                     </button>
                 </div>
             )}
