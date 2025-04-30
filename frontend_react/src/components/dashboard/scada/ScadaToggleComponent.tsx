@@ -5,9 +5,14 @@ import { useParams } from 'react-router-dom';
 interface ScadaToggleComponentProps {
   selectedVar: string;
   gVar: any;
+  fontSizeFactor?: number;
 }
 
-const ScadaToggleComponent: React.FC<ScadaToggleComponentProps> = ({ selectedVar, gVar }) => {
+const ScadaToggleComponent: React.FC<ScadaToggleComponentProps> = ({ 
+  selectedVar, 
+  gVar,
+  fontSizeFactor = 1.0
+}) => {
   const { socket } = useContext(SocketContext);
   const params = useParams();
   const projectId = params.projectId!;
@@ -18,9 +23,7 @@ const ScadaToggleComponent: React.FC<ScadaToggleComponentProps> = ({ selectedVar
   // Función para cambiar el estado del toggle
   const toggleValue = () => {
     if (socket) {
-      // Usar exactamente el mismo evento que en el componente Toggle original
       socket.emit("request-gVariable-change-f-b", selectedVar, !isOn, projectId, (response: any) => {
-        // Callback para confirmar que el servidor recibió el evento
         console.log("Server acknowledged toggle update:", response);
       });
       
@@ -28,20 +31,47 @@ const ScadaToggleComponent: React.FC<ScadaToggleComponentProps> = ({ selectedVar
     }
   };
 
+  // Calcular dimensiones basadas en el factor de escala
+  // Aumentar los valores base para que el toggle sea más visible
+  const baseToggleWidth = 30;   // Ancho base más grande
+  const baseToggleHeight = 16;  // Alto base más grande
+  const baseKnobSize = 12;      // Tamaño del botón interno más grande
+  
+  // Aplicar factor de escala
+  const toggleWidth = baseToggleWidth * fontSizeFactor;
+  const toggleHeight = baseToggleHeight * fontSizeFactor;
+  const knobSize = baseKnobSize * fontSizeFactor;
+  const padding = 2 * fontSizeFactor;
+  
+  // Calcular posición del botón según estado
+  const knobPosition = isOn ? toggleWidth - knobSize - padding : padding;
+
   return (
     <div className="flex items-center justify-center w-full">
-      <button
+      <div 
+        role="button"
         onClick={toggleValue}
-        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${
-          isOn ? 'bg-yellow-400' : 'bg-gray-600'
-        }`}
+        className="relative cursor-pointer rounded-full transition-colors"
+        style={{
+          width: `${toggleWidth}px`,
+          height: `${toggleHeight}px`,
+          backgroundColor: isOn ? '#FBBF24' : '#4B5563', // Amarillo para ON, gris para OFF
+          padding: `${padding}px`,
+          transition: 'background-color 0.3s',
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)'
+        }}
       >
-        <span
-          className={`bg-white h-4 w-4 rounded-full shadow-md transform transition-transform ${
-            isOn ? 'translate-x-6' : 'translate-x-0'
-          }`}
+        <div 
+          className="absolute top-0 rounded-full bg-white shadow-md"
+          style={{
+            width: `${knobSize}px`,
+            height: `${knobSize}px`,
+            transform: `translateX(${knobPosition}px)`,
+            transition: 'transform 0.3s',
+            margin: `${padding}px 0`
+          }}
         />
-      </button>
+      </div>
     </div>
   );
 };

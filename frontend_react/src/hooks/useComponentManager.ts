@@ -25,6 +25,7 @@ interface ScadaComponent {
   selectedVar: string;
   position: { x: number; y: number };
   title: string;
+  fontSizeFactor?: number; // Nuevo campo para almacenar el factor de escalado de texto
 }
 
 export function useComponentManager(projectId: string, gVarData: any) {
@@ -320,13 +321,14 @@ export function useComponentManager(projectId: string, gVarData: any) {
       y: Math.floor(Math.random() * 100)  // Valor aleatorio entre 0-100
     };
     
-    // Crear el nuevo componente con posición inicial aleatoria
+    // Crear el nuevo componente con posición inicial aleatoria y factor de escala por defecto
     const newComponent: ScadaComponent = {
       id: `scada-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type,
       selectedVar: varName,
       position: { x: 50 + randomOffset.x, y: 50 + randomOffset.y }, // Posición inicial con offset
-      title: `${varName} (${type})`
+      title: `${varName} (${type})`,
+      fontSizeFactor: 1.0 // Valor predeterminado
     };
     
     setScadaComponents(prev => [...prev, newComponent]);
@@ -372,6 +374,21 @@ export function useComponentManager(projectId: string, gVarData: any) {
     setScadaComponents(prev => prev.map(comp => 
       comp.id === id ? { ...comp, title } : comp
     ));
+  };
+
+  // Añadir función para actualizar el factor de tamaño de texto
+  const updateScadaComponentFontSize = (id: string, fontSizeFactor: number) => {
+    setScadaComponents(prev => {
+      const updated = prev.map(comp => 
+        comp.id === id ? { ...comp, fontSizeFactor } : comp
+      );
+      
+      // Guardar inmediatamente en localStorage
+      const storageKey = `${projectId}_scada_components`;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      
+      return updated;
+    });
   };
 
   const handleClearAllComponents = () => {
@@ -469,6 +486,7 @@ export function useComponentManager(projectId: string, gVarData: any) {
     removeScadaComponent,
     updateScadaComponentPosition,
     updateScadaComponentTitle,
+    updateScadaComponentFontSize, // Añadir la nueva función al return
     scadaBackgroundUrl,
     setScadaBackgroundUrl,
     clearAllComponents: handleClearAllComponents

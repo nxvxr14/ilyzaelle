@@ -5,9 +5,14 @@ import { useParams } from 'react-router-dom';
 interface ScadaInputComponentProps {
   selectedVar: string;
   gVar: any;
+  fontSizeFactor?: number; // Añadir la prop para el factor de escala
 }
 
-const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({ selectedVar, gVar }) => {
+const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({ 
+  selectedVar, 
+  gVar,
+  fontSizeFactor = 1.0 // Usar 1.0 como valor por defecto
+}) => {
   const { socket } = useContext(SocketContext);
   const params = useParams();
   const projectId = params.projectId!;
@@ -64,11 +69,14 @@ const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({ selectedVar, 
         defaultValue={valueRef.current}
         onKeyDown={handleKeyPress}
         onBlur={handleBlur}
-        className="w-full text-center bg-gray-800 text-white border border-gray-600 rounded p-1 text-sm outline-none focus:border-yellow-400"
+        className="w-full text-center bg-gray-800 text-white border border-gray-600 rounded p-1 outline-none focus:border-yellow-400"
         style={{ 
           cursor: 'text', 
           pointerEvents: 'auto', 
-          touchAction: 'auto' 
+          touchAction: 'auto',
+          fontSize: `${14 * fontSizeFactor}px`, // Aplicar el factor de escala
+          height: `${24 * fontSizeFactor}px`, // Ajustar el alto
+          padding: `${4 * fontSizeFactor}px ${6 * fontSizeFactor}px` // Ajustar el padding
         }}
         tabIndex={0}
         autoComplete="off"

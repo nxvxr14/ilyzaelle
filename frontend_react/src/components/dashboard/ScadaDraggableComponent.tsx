@@ -10,6 +10,8 @@ interface ScadaDraggableComponentProps {
   initialPosition: Position;
   onPositionChange: (id: string, position: Position) => void;
   onRemove: (id: string) => void;
+  onFontSizeChange?: (id: string, factor: number) => void; // Nueva función para actualizar el tamaño de fuente
+  fontSizeFactor?: number; // Nuevo prop para recibir el factor inicial
   children: React.ReactNode;
   varName: string;
 }
@@ -19,28 +21,47 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   initialPosition,
   onPositionChange,
   onRemove,
+  onFontSizeChange,
+  fontSizeFactor: initialFontSize = 1.0, // Valor por defecto si no se proporciona
   children,
   varName
 }) => {
-  // Estado simplificado - eliminado todo lo relacionado con redimensionamiento
+  // Estado simplificado para arrastre
   const [position, setPosition] = useState<Position>(initialPosition);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const componentRef = useRef<HTMLDivElement>(null);
   
-  // Nuevo estado para el factor de escala del texto
-  const [fontSizeFactor, setFontSizeFactor] = useState<number>(1.0);
+  // Usar el factor de escala proporcionado por props o el valor por defecto
+  const [fontSizeFactor, setFontSizeFactor] = useState<number>(initialFontSize);
+
+  // Actualizar fontSizeFactor cuando cambia en props
+  useEffect(() => {
+    setFontSizeFactor(initialFontSize);
+  }, [initialFontSize]);
 
   // Funciones para incrementar y decrementar el tamaño de la fuente
   const increaseFontSize = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevenir que se inicie el arrastre
-    setFontSizeFactor(prev => Math.min(prev + 0.2, 2.0)); // Limitar el máximo a 2.0
+    e.stopPropagation();
+    const newFactor = Math.min(fontSizeFactor + 0.2, 2.0);
+    setFontSizeFactor(newFactor);
+    
+    // Notificar al componente padre del cambio
+    if (onFontSizeChange) {
+      onFontSizeChange(id, newFactor);
+    }
   };
 
   const decreaseFontSize = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevenir que se inicie el arrastre
-    setFontSizeFactor(prev => Math.max(prev - 0.2, 0.6)); // Limitar el mínimo a 0.6
+    e.stopPropagation();
+    const newFactor = Math.max(fontSizeFactor - 0.2, 0.6);
+    setFontSizeFactor(newFactor);
+    
+    // Notificar al componente padre del cambio
+    if (onFontSizeChange) {
+      onFontSizeChange(id, newFactor);
+    }
   };
 
   // Inicio de arrastre - lógica simplificada
@@ -121,6 +142,13 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
   const titleFontSize = `${13 * fontSizeFactor}px`;
   const valueFontSize = `${14 * fontSizeFactor}px`;
 
+  // Crear un estilo con el factor de escala para pasarlo a los hijos
+  const scaleStyle = {
+    fontSize: valueFontSize,
+    transform: `scale(${fontSizeFactor})`,
+    transformOrigin: 'center center'
+  };
+
   return (
     <div
       ref={componentRef}
@@ -165,7 +193,13 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
             fontSize: valueFontSize // Usar el tamaño calculado
           }}
         >
-          {children}
+          {React.Children.map(children, child => {
+            // Clonar el hijo y añadir el fontSizeFactor como prop
+            if (React.isValidElement(child)) {
+              return React.cloneElement(child, { fontSizeFactor });
+            }
+            return child;
+          })}
         </div>
       </div>
       

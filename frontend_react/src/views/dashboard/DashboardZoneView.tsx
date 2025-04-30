@@ -43,6 +43,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
         removeScadaComponent,
         updateScadaComponentPosition,
         updateScadaComponentTitle,
+        updateScadaComponentFontSize, // Añadir la nueva función
     } = useComponentManager(projectId, gVarData);
 
     if (!gVarData) {
@@ -233,6 +234,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                             onRemoveComponent={removeScadaComponent}
                             onUpdatePosition={updateScadaComponentPosition}
                             onUpdateTitle={updateScadaComponentTitle}
+                            onUpdateFontSize={updateScadaComponentFontSize} // Pasar la nueva función
                             gVarData={gVarData}
                         />
                     </>

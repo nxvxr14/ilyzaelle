@@ -21,6 +21,7 @@ interface ScadaBackgroundProps {
   onUpdatePosition: (id: string, position: { x: number; y: number }) => void;
   onUpdateTitle: (id: string, title: string) => void;
   gVarData: any;
+  onUpdateFontSize: (id: string, fontSizeFactor: number) => void; // Nueva prop
 }
 
 const ScadaBackground = ({ 
@@ -30,6 +31,7 @@ const ScadaBackground = ({
   onRemoveComponent,
   onUpdatePosition,
   onUpdateTitle,
+  onUpdateFontSize,
   gVarData
 }: ScadaBackgroundProps) => {
   const [inputUrl, setInputUrl] = useState(backgroundUrl || '');
@@ -49,6 +51,11 @@ const ScadaBackground = ({
       x: newPosition.x,
       y: newPosition.y
     });
+  };
+
+  // Añadir el manejador para cambios de tamaño de fuente
+  const handleFontSizeChange = (id: string, factor: number) => {
+    onUpdateFontSize(id, factor);
   };
 
   return (
@@ -87,7 +94,9 @@ const ScadaBackground = ({
             key={component.id}
             id={component.id}
             initialPosition={component.position} // Asegurar que esto se pasa correctamente
+            fontSizeFactor={component.fontSizeFactor || 1.0} // Pasar el factor guardado
             onPositionChange={handlePositionChange}
+            onFontSizeChange={handleFontSizeChange} // Pasar la función
             onRemove={onRemoveComponent}
             varName={component.selectedVar}
           >
