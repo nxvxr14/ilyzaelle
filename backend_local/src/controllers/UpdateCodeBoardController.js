@@ -35,8 +35,34 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
           gVar[project][timeVectorName] = [];
         }
       });
+      // eliminar los listeners antes
+      for (let i = 0; i < boards[_id].pins.length; i++) {
+        // Construye el nombre del evento para la lectura digital de este pin
+        const eventName = `digital-read-${i}`;
+        // Remueve todos los listeners para ESE evento específico
+        boards[_id].removeAllListeners(eventName);
+    
+        // Opcional: Para detener el reporte desde el Arduino (más eficiente)
+        // Verifica si el pin está en modo INPUT o PULLUP antes de intentar apagar el reporte
+        // if (boards[_id].pins[i] && (boards[_id].pins[i].mode === boards[_id].MODES.INPUT || boards[_id].pins[i].mode === boards[_id].MODES.PULLUP)) {
+        //   boards[_id].reportDigitalPin(i, 0); // 0 para detener el reporte
+        // }
+      }
+      console.log(`Listeners digitales removidos para board ${_id}.`);
+
+      for (let i = 0; i < boards[_id].analogPins.length; i++) {
+        // El nombre del evento análogo usa el índice del canal (0, 1, 2...)
+        const eventName = `analog-read-${i}`;
+        // Remueve todos los listeners para ESE evento específico
+        boards[_id].removeAllListeners(eventName);
+    
+        // Opcional: Para detener el reporte desde el Arduino (más eficiente)
+        // boards[_id].reportAnalogPin(i, 0); // 0 para detener el reporte, usa el índice del canal análogo
+      }
+      console.log(`Listeners análogos removidos para board ${_id}.`);
 
       // Ejecutar el código directamente con eval
+      const board = boards[_id];
       eval(boardCode);
       resolve();
     } catch (error) {
