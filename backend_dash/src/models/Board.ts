@@ -14,7 +14,7 @@ export type BoardTypes = typeof boardTypes[keyof typeof boardTypes]
 */
 
 export interface IBoard extends Document {
-    boardType: 1 | 2 | 3 | 4// 1 = Arduino UNO, 2 = XELORIUM , 3 = PLC328P, 4 = FatoryIO 
+    boardType: 1 | 2 | 3 | 4// 1 = Arduino UNO, 2 = XELORIUM , 3 = ESP32, 4 = Nodo
     // boardType: BoardTypes
     boardName: string
     boardConnect: number
