@@ -98,6 +98,12 @@ export const connectBoard = ({ data }) => {
       tcpIpClient[_id] = net.createServer((socket) => {
         activeSockets[_id] = socket;
 
+        // Add error handling for the socket
+        socket.on("error", (err) => {
+          console.error(`Socket error for board ${_id}:`, err.message);
+          // Don't let this crash the application
+        });
+
         // Handle socket disconnection
         socket.on("close", () => {
           console.log(`Client disconnected from port ${boardInfo.port}`);
@@ -105,6 +111,19 @@ export const connectBoard = ({ data }) => {
         });
 
         createFirmataBoard(socket);
+      });
+
+      // Add error handling for the TCP server
+      tcpIpClient[_id].on("error", (err) => {
+        console.error(
+          `TCP server error on port ${boardInfo.port}:`,
+          err.message
+        );
+        // If the port is in use, you might want to handle that specifically
+        if (err.code === "EADDRINUSE") {
+          console.error(`Port ${boardInfo.port} is already in use`);
+        }
+        reject(err.message);
       });
       tcpIpClient[_id].listen(boardInfo.port, () => {
         console.log(`Servidor escuchando en el puerto ${boardInfo.port}`);
@@ -145,9 +164,30 @@ export const connectBoard = ({ data }) => {
 
         boards[_id].on("close", () => {
           console.log("onclose");
-          if(!boardConnect === 2 && !boardType == 3) boards[_id].transport.close();
+          if (!boardConnect === 2 && !boardType == 3)
+            boards[_id].transport.close();
           boards[_id].isReady = false;
         });
+      });
+
+      // Add error event handler
+      boards[_id].on("error", (error) => {
+        console.error(`[${_id}] Board connection error:`, error.message);
+
+        // Clean up resources
+        if (boards[_id] && boards[_id].isReady) {
+          clearTimersById(_id);
+          boards[_id].isReady = false;
+
+          // Handle socket/connection cleanup based on connection type
+          if (boardConnect === 2 && boardType == 3 && activeSockets[_id]) {
+            console.log(`Cleaning up socket for ${_id} after error`);
+            activeSockets[_id].removeAllListeners();
+            delete activeSockets[_id];
+          }
+        }
+
+        // Optional: implement reconnection logic here if needed
       });
     }
   });
