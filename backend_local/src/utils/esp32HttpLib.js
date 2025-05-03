@@ -144,6 +144,32 @@ export async function setVariable({ project, variable, value }) {
   }
 }
 
+/**
+ * Disconnect from the ESP32 and cleanup connection resources
+ * @param {Object} params - Request parameters
+ * @param {String} params.project - Project identifier
+ * @returns {boolean} - Success status
+ */
+export function disconnectESP32({ project }) {
+  try {
+    // Check if we have a connection for this project
+    if (connections[project]) {
+      // Log the disconnection
+      console.log(`Disconnecting from ESP32 for project ${project}`);
+      
+      // We need to abort any pending requests
+      // For axios, we can't directly abort, but we can remove the connection info
+      // so future requests will fail with clear error messages
+      delete connections[project];
+      
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error(`Error disconnecting from ESP32: ${error.message}`);
+    return false;
+  }
+}
 
 // Utility to check if connection is configured
 function validateConnection(project) {

@@ -6,7 +6,11 @@ import {
 import { clearTimersById } from "../controllers/ClearTimers.js";
 // Import the new Xelorium library
 import { xelInterval, xelTimeout } from "../utils/xeloriumLib.js";
+// Import the ESP32 functions including the new disconnect function
+import { setConnection, getAvailableVariables, getVariables, setVariable, disconnectESP32 } from "../utils/esp32HttpLib.js";
 
+// Export the ESP32 functions to make them available to the eval code
+export { setConnection, getAvailableVariables, getVariables, setVariable };
 
 export const boards = {};
 export const virtualBridges = {};
@@ -30,6 +34,8 @@ export const connectBoard = ({ data }) => {
     // Special handling for boardType 4
     if (boardType === 4) {
       if (closing) {
+        // Clean up ESP32 connection before clearing timers
+        disconnectESP32({ project });
         clearTimersById(_id);
         resolve();
         return;
