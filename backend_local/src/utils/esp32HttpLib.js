@@ -1,28 +1,96 @@
-/**
- * ESP32 HTTP Communication Library
- * Compatible with ESPAPIServer Arduino library
- */
 import axios from "axios";
 import { gVar } from "../controllers/UpdateCodeBoardController.js";
 
 // Store connection configurations by project
 const connections = {};
+const TIMEOUT = 2000;          // Reduced from 3000ms to 2000ms
+const MAX_RETRIES = 2;         // Reduced from 3 to 2 for faster failures
+const RETRY_DELAY = 150;       // Reduced from 300ms to 150ms
+const REQUEST_THROTTLE = 200;  // Reduced from 500ms to 200ms
+
+// Last request timestamps to implement throttling
+const lastRequestTime = {};
+
+// Store cancelation tokens for each project
+const cancelTokens = {};
+
+/**
+ * Sleep function for delays
+ */
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Validate if connection is configured for a project
+ */
+function validateConnection(project) {
+  if (!connections[project]) {
+    throw new Error(`No connection configured for project: ${project}. Call setConnection first.`);
+  }
+}
+
+/**
+ * Helper function to throttle requests to the same ESP32
+ */
+async function throttleRequest(project) {
+  const now = Date.now();
+  if (lastRequestTime[project]) {
+    const timeSinceLastRequest = now - lastRequestTime[project];
+    if (timeSinceLastRequest < REQUEST_THROTTLE) {
+      // Wait to ensure minimum spacing between requests
+      await sleep(REQUEST_THROTTLE - timeSinceLastRequest);
+    }
+  }
+  lastRequestTime[project] = Date.now();
+}
+
+/**
+ * Retry wrapper for API calls
+ */
+async function withRetry(project, operation) {
+  let lastError;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      // Throttle requests to avoid overwhelming the ESP32
+      await throttleRequest(project);
+      
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      
+      // Don't retry on canceled requests
+      if (axios.isCancel(error)) {
+        throw error;
+      }
+      
+      console.log(`Attempt ${attempt}/${MAX_RETRIES} failed: ${error.message}`);
+      
+      if (attempt < MAX_RETRIES) {
+        // Exponential backoff with jitter for retries
+        const delay = RETRY_DELAY * Math.pow(2, attempt - 1) * (0.5 + Math.random() * 0.5);
+        await sleep(delay);
+      }
+    }
+  }
+  throw lastError;
+}
 
 /**
  * Initialize the connection settings for an ESP32 device
- * @param {Object} config - Connection configuration
- * @param {String} config.project - Project identifier
- * @param {String} config.ip - ESP32 IP address
- * @param {String} config.serverAPIKey - API key for authentication
- * @param {String} config.port - Optional port number (default: 80)
- * @returns {Object} - Connection configuration
  */
 export function setConnection({ project, ip, serverAPIKey, port = 80 }) {
+  // First close any existing connection for this project
+  if (connections[project]) {
+    closeConnection(project);
+  }
+  
   if (!project || !ip || !serverAPIKey) {
     throw new Error(
       "Missing required parameters: project, ip, and serverAPIKey are required"
     );
   }
+
+  // Create a new cancel token source for this project
+  cancelTokens[project] = axios.CancelToken.source();
 
   connections[project] = {
     ip,
@@ -34,148 +102,188 @@ export function setConnection({ project, ip, serverAPIKey, port = 80 }) {
   console.log(
     `ESP32 connection configured for project ${project} at ${ip}:${port}`
   );
+  
+  // Initialize gVar for this project if it doesn't exist
+  if (!gVar[project]) {
+    gVar[project] = {};
+  }
+  
   return connections[project];
 }
 
 /**
- * Get available variables and their metadata from the ESP32
- * @param {Object} params - Request parameters
- * @param {String} params.project - Project identifier
- * @param {String} params._id - Board ID for timer tracking
- * @returns {Promise<Array>} - List of variable information objects
+ * Close the connection to an ESP32 device for a specific project
+ */
+export function closeConnection(project) {
+  try {
+    if (connections[project]) {
+      console.log(`Closing ESP32 connection for project ${project}`);
+
+      // Cancel any pending requests
+      if (cancelTokens[project]) {
+        cancelTokens[project].cancel('Connection closed');
+        // Create a new cancel token for future requests
+        cancelTokens[project] = axios.CancelToken.source();
+      }
+
+      // Remove the connection configuration
+      delete connections[project];
+      
+      // Clear the throttling timestamp
+      delete lastRequestTime[project];
+      
+      return true;
+    } else {
+      console.log(`No active ESP32 connection found for project ${project}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`Error closing ESP32 connection: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Check if ESP32 connection is healthy
+ */
+export async function checkConnection(project) {
+  try {
+    validateConnection(project);
+    const { baseUrl } = connections[project];
+    
+    // Simple ping request to check if ESP32 is responding
+    await axios.get(`${baseUrl}/ping`, { 
+      timeout: 1000,
+      cancelToken: cancelTokens[project]?.token
+    });
+    return true;
+  } catch (error) {
+    if (axios.isCancel(error)) {
+      console.log(`Connection check for ${project} was cancelled`);
+    } else {
+      console.error(`ESP32 connection check failed: ${error.message}`);
+    }
+    return false;
+  }
+}
+
+/**
+ * Get available variables from the ESP32
  */
 export async function getAvailableVariables({ project }) {
   try {
     validateConnection(project);
 
-    const { baseUrl, serverAPIKey } = connections[project];
-    const response = await axios.get(`${baseUrl}/variables`, {
-      params: { serverAPIKey },
+    return await withRetry(project, async () => {
+      const { baseUrl, serverAPIKey } = connections[project];
+      const response = await axios.get(`${baseUrl}/variables`, {
+        params: { serverAPIKey },
+        timeout: TIMEOUT,
+        cancelToken: cancelTokens[project]?.token
+      });
+      
+      if (response.status === 200 && response.data && response.data.variables) {
+        return response.data.variables;
+      }
+      return [];
     });
-
-    if (response.status === 200 && response.data && response.data.variables) {
-      // The response now contains detailed variable information
-      return response.data.variables;
-    }
-    return [];
   } catch (error) {
-    console.error(`Error getting available variables: ${error.message}`);
+    if (axios.isCancel(error)) {
+      console.log(`Request for ${project} was cancelled`);
+    } else {
+      console.error(`Error getting available variables: ${error.message}`);
+    }
     return [];
   }
 }
 
 /**
- * Get variable values from ESP32 and store in gVar
- * @param {Object} params - Request parameters
- * @param {String} params.project - Project identifier
- * @param {String} params._id - Board ID for timer tracking
- * @returns {Promise<Object>} - The updated gVar[project] object
+ * Get current variable values from the ESP32
  */
 export async function getVariables({ project }) {
   try {
     validateConnection(project);
-
-    const { baseUrl, serverAPIKey } = connections[project];
-    const response = await axios.get(`${baseUrl}/values`, {
-      params: { serverAPIKey },
-    });
-
-    if (response.status === 200 && response.data && response.data.values) {
-      // Initialize project object if it doesn't exist
-      if (!gVar[project]) {
-        gVar[project] = {};
-      }
-
-      // Store all variables in gVar[project]
-      const variables = response.data.values;
-      Object.keys(variables).forEach((varName) => {
-        gVar[project][varName] = variables[varName];
+    
+    return await withRetry(project, async () => {
+      const { baseUrl, serverAPIKey } = connections[project];
+      const response = await axios.get(`${baseUrl}/values`, {
+        params: { serverAPIKey },
+        timeout: TIMEOUT,
+        cancelToken: cancelTokens[project]?.token
       });
-
-      return gVar[project];
-    }
-    return gVar[project] || {};
+      
+      if (response.status === 200 && response.data && response.data.values) {
+        if (!gVar[project]) {
+          gVar[project] = {};
+        }
+        
+        const variables = response.data.values;
+        Object.keys(variables).forEach((varName) => {
+          gVar[project][varName] = variables[varName];
+        });
+        
+        return gVar[project];
+      }
+      return gVar[project] || {};
+    });
   } catch (error) {
-    console.error(`Error fetching ESP32 variables: ${error.message}`);
+    if (axios.isCancel(error)) {
+      console.log(`Request for ${project} was cancelled`);
+    } else {
+      console.error(`Error fetching ESP32 variables: ${error.message}`);
+    }
     return gVar[project] || {};
   }
 }
 
 /**
  * Set a variable value on the ESP32
- * @param {Object} params - Request parameters
- * @param {String} params.project - Project identifier
- * @param {String} params._id - Board ID for timer tracking
- * @param {String} params.variable - Variable name to update
- * @param {*} params.value - New value for the variable
- * @returns {Promise<boolean>} - Success status
  */
 export async function setVariable({ project, variable, value }) {
   try {
     validateConnection(project);
-
+    
     if (!variable) {
       throw new Error("Variable name is required");
     }
-
-    const { baseUrl, serverAPIKey } = connections[project];
-    const response = await axios.post(`${baseUrl}/set`, {
-      serverAPIKey,
-      variable,
-      value,
+    
+    return await withRetry(project, async () => {
+      const { baseUrl, serverAPIKey } = connections[project];
+      const response = await axios.post(`${baseUrl}/set`, {
+        serverAPIKey,
+        variable,
+        value,
+      }, {
+        timeout: TIMEOUT,
+        cancelToken: cancelTokens[project]?.token
+      });
+      
+      if (response.status === 200 && response.data.success) {
+        // Update local cache
+        if (!gVar[project]) {
+          gVar[project] = {};
+        }
+        gVar[project][variable] = value;
+        
+        console.log(`${Date.now()} seteado`+ variable + " " + value);
+        return true;
+      }
+      
+      if (response.data && response.data.message) {
+        console.error(`Error setting variable: ${response.data.message}`);
+      }
+      
+      return false;
     });
-
-    if (response.status === 200 && response.data.success) {
-      //console.log(`Successfully set ${variable} to ${value} on ESP32`);
-      return true;
-    }
-
-    if (response.data && response.data.message) {
-      console.error(`Error setting variable: ${response.data.message}`);
-    }
-
-    return false;
   } catch (error) {
-    console.error(`Error setting ESP32 variable: ${error.message}`);
-    if (error.response && error.response.data) {
-      console.error("Server response:", error.response.data);
+    if (axios.isCancel(error)) {
+      console.log(`Request for ${project} was cancelled`);
+    } else {
+      console.error(`Error setting ESP32 variable: ${error.message}`);
     }
     return false;
   }
 }
 
-/**
- * Disconnect from the ESP32 and cleanup connection resources
- * @param {Object} params - Request parameters
- * @param {String} params.project - Project identifier
- * @returns {boolean} - Success status
- */
-export function disconnectESP32({ project }) {
-  try {
-    // Check if we have a connection for this project
-    if (connections[project]) {
-      // Log the disconnection
-      console.log(`Disconnecting from ESP32 for project ${project}`);
-      
-      // We need to abort any pending requests
-      // For axios, we can't directly abort, but we can remove the connection info
-      // so future requests will fail with clear error messages
-      delete connections[project];
-      
-      return true;
-    }
-    return false;
-  } catch (error) {
-    console.error(`Error disconnecting from ESP32: ${error.message}`);
-    return false;
-  }
-}
-
-// Utility to check if connection is configured
-function validateConnection(project) {
-  if (!connections[project]) {
-    throw new Error(
-      `No connection configured for project: ${project}. Call setConnection first.`
-    );
-  }
-}
+// For compatibility with existing code
+export const disconnectESP32 = closeConnection;
