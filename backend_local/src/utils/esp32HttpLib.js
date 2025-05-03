@@ -126,7 +126,7 @@ export async function setVariable({ project, variable, value }) {
     });
 
     if (response.status === 200 && response.data.success) {
-      console.log(`Successfully set ${variable} to ${value} on ESP32`);
+      //console.log(`Successfully set ${variable} to ${value} on ESP32`);
       return true;
     }
 

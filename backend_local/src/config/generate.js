@@ -7,7 +7,13 @@ import { clearTimersById } from "../controllers/ClearTimers.js";
 // Import the new Xelorium library
 import { xelInterval, xelTimeout } from "../utils/xeloriumLib.js";
 // Import the ESP32 functions including the new disconnect function
-import { setConnection, getAvailableVariables, getVariables, setVariable, disconnectESP32 } from "../utils/esp32HttpLib.js";
+import {
+  setConnection,
+  getAvailableVariables,
+  getVariables,
+  setVariable,
+  disconnectESP32,
+} from "../utils/esp32HttpLib.js";
 
 // Export the ESP32 functions to make them available to the eval code
 export { setConnection, getAvailableVariables, getVariables, setVariable };
@@ -40,9 +46,18 @@ export const connectBoard = ({ data }) => {
         resolve();
         return;
       }
+
       if (!gVar[project]) {
         gVar[project] = {};
       }
+
+      // Connect to your ESP32 device
+      setConnection({
+        project: project,
+        ip: boardInfo.port, // Use your ESP32's actual IP address
+        serverAPIKey: boardInfo.host // The API key you set in your ESP32 code
+      });
+
       updateCodeBoardController({ project, _id, boardCode });
       resolve();
       return;
