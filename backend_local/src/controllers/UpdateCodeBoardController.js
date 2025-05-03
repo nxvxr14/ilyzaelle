@@ -68,8 +68,7 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
         }
         console.log(`Listeners análogos removidos para board ${_id}.`);
 
-        // Ejecutar el código directamente con eval
-        const board = boards[_id];
+
       }
       eval(boardCode);
       resolve();
