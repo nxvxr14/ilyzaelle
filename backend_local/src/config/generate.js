@@ -39,7 +39,7 @@ export const connectBoard = ({ data }) => {
     if (boardType === 4) {
       if (closing) {
         // Clean up ESP32 connection before clearing timers
-        killConection({ project });
+        killConection({ project, _id });
         clearTimersById(_id);
         resolve();
         return;
@@ -52,6 +52,7 @@ export const connectBoard = ({ data }) => {
       // Connect to your ESP32 device
       setConnection({
         project: project,
+        _id: _id,
         ip: boardInfo.port, // Use your ESP32's actual IP address
         serverAPIKey: boardInfo.host // The API key you set in your ESP32 code
       });

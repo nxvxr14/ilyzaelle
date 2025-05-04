@@ -7,7 +7,7 @@ const connections = {};
 // Configuration settings
 const TIMEOUT = 3000;         // 3 seconds timeout
 const CACHE_TTL = 500;        // Cache values for 500ms to prevent flooding requests
-const cacheByProject = {};    // Cache store for getVariables
+const cacheById = {};    // Cache store for getVariables
 
 /**
  * Initialize the connection settings for an ESP32 device
@@ -18,14 +18,14 @@ const cacheByProject = {};    // Cache store for getVariables
  * @param {String} config.port - Optional port number (default: 80)
  * @returns {Object} - Connection configuration
  */
-export function setConnection({ project, ip, serverAPIKey, port = 80 }) {
-  if (!project || !ip || !serverAPIKey) {
-    console.error("Missing required parameters: project, ip, and serverAPIKey are required");
+export function setConnection({ project, _id, ip, serverAPIKey, port = 80 }) {
+  if (!_id || !ip || !serverAPIKey) {
+    console.error("Missing required parameters: _id, ip, and serverAPIKey are required");
     return null;
   }
 
   // Store connection info
-  connections[project] = {
+  connections[_id] = {
     ip,
     port,
     serverAPIKey,
@@ -40,7 +40,7 @@ export function setConnection({ project, ip, serverAPIKey, port = 80 }) {
     gVar[project] = {};
   }
   
-  return connections[project];
+  return connections[_id];
 }
 
 /**
@@ -49,15 +49,15 @@ export function setConnection({ project, ip, serverAPIKey, port = 80 }) {
  * @param {String} params.project - Project identifier
  * @returns {Promise<Array>} - List of available variable info
  */
-export async function getAvailableVariables({ project }) {
+export async function getAvailableVariables({ project, _id }) {
   try {
     // Check if connection exists
-    if (!connections[project]) {
-      console.error(`No connection configured for project: ${project}`);
+    if (!connections[_id]) {
+      console.error(`No connection configured for id: ${_id}`);
       return [];
     }
 
-    const { baseUrl, serverAPIKey } = connections[project];
+    const { baseUrl, serverAPIKey } = connections[_id];
     
     // Make request with timeout
     const response = await axios.get(`${baseUrl}/variables`, {
@@ -79,24 +79,24 @@ export async function getAvailableVariables({ project }) {
  * Get variable values from ESP32 and store in gVar
  * Uses caching to prevent too frequent requests
  * @param {Object} params - Request parameters
- * @param {String} params.project - Project identifier
+ * @param {String} params._id - _id identifier
  * @returns {Promise<Object>} - The updated gVar[project] object
  */
-export async function getVariables({ project }) {
+export async function getVariables({ project, _id }) {
   try {
     // Check if connection exists
-    if (!connections[project]) {
-      console.error(`No connection configured for project: ${project}`);
+    if (!connections[_id]) {
+      console.error(`No connection configured for _id: ${_id}`);
       return gVar[project] || {};
     }
 
     // Check cache to prevent flooding ESP32 with requests
     const now = Date.now();
-    if (cacheByProject[project] && now - cacheByProject[project].timestamp < CACHE_TTL) {
-      return cacheByProject[project].data;
+    if (cacheById[_id] && now - cacheById[_id].timestamp < CACHE_TTL) {
+      return cacheById[_id].data;
     }
 
-    const { baseUrl, serverAPIKey } = connections[project];
+    const { baseUrl, serverAPIKey } = connections[_id];
     
     // Make request with timeout
     const response = await axios.get(`${baseUrl}/values`, {
@@ -117,7 +117,7 @@ export async function getVariables({ project }) {
       });
       
       // Update cache
-      cacheByProject[project] = {
+      cacheById[_id] = {
         timestamp: now,
         data: gVar[project],
       };
@@ -129,9 +129,9 @@ export async function getVariables({ project }) {
     return gVar[project] || {};
   } catch (error) {
     // Return cached data on error if available
-    if (cacheByProject[project]) {
+    if (cacheById[_id]) {
       console.error(`Error fetching ESP32 variables (using cached data): ${error.message}`);
-      return cacheByProject[project].data;
+      return cacheById[_id].data;
     }
     
     console.error(`Error fetching ESP32 variables: ${error.message}`);
@@ -142,16 +142,16 @@ export async function getVariables({ project }) {
 /**
  * Set a variable value on the ESP32
  * @param {Object} params - Request parameters
- * @param {String} params.project - Project identifier
+ * @param {String} params._id - Project identifier
  * @param {String} params.variable - Variable name to update
  * @param {*} params.value - New value for the variable
  * @returns {Promise<boolean>} - Success status
  */
-export async function setVariable({ project, variable, value }) {
+export async function setVariable({ project, _id, variable, value }) {
   try {
     // Check if connection exists
-    if (!connections[project]) {
-      console.error(`No connection configured for project: ${project}`);
+    if (!connections[_id]) {
+      console.error(`No connection configured for _id: ${_id}`);
       return false;
     }
 
@@ -160,7 +160,7 @@ export async function setVariable({ project, variable, value }) {
       return false;
     }
 
-    const { baseUrl, serverAPIKey } = connections[project];
+    const { baseUrl, serverAPIKey } = connections[_id];
     
     // Optimistically update local value right away
     if (gVar[project]) {
@@ -178,8 +178,8 @@ export async function setVariable({ project, variable, value }) {
       console.log(`Successfully set ${variable} to ${value}`);
       
       // Update cache to reflect the new value
-      if (cacheByProject[project]) {
-        cacheByProject[project].data[variable] = value;
+      if (cacheById[_id]) {
+        cacheById[_id].data[variable] = value;
       }
       
       return true;
@@ -202,15 +202,15 @@ export async function setVariable({ project, variable, value }) {
  * @param {String} params.project - Project identifier
  * @returns {Promise<boolean>} - True if ESP32 is responding
  */
-export async function pingServer({ project }) {
+export async function pingServer({ project, _id }) {
   try {
     // Check if connection exists
-    if (!connections[project]) {
-      console.error(`No connection configured for project: ${project}`);
+    if (!connections[_id]) {
+      console.error(`No connection configured for _id: ${_id}`);
       return false;
     }
 
-    const { baseUrl, serverAPIKey } = connections[project];
+    const { baseUrl, serverAPIKey } = connections[_id];
     
     // Make request with shorter timeout
     await axios.get(`${baseUrl}/status`, {
@@ -231,12 +231,12 @@ export async function pingServer({ project }) {
  * @param {String} params.project - Project identifier
  * @returns {boolean} - Success status
  */
-export function killConection({ project }) {
+export function killConection({ project, _id }) {
   try {
-    if (connections[project]) {
-      console.log(`Disconnecting from ESP32 for project ${project}`);
-      delete connections[project];
-      delete cacheByProject[project];
+    if (connections[_id]) {
+      console.log(`Disconnecting from ESP32 for _id ${_id}`);
+      delete connections[_id];
+      delete cacheById[_id];
       return true;
     }
     return false;
