@@ -6,35 +6,30 @@ import ProjectForm from "@/components/projects/ProjectForm";
 import { ProjectFormData } from "types";
 import { createProject } from "@/api/ProjectApi";
 
-// LocalStorage key for storing unlocked projects (same as in DashboardView)
+// LocalStorage key for storing unlocked projects
 const UNLOCKED_PROJECTS_KEY = 'unlockedProjects';
 
 export default function CreateProjectView() {
-    // react queri es una libreria para obtener datos del servidor
-    // obtiene datos de forma rapida, cachea las consultas, se puede usar con fetch api o axios
-    // queries: se utilizan para obtener datos de un servidor o api (get) useQuery
-    // mutatios: se utilizan para cambiar datos en el servidor (post, put, patch delete:5) useMutation
-
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     const initialValues: ProjectFormData = {
         projectName: "",
         description: "",
         server: "",
         serverAPIKey: ""
-    }
+    };
 
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: initialValues
-    })
+    });
 
     const { mutate } = useMutation({
         mutationFn: createProject,
         onError: (error) => {
-            toast.error(error.message)
+            toast.error(error.message);
         },
         onSuccess: (data, variables) => {
-            toast.success(data)
+            toast.success(data);
             
             // Save the serverAPIKey to localStorage so this project is automatically unlocked
             if (variables.serverAPIKey) {
@@ -57,37 +52,38 @@ export default function CreateProjectView() {
                 }
             }
             
-            navigate('/')
+            navigate('/');
         }
-    })
+    });
 
-    const handleForm = (formData: ProjectFormData) => mutate(formData)
-    
-    // ejemplo de peticion con axios sin querys
-    /*
-    const handleForm = async (formData: ProjectFormData) => {
-        const data = await createProject(formData);
-        toast.success(data)
-        navigate('/')
-    }
-    */
+    const handleForm = (formData: ProjectFormData) => mutate(formData);
 
     return (
-        <>
-            <h1 className='text-5xl font-black'>proyectos/crear</h1>
-            <p className='text-1xl font-light text-gray-500 mt-5'>completa el formulario</p>
-
-            <nav className="my-5">
-                <Link className='bg-black hover:bg-[#FFFF44] text-white hover:text-black px-10 py-3 text-xl font-bold cursor-pointer transition-colors rounded-md'
-                    to='/'
-                >
-                    volver
-                </Link>
-            </nav>
-
-            {/* <form className='mt-10 bg-white p-10 rounded-lg border border-gray-300'> */}
-            <div className='max-w-3xl mx-auto'>
-                <form className='mt-10 pt-10 bg-white p-5 shadow-md shadow-purple-200/50 rounded-md'
+        <div className="container mx-auto px-4 py-8">
+            {/* Header section */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                <div className="p-6">
+                    <div className="border-l-4 border-yellow-400 pl-4 mb-6">
+                        <h1 className="text-4xl font-black text-gray-800">Crear Proyecto</h1>
+                        <p className="text-lg text-gray-500 mt-2">Completa el formulario para crear un nuevo proyecto</p>
+                    </div>
+                    
+                    <Link 
+                        to="/"
+                        className="inline-flex items-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-6 py-3 rounded-xl transition-colors shadow-sm"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Volver
+                    </Link>
+                </div>
+            </div>
+            
+            {/* Form section */}
+            <div className="max-w-3xl mx-auto">
+                <form 
+                    className="bg-white rounded-xl shadow-md overflow-hidden p-8"
                     onSubmit={handleSubmit(handleForm)}
                     noValidate
                 >
@@ -95,13 +91,17 @@ export default function CreateProjectView() {
                         register={register}
                         errors={errors}
                     />
-                    <input
-                        type="submit"
-                        value='crear'
-                        className='bg-black hover:bg-[#FFFF44] text-white hover:text-black w-full p-3 font-bold cursor-pointer transition-color'
-                    />
+                    
+                    <div className="mt-8">
+                        <button
+                            type="submit"
+                            className="w-full bg-black hover:bg-yellow-400 text-white hover:text-black font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg uppercase tracking-wide shadow-md hover:shadow-lg"
+                        >
+                            Crear Proyecto
+                        </button>
+                    </div>
                 </form>
             </div>
-        </>
+        </div>
     );
 }

@@ -121,14 +121,15 @@ function ProjectDetailsView() {
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                                 </svg>
-                                <span className="font-semibold">Server:</span> <span className="ml-1 font-mono">{data.server}</span>
+                                <span className="font-semibold">Gateway:</span> 
+                                <span className="ml-1 font-mono bg-gray-100 px-2 py-1 rounded">{data.server}</span>
                             </p>
                             
                             <p className="text-sm text-emerald-600 font-medium flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                 </svg>
-                                <span className="font-semibold">API Key:</span> <span className="ml-1 font-mono bg-gray-100 px-2 py-1 rounded">{data.serverAPIKey}</span>
+                                <span className="font-semibold">Gateway API key:</span> <span className="ml-1 font-mono bg-gray-100 px-2 py-1 rounded">{data.serverAPIKey}</span>
                             </p>
                         </div>
                     </div>

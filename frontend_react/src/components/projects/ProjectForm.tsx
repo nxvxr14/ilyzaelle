@@ -2,39 +2,28 @@ import { FieldErrors, UseFormRegister } from "react-hook-form";
 import ErrorMessage from "../ErrorMessage";
 import { ProjectFormData } from "@/types/index.ts";
 
-// los generics (lo que va dentro de ls objetos) este type los obtuve copiando&pegando los ofrecidos por react en el useForm
 type ProjectFormProps = {
     register: UseFormRegister<ProjectFormData>,
     errors: FieldErrors<ProjectFormData>
 }
-// si no hubiera usado zod para crear mi type tendria que hacerlo de esta manera
-/*
-type ProjectFormProps = {
-    register: UseFormRegister<{
-        projectName: string;
-        description: string;
-    }>,
-    errors: FieldErrors<{
-        projectName: string;
-        description: string;
-    }>
-}
-*/
 
 export default function ProjectForm({ register, errors }: ProjectFormProps) {
     return (
         <>
-            <div className="mb-5 space-y-3">
-                <label htmlFor="projectName" className="text-lg font-bold">
-                    nombre del proyecto
+            <div className="mb-6">
+                <label 
+                    htmlFor="projectName" 
+                    className="block text-gray-700 font-bold mb-2 text-lg"
+                >
+                    Nombre del proyecto
                 </label>
                 <input
                     id="projectName"
-                    className="w-full p-3  border border-gray-200"
+                    className="w-full p-4 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200"
                     type="text"
-                    placeholder="nombre"
+                    placeholder="Ingrese el nombre del proyecto"
                     {...register("projectName", {
-                        required: "titulo obligatorio",
+                        required: "El nombre del proyecto es obligatorio",
                     })}
                 />
                 {errors.projectName && (
@@ -42,51 +31,67 @@ export default function ProjectForm({ register, errors }: ProjectFormProps) {
                 )}
             </div>
 
-            <div className="mb-5 space-y-3">
-                <label htmlFor="server" className="text-lg font-bold">
-               server 
+            <div className="mb-6">
+                <label 
+                    htmlFor="server" 
+                    className="block text-gray-700 font-bold mb-2 text-lg"
+                >
+                    Gateway
                 </label>
-                <textarea
+                <input
                     id="server"
-                    className="w-full p-3  border border-gray-200"
-                    placeholder="server"
+                    className="w-full p-4 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200"
+                    type="text"
+                    placeholder="Dirección del gateway"
                     {...register("server", {
-                        required: "server obligatoria"
+                        required: "La dirección del gateway es obligatoria"
                     })}
                 />
+                {errors.server && (
+                    <ErrorMessage>{errors.server.message}</ErrorMessage>
+                )}
             </div>
 
-            <div className="mb-5 space-y-3">
-                <label htmlFor="serverAPIKey" className="text-lg font-bold">
-               server API 
+            <div className="mb-6">
+                <label 
+                    htmlFor="serverAPIKey" 
+                    className="block text-gray-700 font-bold mb-2 text-lg"
+                >
+                    Gateway API key
                 </label>
-                <textarea
+                <input
                     id="serverAPIKey"
-                    className="w-full p-3  border border-gray-200"
-                    placeholder="serverAPIKey"
+                    className="w-full p-4 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200"
+                    type="text"
+                    placeholder="Clave de API para el gateway"
                     {...register("serverAPIKey", {
-                        required: "serverAPIKey obligatoria"
+                        required: "La clave API es obligatoria"
                     })}
                 />
+                {errors.serverAPIKey && (
+                    <ErrorMessage>{errors.serverAPIKey.message}</ErrorMessage>
+                )}
             </div>
 
-            <div className="mb-5 space-y-3">
-                <label htmlFor="description" className="text-lg font-bold">
-                    descripción
+            <div className="mb-6">
+                <label 
+                    htmlFor="description" 
+                    className="block text-gray-700 font-bold mb-2 text-lg"
+                >
+                    Descripción
                 </label>
                 <textarea
                     id="description"
-                    className="w-full p-3  border border-gray-200"
-                    placeholder="descripción"
+                    className="w-full p-4 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 min-h-[120px]"
+                    placeholder="Describe brevemente el propósito del proyecto"
                     {...register("description", {
-                        required: "descripción obligatoria"
+                        required: "La descripción es obligatoria"
                     })}
                 />
-
                 {errors.description && (
                     <ErrorMessage>{errors.description.message}</ErrorMessage>
                 )}
             </div>
         </>
-    )
+    );
 }
