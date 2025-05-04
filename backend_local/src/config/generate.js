@@ -12,7 +12,7 @@ import {
   getAvailableVariables,
   getVariables,
   setVariable,
-  disconnectESP32,
+  killConection,
 } from "../utils/xelHTTP.js";
 
 

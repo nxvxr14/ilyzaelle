@@ -63,6 +63,15 @@ function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps
         mutate(data)
     }
 
+    const handleCodeEditorBoardOFF = async () => {
+        const data = {
+            projectId,
+            boardId,
+            boardCode
+        }
+        mutate(data)
+    }
+
     return (
         <>
             <div className="py-5">
@@ -71,6 +80,12 @@ function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps
                     onClick={handleCodeEditorBoard}
                 >
                     burn
+                </button>
+                <button
+                    className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
+                    onClick={handleCodeEditorBoardOFF}
+                >
+                    Offburn
                 </button>
             </div>
         </>

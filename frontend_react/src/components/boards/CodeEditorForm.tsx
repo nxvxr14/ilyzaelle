@@ -20,7 +20,7 @@ export default function CodeEditorForm({ boardCode }: CodeEditorFormData) {
     };
 
     // para ir guardando en una variable los cambios para posteriormente enviarlos al backend como post
-    const [code, setCodeValue] = useState<string>('');  // Se inicializa como cadena vacía
+    const [code, setCodeValue] = useState<string>(boardCode);  // Se inicializa como cadena vacía
 
     return (
         <>
@@ -35,7 +35,7 @@ export default function CodeEditorForm({ boardCode }: CodeEditorFormData) {
                         className="text-3xl text-[#d4d4d4] font-bold m-5 cursor-pointer"
                         onClick={() => scrollToSection(editorRef)}
                     >
-                        editor/
+                        editor
                     </h1>
 
                     <Editor
@@ -54,33 +54,10 @@ export default function CodeEditorForm({ boardCode }: CodeEditorFormData) {
                     />
                 </div>
 
-                {/* Segundo div que ocupa la mitad del espacio */}
-                <div
-                    ref={consoleRef}
-                    className="flex flex-col justify-start items-start pl-4"
-                >
-                    <h1
-                        className="text-3xl text-[#d4d4d4] font-bold m-5 cursor-pointer"
-                        onClick={() => scrollToSection(consoleRef)}
-                    >
-                        consola/
-                    </h1>
-                    <div
-                        style={{
-                            width: "97%",
-                            height: "85%",
-                            backgroundColor: "#1e1e1e",
-                            color: "#d4d4d4",
-                            overflow: "auto",
-                            padding: "1rem",
-                        }}
-                    >
-                        hola
-                    </div>
                     <CodeEditorModal boardCode={code} projectId={projectId} boardId={boardId} />
+                
                 </div>
 
-            </div>
 
         </>
     );

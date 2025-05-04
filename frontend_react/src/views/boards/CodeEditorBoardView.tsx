@@ -32,11 +32,11 @@ function CodeEditorBoardView() {
     if (data) return (
         <>
             <div className="py-10">
-                <StatusLocalModal />
+            <StatusLocalModal />
                 {/* <StatusLocalModal boards={data.boards}
     server={data.server} /> */}
                 <h1 className='text-5xl font-black mt-5'>
-                    editor/{data.boardName}
+                    {data.boardName}
                 </h1>
                 <p className="text-lg text-gray-400 mt-2">
                     {boardNames[data.boardType] || 'Desconocido'}
