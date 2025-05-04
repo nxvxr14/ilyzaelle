@@ -49,6 +49,26 @@ export default function CodeEditorForm({ boardCode }: CodeEditorFormData) {
                     options={{
                         wordWrap: "on",
                         wrappingIndent: "same",
+                        fontSize: 14,
+                        minimap: { enabled: true },
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                        tabSize: 2,
+                        lineNumbers: "on",                     // "on", "off", or "relative"
+                        renderLineHighlight: "all",            // "all", "line", "gutter", or "none"
+                        cursorBlinking: "smooth",              // "blink", "smooth", "phase", "expand", "solid"
+                        cursorStyle: "line",                   // "line", "block", "underline", "line-thin"
+                        matchBrackets: "always", 
+                        bracketPairColorization: { enabled: true }, // Colorize matching brackets
+                        guides: {                              // Indentation guides
+                          bracketPairs: true,
+                          indentation: true,
+                        },
+                        quickSuggestions: true,                // Enable auto-suggestions
+                        suggestOnTriggerCharacters: true,      // Show suggestions when typing trigger chars
+                        formatOnPaste: true,                   // Auto-format pasted code
+                        formatOnType: false, 
+                        folding: false
                     }}
                     width="100%"
                     height="85vh" // Preserves the original height based on screen
