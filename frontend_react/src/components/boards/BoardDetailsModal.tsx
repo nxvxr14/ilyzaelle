@@ -146,20 +146,22 @@ export default function BoardDetailsModal({ server }: { server: string }) {
                                                 </span>
                                             </div>
                                             
-                                            {/* Active status */}
+                                            {/* Active status - Updated to match new style but kept as a button */}
                                             <div>
                                                 <button 
-                                                    className={`inline-flex items-center px-4 py-2 rounded-xl text-white text-sm font-medium transition-colors ${
+                                                    className={`text-sm font-medium px-3 py-1 rounded-full transition-colors ${
                                                         data.active 
-                                                            ? 'bg-green-500 hover:bg-green-600' 
-                                                            : 'bg-red-500 hover:bg-red-600'
+                                                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                                            : 'bg-red-100 text-red-800 hover:bg-red-200'
                                                     }`}
                                                     onClick={handleClick}
                                                 >
-                                                    <span className={`w-3 h-3 rounded-full mr-2 ${
-                                                        data.active ? 'bg-white' : 'bg-white'
-                                                    }`}></span>
-                                                    {data.active ? 'En línea' : 'Desconectado'}
+                                                    <div className="flex items-center">
+                                                        <div className={`w-3 h-3 rounded-full mr-2 ${
+                                                            data.active ? 'bg-green-500' : 'bg-red-500'
+                                                        }`}></div>
+                                                        {data.active ? 'Conectado' : 'Desconectado'}
+                                                    </div>
                                                 </button>
                                             </div>
                                             
@@ -225,9 +227,9 @@ export default function BoardDetailsModal({ server }: { server: string }) {
                                                     alt={boardNames[data.boardType] || "Dispositivo"}
                                                     className="max-w-full h-auto max-h-64 object-contain mb-4"
                                                 />
-                                                <p className="text-center text-sm text-gray-500 font-medium">
+                                                {/* <p className="text-center text-sm text-gray-500 font-medium">
                                                     ID: <span className="font-mono">{data._id.substring(0, 10)}...</span>
-                                                </p>
+                                                </p> */}
                                             </div>
                                         </div>
                                     </div>

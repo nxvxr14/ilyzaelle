@@ -13,81 +13,81 @@ type CodeEditorModalProps = {
 }
 
 function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps) {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
-
-    const { data : project, isLoading, isError } = useQuery({
-        // se usa projectid en querykey para que sean unicos, no quede cacheado y no haya problemas mas adelante
+    const { data: project, isLoading, isError } = useQuery({
         queryKey: ['project', projectId],
-        //cuando tengo una funcion que toma un parametro debo tener un callback
         queryFn: () => getProjectById(projectId)
-    })
+    });
 
-    // elimia informacion cacheada para realizar otra consulta
-    const queryClient = useQueryClient()
+    // Query client for cache invalidation
+    const queryClient = useQueryClient();
 
-    //para ejecutar el update
+    // Mutation for code updates
     const { mutate } = useMutation({
         mutationFn: updateCodeBoardById,
         onError: (error) => {
-            toast.error(error.message)
-
+            toast.error(error.message);
         },
         onSuccess: (data) => {
-            toast.success(data),
-                queryClient.invalidateQueries({ queryKey: ['CodeEditorBoard', boardId] })
-            // para navegar hacia atras
-            // navigate(`/projects/${projectId}`, { replace: true })
+            toast.success(data);
+            queryClient.invalidateQueries({ queryKey: ['CodeEditorBoard', boardId] });
         }
+    });
 
-    })
-
+    // Handle code burning with connection check
     const handleCodeEditorBoard = async () => {
         const data = {
             projectId,
             boardId,
             boardCode
-        }
+        };
 
         const pollingDataCodes = {
             project: projectId,
             _id: boardId,
             boardCode: boardCode
-        }
+        };
 
-        const response = await pollingCodes({ pollingDataCodes }, project.server)
+        const response = await pollingCodes({ pollingDataCodes }, project.server);
         if (isAxiosError(response)) {
-            return toast.error("localhost sin conexion");
+            return toast.error("localhost sin conexión");
         }
 
-        mutate(data)
-    }
+        mutate(data);
+    };
 
+    // Handle code update without connection check
     const handleCodeEditorBoardOFF = async () => {
         const data = {
             projectId,
             boardId,
             boardCode
-        }
-        mutate(data)
-    }
+        };
+        mutate(data);
+    };
 
     return (
         <>
-            <div className="py-5">
-                <button
-                    className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                    onClick={handleCodeEditorBoard}
-                >
-                    burn
-                </button>
-                <button
-                    className='bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl'
-                    onClick={handleCodeEditorBoardOFF}
-                >
-                    Offburn
-                </button>
-            </div>
+            <button
+                className="inline-flex items-center bg-green-500 hover:bg-green-600 text-white font-medium px-5 py-2 rounded-lg transition-colors shadow-sm"
+                onClick={handleCodeEditorBoard}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Ejecutar
+            </button>
+            
+            <button
+                className="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-medium px-5 py-2 rounded-lg transition-colors shadow-sm"
+                onClick={handleCodeEditorBoardOFF}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Guardar
+            </button>
         </>
     );
 }

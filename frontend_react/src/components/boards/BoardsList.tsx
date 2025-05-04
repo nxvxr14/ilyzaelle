@@ -167,7 +167,7 @@ function BoardsList({ boards }: BoardsListProps) {
                                                                 ? 'bg-green-100 text-green-800' 
                                                                 : 'bg-red-100 text-red-800'
                                                             }`}>
-                                                                {board.active ? 'Activo' : 'Inactivo'}
+                                                                {board.active ? 'Conectado' : 'Desconectado'}
                                                             </span>
                                                         </div>
                                                     </div>

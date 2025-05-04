@@ -5,60 +5,56 @@ import { useParams } from "react-router-dom";
 import CodeEditorModal from "./CodeEditorModal";
 
 export default function CodeEditorForm({ boardCode }: CodeEditorFormData) {
+    const params = useParams();
+    const projectId = params.projectId!;
+    const boardId = params.boardId!;
 
-    const params = useParams()
-    const projectId = params.projectId!
-    const boardId = params.boardId!
-
-    // aca hago un scroll para ajustar el editor en la pantalla con un click
+    // Scroll reference for editor navigation
     const editorRef = useRef<HTMLDivElement>(null);
-    const consoleRef = useRef<HTMLDivElement>(null);
     const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
         if (ref.current) {
             ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
         }
     };
 
-    // para ir guardando en una variable los cambios para posteriormente enviarlos al backend como post
-    const [code, setCodeValue] = useState<string>(boardCode);  // Se inicializa como cadena vacía
+    // State for tracking code changes
+    const [code, setCodeValue] = useState<string>(boardCode);
 
     return (
-        <>
-            <div className="grid grid-cols-2 h-screen w-full bg-[#120d18] rounded-2xl overflow-hidden">
-                {/* Primer div que ocupa la mitad del espacio */}
-                <div
-                    ref={editorRef}
-                    className="flex flex-col justify-start items-start pl-4"
+        <div 
+            ref={editorRef}
+            className="bg-[#120d18] rounded-2xl overflow-hidden"
+        >
+            {/* Header with editor title and action buttons */}
+            <div className="flex justify-between items-center p-4">
+                <h2
+                    className="text-3xl text-[#d4d4d4] font-bold cursor-pointer pl-2"
+                    onClick={() => scrollToSection(editorRef)}
                 >
-                    {/* Encabezado h1 alineado a la izquierda */}
-                    <h1
-                        className="text-3xl text-[#d4d4d4] font-bold m-5 cursor-pointer"
-                        onClick={() => scrollToSection(editorRef)}
-                    >
-                        editor
-                    </h1>
-
-                    <Editor
-                        // funciones
-                        defaultLanguage="javascript"
-                        defaultValue={boardCode}
-                        onChange={(code) => setCodeValue(code || '')} // Si `code` es `undefined`, se usa una cadena vacía.
-                        // estilos
-                        options={{
-                            wordWrap: "on",
-                            wrappingIndent: "same",
-                        }}
-                        width="97%"
-                        height="85%"
-                        theme="vs-dark"
-                    />
-                </div>
-
-                    <CodeEditorModal boardCode={code} projectId={projectId} boardId={boardId} />
+                    Editor
+                </h2>
                 
+                {/* Action buttons */}
+                <div className="flex space-x-3">
+                    <CodeEditorModal boardCode={code} projectId={projectId} boardId={boardId} />
                 </div>
-
-
-        </>
+            </div>
+            
+            {/* Monaco Editor - full width, preserving height */}
+            <div className="px-4 pb-4">
+                <Editor
+                    defaultLanguage="javascript"
+                    defaultValue={boardCode}
+                    onChange={(code) => setCodeValue(code || '')}
+                    options={{
+                        wordWrap: "on",
+                        wrappingIndent: "same",
+                    }}
+                    width="100%"
+                    height="85vh" // Preserves the original height based on screen
+                    theme="vs-dark"
+                />
+            </div>
+        </div>
     );
 }
