@@ -3,8 +3,13 @@ import { boards } from "../config/generate.js";
 import { SerialPort, firmata } from "../config/index.js";
 import { clearTimersById } from "./ClearTimers.js";
 import { xelInterval, xelTimeout } from "../utils/xeloriumLib.js";
-// Import the new ESP32 HTTP library
-import { setConnection, getAvailableVariables, getVariables, setVariable } from "../utils/esp32HttpLib.js";
+import {
+  setConnection,
+  getAvailableVariables,
+  getVariables,
+  setVariable,
+  disconnectESP32,
+} from "../utils/esp32HttpLib.js";
 
 export let gVar = {};
 

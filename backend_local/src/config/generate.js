@@ -15,8 +15,6 @@ import {
   disconnectESP32,
 } from "../utils/esp32HttpLib.js";
 
-// Export the ESP32 functions to make them available to the eval code
-export { setConnection, getAvailableVariables, getVariables, setVariable };
 
 export const boards = {};
 export const virtualBridges = {};
