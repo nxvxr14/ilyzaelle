@@ -5,7 +5,7 @@ import {
 } from "../controllers/UpdateCodeBoardController.js";
 import { clearTimersById } from "../controllers/ClearTimers.js";
 // Import the new Xelorium library
-import { xelInterval, xelTimeout } from "../utils/xeloriumLib.js";
+import { xelInterval, xelTimeout } from "../utils/xelTIME.js";
 // Import the ESP32 functions including the new disconnect function
 import {
   setConnection,
@@ -13,7 +13,7 @@ import {
   getVariables,
   setVariable,
   disconnectESP32,
-} from "../utils/esp32HttpLib.js";
+} from "../utils/xelHTTP.js";
 
 
 export const boards = {};
@@ -35,11 +35,11 @@ export const connectBoard = ({ data }) => {
   } = data;
 
   return new Promise((resolve, reject) => {
-    // Special handling for boardType 4
+    // Special handling for HTTP client
     if (boardType === 4) {
       if (closing) {
         // Clean up ESP32 connection before clearing timers
-        disconnectESP32({ project });
+        killConection({ project });
         clearTimersById(_id);
         resolve();
         return;

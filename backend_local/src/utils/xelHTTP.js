@@ -202,7 +202,7 @@ export async function setVariable({ project, variable, value }) {
  * @param {String} params.project - Project identifier
  * @returns {Promise<boolean>} - True if ESP32 is responding
  */
-export async function pingESP32({ project }) {
+export async function pingServer({ project }) {
   try {
     // Check if connection exists
     if (!connections[project]) {
@@ -231,7 +231,7 @@ export async function pingESP32({ project }) {
  * @param {String} params.project - Project identifier
  * @returns {boolean} - Success status
  */
-export function disconnectESP32({ project }) {
+export function killConection({ project }) {
   try {
     if (connections[project]) {
       console.log(`Disconnecting from ESP32 for project ${project}`);
@@ -247,4 +247,4 @@ export function disconnectESP32({ project }) {
 }
 
 // Alias for backward compatibility
-export const closeConnection = disconnectESP32;
+export const closeConnection = killConection;

@@ -32,7 +32,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                 <label
                     className="font-medium text-xl text-gray-700"
                     htmlFor="boardType"
-                >Marca</label>
+                >Tipo</label>
                 <select
                     id="boardType"
                     className="w-full p-3.5 border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all duration-200 bg-white/50 hover:bg-white appearance-none cursor-pointer"
@@ -43,7 +43,9 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                     <option value="1">Arduino</option>
                     <option value="2">Xelorium</option>
                     <option value="3">Esp32</option>
-                    <option value="4">Nodo</option>
+                    <option value="4">HTTP</option>
+                    <option value="4">MQTT</option>
+                    <option value="4">Factory IO</option>
                 </select>
                 {errors.boardType && (
                     <ErrorMessage>{errors.boardType.message}</ErrorMessage>
@@ -65,6 +67,7 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                     <option value="1">USB</option>
                     <option value="2">Wi-Fi</option>
                     <option value="3">Ethernet</option>
+                    <option value="4">Nodo</option>
                 </select>
                 {errors.boardConnect && (
                     <ErrorMessage>{errors.boardConnect.message}</ErrorMessage>
