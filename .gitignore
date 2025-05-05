@@ -2,6 +2,7 @@
 **.env
 **.txt
 **.vscode
+**/dist/
 
 # Logs
 logs
