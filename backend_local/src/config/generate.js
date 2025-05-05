@@ -15,11 +15,14 @@ import {
   killConection,
 } from "../utils/xelHTTP.js";
 
+import { connectMQTT, disconnectMQTT, clients } from "../utils/xelMQTT.js";
+
 
 export const boards = {};
 export const virtualBridges = {};
 export const tcpIpClient = {};
 export const activeSockets = {};
+export const mqttConnections= {};
 
 export const connectBoard = ({ data }) => {
   const {
@@ -55,6 +58,32 @@ export const connectBoard = ({ data }) => {
         _id: _id,
         ip: boardInfo.port, // Use your ESP32's actual IP address
         serverAPIKey: boardInfo.host // The API key you set in your ESP32 code
+      });
+
+      updateCodeBoardController({ project, _id, boardCode });
+      resolve();
+      return;
+    }
+
+    if (boardType === 5) {
+      if (closing) {
+        // Clean up MQTT connection before clearing timers
+        disconnectMQTT({ _id });
+        clearTimersById(_id);
+        resolve();
+        return;
+      }
+
+      if (!gVar[project]) {
+        gVar[project] = {};
+      }
+
+      // Connect to your MQTT broker
+      connectMQTT({
+        project: project,
+        _id: _id,
+        brokerUrl: boardInfo.host, // Use your MQTT broker's actual URL
+        port: boardInfo.port, // The port for your MQTT broker
       });
 
       updateCodeBoardController({ project, _id, boardCode });

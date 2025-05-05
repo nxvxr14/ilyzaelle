@@ -11,6 +11,14 @@ import {
   killConection,
 } from "../utils/xelHTTP.js";
 
+
+import {
+  connectMQTT,
+  disconnectMQTT,
+  clients,
+  clearMQTTListeners,
+} from "../utils/xelMQTT.js";
+
 export let gVar = {};
 
 export const updateCodeBoardController = ({ project, _id, boardCode }) => {
@@ -72,8 +80,10 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
           // boards[_id].reportAnalogPin(i, 0); // 0 para detener el reporte, usa el índice del canal análogo
         }
         console.log(`Listeners análogos removidos para board ${_id}.`);
+      }
 
-
+      if (clients[_id]) {
+        clearMQTTListeners(_id);
       }
       eval(boardCode);
       resolve();

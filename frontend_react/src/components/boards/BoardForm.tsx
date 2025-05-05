@@ -44,8 +44,8 @@ export default function BoardForm({ errors, register }: BoardFormProps) {
                     <option value="2">Xelorium</option>
                     <option value="3">Esp32</option>
                     <option value="4">HTTP</option>
-                    <option value="4">MQTT</option>
-                    <option value="4">Factory IO</option>
+                    <option value="5">MQTT</option>
+                    <option value="6">Factory IO</option>
                 </select>
                 {errors.boardType && (
                     <ErrorMessage>{errors.boardType.message}</ErrorMessage>
