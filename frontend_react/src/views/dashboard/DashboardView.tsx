@@ -169,7 +169,7 @@ export default function DashboardView() {
             
             {/* Projects list */}
             {visibleProjects.length ? (
-                <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+                <div className="bg-white rounded-xl shadow-md overflow-visible border border-gray-100"> {/* Changed overflow-hidden to overflow-visible */}
                     <div className="border-t-4 border-yellow-400 pt-4"></div>
                     <ul role="list" className="divide-y divide-gray-100">
                         {visibleProjects.map((project) => (
@@ -218,7 +218,12 @@ export default function DashboardView() {
                                             leaveFrom="transform opacity-100 scale-100"
                                             leaveTo="transform opacity-0 scale-95">
                                             <Menu.Items
-                                                className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-lg bg-white py-2 shadow-xl ring-1 ring-gray-900/5 focus:outline-none"
+                                                className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-lg bg-white py-2 shadow-xl ring-1 ring-gray-900/5 focus:outline-none"
+                                                style={{ 
+                                                    // Use dynamic positioning to prevent cut-off at bottom
+                                                    maxHeight: '300px',
+                                                    overflowY: 'auto',
+                                                }}
                                             >
                                                 <Menu.Item>
                                                     <Link to={`/projects/${project._id}`}
