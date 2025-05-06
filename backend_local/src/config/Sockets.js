@@ -34,13 +34,13 @@ class Sockets {
       // Ensure all arrays have their time vectors before sending data
       this.ensureArrayTimeVectors(projectId);
       
-      console.log(`Received request for gVar update for project ${projectId}`);
+      //console.log(`Received request for gVar update for project ${projectId}`);
       
       // Check which arrays have time vectors
       if (gVar[projectId]) {
         // Emitir los datos actualizados incluyendo el projectId como referencia
         this.socket.emit("response-gVar-update-b-b", gVar[projectId], projectId);
-        console.log(`Sent gVar update for project ${projectId} with API key ${this.serverAPIKey}`);
+        //console.log(`Sent gVar update for project ${projectId} with API key ${this.serverAPIKey}`);
       } else {
         console.log(`No data available for project ${projectId}`);
         // Enviar un objeto vacío para evitar errores en el frontend
@@ -168,7 +168,7 @@ class Sockets {
           gVar[projectId][timeKey] = timeVector;
         } else if (gVar[projectId][timeKey].length !== value.length) {
           // Fix length mismatch between array and its time vector
-          console.log(`Fixing time vector length for ${key}: array=${value.length}, time=${gVar[projectId][timeKey].length}`);
+          //console.log(`Fixing time vector length for ${key}: array=${value.length}, time=${gVar[projectId][timeKey].length}`);
           
           const timeVector = gVar[projectId][timeKey];
           const now = Date.now();
