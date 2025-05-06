@@ -21,7 +21,8 @@ interface ScadaBackgroundProps {
   onUpdatePosition: (id: string, position: { x: number; y: number }) => void;
   onUpdateTitle: (id: string, title: string) => void;
   gVarData: any;
-  onUpdateFontSize: (id: string, fontSizeFactor: number) => void; // Nueva prop
+  onUpdateFontSize: (id: string, fontSizeFactor: number) => void;
+  serverAPIKey?: string; // Añadir serverAPIKey como prop opcional
 }
 
 const ScadaBackground = ({ 
@@ -32,7 +33,8 @@ const ScadaBackground = ({
   onUpdatePosition,
   onUpdateTitle,
   onUpdateFontSize,
-  gVarData
+  gVarData,
+  serverAPIKey
 }: ScadaBackgroundProps) => {
   const [inputUrl, setInputUrl] = useState(backgroundUrl || '');
 
@@ -104,6 +106,7 @@ const ScadaBackground = ({
               <ScadaInputComponent 
                 selectedVar={component.selectedVar}
                 gVar={gVarData}
+                serverAPIKey={serverAPIKey} // Pasar serverAPIKey
               />
             )}
             {component.type === 'label' && (
@@ -116,6 +119,7 @@ const ScadaBackground = ({
               <ScadaToggleComponent 
                 selectedVar={component.selectedVar}
                 gVar={gVarData}
+                serverAPIKey={serverAPIKey} // Pasar serverAPIKey
               />
             )}
             {component.type === 'arrayValue' && (

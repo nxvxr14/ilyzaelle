@@ -252,6 +252,7 @@ function DashboardZoneView({ gVarData, projectId, serverAPIKey }: DashboardZoneV
                             onUpdateTitle={updateScadaComponentTitle}
                             onUpdateFontSize={updateScadaComponentFontSize}
                             gVarData={gVarData}
+                            serverAPIKey={serverAPIKey} // Pasar serverAPIKey
                         />
                     </>
                 )}

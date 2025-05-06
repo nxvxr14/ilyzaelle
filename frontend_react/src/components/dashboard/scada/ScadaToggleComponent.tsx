@@ -6,12 +6,14 @@ interface ScadaToggleComponentProps {
   selectedVar: string;
   gVar: any;
   fontSizeFactor?: number;
+  serverAPIKey?: string; // Añadir serverAPIKey como prop opcional
 }
 
 const ScadaToggleComponent: React.FC<ScadaToggleComponentProps> = ({ 
   selectedVar, 
   gVar,
-  fontSizeFactor = 1.0
+  fontSizeFactor = 1.0,
+  serverAPIKey 
 }) => {
   const { socket } = useContext(SocketContext);
   const params = useParams();
@@ -23,11 +25,11 @@ const ScadaToggleComponent: React.FC<ScadaToggleComponentProps> = ({
   // Función para cambiar el estado del toggle
   const toggleValue = () => {
     if (socket) {
-      socket.emit("request-gVariable-change-f-b", selectedVar, !isOn, projectId, (response: any) => {
+      socket.emit("request-gVariable-change-f-b", selectedVar, !isOn, projectId, serverAPIKey, (response: any) => {
         console.log("Server acknowledged toggle update:", response);
       });
       
-      console.log(`Toggle pressed: Sending value change for ${selectedVar} from ${isOn} to ${!isOn}`);
+      console.log(`Toggle pressed: Sending value change for ${selectedVar} from ${isOn} to ${!isOn} with serverAPIKey: ${serverAPIKey}`);
     }
   };
 
