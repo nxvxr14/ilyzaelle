@@ -160,7 +160,11 @@ function DashboardZoneView({ gVarData, projectId, serverAPIKey }: DashboardZoneV
                                                 title={input.title}
                                                 onTitleChange={(newTitle) => updateInputTitle(input.id, newTitle)}
                                             >
-                                                <Input selectedVar={input.selectedVar} gVar={gVarData} />
+                                                <Input 
+                                                    selectedVar={input.selectedVar} 
+                                                    gVar={gVarData} 
+                                                    serverAPIKey={serverAPIKey} // Pasar serverAPIKey
+                                                />
                                             </RemovableComponent>
                                         </div>
                                     ))}
@@ -200,7 +204,11 @@ function DashboardZoneView({ gVarData, projectId, serverAPIKey }: DashboardZoneV
                                                 title={toggle.title}
                                                 onTitleChange={(newTitle) => updateToggleTitle(toggle.id, newTitle)}
                                             >
-                                                <Toggle selectedVar={toggle.selectedVar} gVar={gVarData} />
+                                                <Toggle 
+                                                    selectedVar={toggle.selectedVar} 
+                                                    gVar={gVarData} 
+                                                    serverAPIKey={serverAPIKey} // Pasar serverAPIKey
+                                                />
                                             </RemovableComponent>
                                         </div>
                                     ))}

@@ -6,9 +6,10 @@ import { useParams } from "react-router-dom";
 type varProps = {
     selectedVar: string;
     gVar: any;
+    serverAPIKey?: string; // Añadir prop para serverAPIKey
 };
 
-function InputVar({ selectedVar, gVar }: varProps) {
+function InputVar({ selectedVar, gVar, serverAPIKey }: varProps) {
     const params = useParams();
     // Use '!' to assert that the value will always be present in the params
     const projectId = params.projectId!;
@@ -21,8 +22,8 @@ function InputVar({ selectedVar, gVar }: varProps) {
             console.error("Socket not connected");
             return;
         }
-        console.log("input"+gVar[selectedVar]);
-        socket.emit("request-gVariable-change-f-b", selectedVar, inputVar, projectId, (response: any) => {
+        console.log("input "+gVar[selectedVar]+" new value: "+inputVar+" with serverAPIKey: "+serverAPIKey);
+        socket.emit("request-gVariable-change-f-b", selectedVar, inputVar, projectId, serverAPIKey, (response: any) => {
             // Callback para confirmar que el servidor recibió el evento
             console.log("Server acknowledged the update:", response);
         });

@@ -5,9 +5,10 @@ import { useContext } from 'react';
 type varProps = {
     selectedVar: string;
     gVar: any;
+    serverAPIKey?: string; // Añadir prop para serverAPIKey
 };
 
-function Toggle({ selectedVar, gVar }: varProps) {
+function Toggle({ selectedVar, gVar, serverAPIKey }: varProps) {
     const params = useParams();
     const projectId = params.projectId!;
     const { socket } = useContext(SocketContext);
@@ -19,14 +20,14 @@ function Toggle({ selectedVar, gVar }: varProps) {
     const handleToggle = () => {
         // Use the f-b socket event, not b-b
         if (socket) {
-            // Send the opposite of current value
-            socket.emit("request-gVariable-change-f-b", selectedVar, !isOn, projectId, (response: any) => {
+            // Send the opposite of current value and include serverAPIKey
+            socket.emit("request-gVariable-change-f-b", selectedVar, !isOn, projectId, serverAPIKey, (response: any) => {
                 // Callback to confirm server received the event
                 console.log("Server acknowledged toggle update:", response);
             });
             
             // Add console.log for debugging
-            console.log(`Toggle pressed: Sending value change for ${selectedVar} from ${isOn} to ${!isOn}`);
+            console.log(`Toggle pressed: Sending value change for ${selectedVar} from ${isOn} to ${!isOn} with serverAPIKey: ${serverAPIKey}`);
         }
     };
     
