@@ -41,8 +41,12 @@ class Sockets {
           online: true,
         });
 
-        socket.on("response-gVar-update-b-b", (data) => {
-          this.io.emit("response-gVar-update-b-f", data);
+        // Modificar para enviar solo a la sala específica
+        socket.on("response-gVar-update-b-b", (data, projectId) => {
+          if (!projectId) return;
+          // Enviando solo a la sala específica basada en el serverAPIKey
+          this.io.to(serverAPIKey).emit("response-gVar-update-b-f", data, serverAPIKey);
+          console.log(`Backend local ${serverAPIKey} responded with data for project ${projectId}`);
         });
 
         // Manejar desconexión del servidor
@@ -65,35 +69,49 @@ class Sockets {
         // Manejar conexión del frontend
 
         /** EVENTOS DE SOCKET **/
-        socket.on("request-gVar-update-f-b", (projectId) => {
-          this.io.emit("request-gVar-update-b-b", projectId);
+        socket.on("request-gVar-update-f-b", (projectId, clientServerAPIKey) => {
+          // Modificado: Enviar solo al servidor específico que coincide con clientServerAPIKey
+          if (clientServerAPIKey && this.connectedServers.has(clientServerAPIKey)) {
+            this.io.to(clientServerAPIKey).emit("request-gVar-update-b-b", projectId);
+            console.log(`Frontend requesting data for project ${projectId} from server ${clientServerAPIKey}`);
+          } else {
+            console.log(`No server available for API key: ${clientServerAPIKey}`);
+            // Notificar al cliente que no hay servidor disponible
+            socket.emit("no-server-available", { projectId, serverAPIKey: clientServerAPIKey });
+          }
         });
 
-        socket.on("request-gVariable-delete-f-b", (projectId, key) => {
-          this.io.emit("request-gVariable-delete-b-b", projectId, key);
+        socket.on("request-gVariable-delete-f-b", (projectId, key, clientServerAPIKey) => {
+          if (clientServerAPIKey) {
+            this.io.to(clientServerAPIKey).emit("request-gVariable-delete-b-b", projectId, key);
+          }
         });
 
         socket.on(
           "request-gVariable-change-f-b",
-          (selectedVar, inputVar, projectId) => {
-            this.io.emit(
-              "request-gVariable-change-b-b",
-              selectedVar,
-              inputVar,
-              projectId
-            );
+          (selectedVar, inputVar, projectId, clientServerAPIKey) => {
+            if (clientServerAPIKey) {
+              this.io.to(clientServerAPIKey).emit(
+                "request-gVariable-change-b-b",
+                selectedVar,
+                inputVar,
+                projectId
+              );
+            }
           }
         );
 
         socket.on(
           "request-gVarriable-initialize-f-b",
-          (projectId, nameGlobalVar, initialValue) => {
-            this.io.emit(
-              "request-gVarriable-initialize-b-b",
-              projectId,
-              nameGlobalVar,
-              initialValue
-            );
+          (projectId, nameGlobalVar, initialValue, clientServerAPIKey) => {
+            if (clientServerAPIKey) {
+              this.io.to(clientServerAPIKey).emit(
+                "request-gVarriable-initialize-b-b",
+                projectId,
+                nameGlobalVar,
+                initialValue
+              );
+            }
           }
         );
         /** EVENTOS DE SOCKET **/

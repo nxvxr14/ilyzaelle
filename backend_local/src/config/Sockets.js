@@ -4,7 +4,8 @@ import { io } from "socket.io-client";
 
 class Sockets {
   constructor(url, serverAPIKey) {
-    console.log(serverAPIKey);
+    console.log(`Initializing socket connection with serverAPIKey: ${serverAPIKey}`);
+    this.serverAPIKey = serverAPIKey;
     this.socket = io(url, {
       transports: ["websocket"],
       query: {
@@ -18,7 +19,7 @@ class Sockets {
 
   socketsEvents() {
     this.socket.on("connect", () => {
-      console.log("[devMessage] backend_local connected to Socket.IO server");
+      console.log(`[devMessage] backend_local connected to Socket.IO server with API key: ${this.serverAPIKey}`);
     });
 
     this.socket.on("disconnect", () => {
@@ -33,24 +34,26 @@ class Sockets {
       // Ensure all arrays have their time vectors before sending data
       this.ensureArrayTimeVectors(projectId);
       
-      // Log the variables with time vectors before sending
-      console.log("Sending gVar update with keys:", Object.keys(gVar[projectId] || {}));
+      console.log(`Received request for gVar update for project ${projectId}`);
       
       // Check which arrays have time vectors
       if (gVar[projectId]) {
-        Object.keys(gVar[projectId]).forEach(key => {
-          if (Array.isArray(gVar[projectId][key]) && !key.endsWith('_time')) {
-            const timeKey = `${key}_time`;
-            console.log(`Array variable ${key} has time vector: ${timeKey in gVar[projectId]} with length: ${gVar[projectId][timeKey]?.length || 0}`);
-          }
-        });
+        // Emitir los datos actualizados incluyendo el projectId como referencia
+        this.socket.emit("response-gVar-update-b-b", gVar[projectId], projectId);
+        console.log(`Sent gVar update for project ${projectId} with API key ${this.serverAPIKey}`);
+      } else {
+        console.log(`No data available for project ${projectId}`);
+        // Enviar un objeto vacío para evitar errores en el frontend
+        this.socket.emit("response-gVar-update-b-b", {}, projectId);
       }
-      
-      // Emitir los datos actualizados al room específico del proyecto
-      this.socket.emit("response-gVar-update-b-b", gVar[projectId]);
     });
 
     this.socket.on("request-gVariable-delete-b-b", (projectId, key) => {
+      if (!gVar[projectId]) {
+        console.log(`No data available for project ${projectId}`);
+        return;
+      }
+      
       const value = gVar[projectId][key];
       if (typeof value === "number") {
         gVar[projectId][key] = 0; // Reemplazar con 0 si es un número
@@ -64,11 +67,11 @@ class Sockets {
         }
       }
       console.log(
-        "Variable reemplazada por valor por defecto: " + gVar[projectId][key]
+        `Variable ${key} en proyecto ${projectId} reemplazada por valor por defecto: ${gVar[projectId][key]}`
       );
     });
 
-    //   // si en el dashboardzoneview elegi la opcion de editar una variable global aca recibo los datos y actualizo
+    /** EVENTOS DE SOCKET **/
     this.socket.on(
       "request-gVariable-change-b-b",
       (selectedVar, inputVar, projectId) => {
@@ -105,7 +108,6 @@ class Sockets {
       }
     );
 
-    //   // con esto inicializo las variables globales por primera vez las que seleccione en el frontend
     this.socket.on("request-gVarriable-initialize-b-b", (projectId, nameGlobalVar, initialValue) => {
       console.log("Initializing variable:", projectId, nameGlobalVar);
       gVar[projectId] = gVar[projectId] || {};

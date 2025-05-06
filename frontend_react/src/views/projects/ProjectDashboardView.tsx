@@ -9,62 +9,75 @@ import StatusBoardLocalModal from "@/components/boards/StatusBoardLocalModal";
 
 const ProjectDashboardView = () => {
     const params = useParams();
-    // Use '!' to assert that the value will always be present in the params
     const projectId = params.projectId!;
-
-    //  para enviar el server que se recibe en cada proyecto hacia el socket
 
     const { socket, setServerAPI } = useContext(SocketContext);
     const [gVarData, setGVarData] = useState<any>(null);
+    const [serverAPIKey, setServerAPIKeyLocal] = useState<string>("");
 
     const { data, isLoading, isError } = useQuery({
-        // se usa projectid en querykey para que sean unicos, no quede cacheado y no haya problemas mas adelante
         queryKey: ['project', projectId],
-        //cuando tengo una funcion que toma un parametro debo tener un callback
         queryFn: () => getProjectById(projectId),
-    })
+    });
 
-    useEffect(() => {
-        if (socket) {
-            // Unirse al room del proyecto
-            const interval = setInterval(() => {
-                socket.emit('request-gVar-update-f-b', projectId);
-            }, 500);
-
-            // Escuchar actualizaciones de gVar
-            const handleUpdateGVar = (gVarData: object) => {
-                setGVarData(gVarData);
-            };
-
-            socket.on('response-gVar-update-b-f', handleUpdateGVar);
-
-            return () => {
-                console.log('desmontando timer')
-                clearInterval(interval);
-                socket.off('response-gVar-update-b-f', handleUpdateGVar);
-            };
-        }
-    }, [socket]);
-
-    // Usamos useEffect para evitar setServer dentro del render
     useEffect(() => {
         if (data) {
+            // Guardar la API key para usarla en las solicitudes de socket
             setServerAPI(data.serverAPIKey);
+            setServerAPIKeyLocal(data.serverAPIKey);
         }
     }, [data, setServerAPI]);
-    // Ejecutamos el efecto solo cuando data cambie
-    // la mayoria de problmas de typscript se generan por tipo de dato
-    // como socket no obtiene un valor hasta que la data se obtenga toca definir el useState como un objeto socket o null, de esta manera ts no tira error pero js permitiria el funcionamiento, es diferente el maneo a statuslocalmodal
+
+    useEffect(() => {
+        if (socket && serverAPIKey) {
+            let intervalId: NodeJS.Timeout;
+            
+            // Manejar respuestas del servidor
+            const handleUpdateGVar = (gVarData: object, responseServerAPIKey: string) => {
+                // Solo actualizar si la respuesta es del servidor que nos interesa
+                if (responseServerAPIKey === serverAPIKey) {
+                    setGVarData(gVarData);
+                    console.log(`Received gVar update for project ${projectId} from server ${responseServerAPIKey}`);
+                }
+            };
+
+            // Escuchar el evento para cuando no hay servidor disponible
+            const handleNoServer = (data: any) => {
+                console.log(`No server available for project ${data.projectId} with API key ${data.serverAPIKey}`);
+                // Puedes mostrar un mensaje al usuario o establecer un estado
+            };
+
+            // Registrar listeners
+            socket.on('response-gVar-update-b-f', handleUpdateGVar);
+            socket.on('no-server-available', handleNoServer);
+
+            // Iniciar el intervalo para solicitar actualizaciones
+            intervalId = setInterval(() => {
+                socket.emit('request-gVar-update-f-b', projectId, serverAPIKey);
+            }, 500);
+
+            // Cleanup function
+            return () => {
+                console.log('Unmounting ProjectDashboardView and cleaning up listeners');
+                clearInterval(intervalId);
+                socket.off('response-gVar-update-b-f', handleUpdateGVar);
+                socket.off('no-server-available', handleNoServer);
+            };
+        }
+        
+        return () => {
+            // Nada que limpiar si no hay socket o serverAPIKey
+        };
+    }, [socket, projectId, serverAPIKey]);
 
     if (isLoading) return (
         <div className="flex items-center justify-center min-h-screen">
             <div className="animate-pulse text-2xl font-bold text-gray-600">Cargando proyecto...</div>
         </div>
-    )
+    );
 
-    if (isError) return <Navigate to='/404' />
+    if (isError) return <Navigate to='/404' />;
 
-    // Render the dashboard when data is available
     if (data) return (
         <div className="container mx-auto px-4 py-8">
             {/* Project Header Section */}
@@ -111,7 +124,11 @@ const ProjectDashboardView = () => {
                 </div>
             </div>
 
-            <DashboardZoneView gVarData={gVarData} />
+            <DashboardZoneView 
+                gVarData={gVarData} 
+                projectId={projectId}
+                serverAPIKey={serverAPIKey}
+            />
         </div>
     );
 

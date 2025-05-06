@@ -10,6 +10,8 @@ type GlobalVarListProps = {
   onAddLabel: (selectedVar: string) => void;
   onAddInput: (selectedVar: string) => void;
   onAddToggle: (selectedVar: string) => void; // New prop for handling toggle component
+  projectId?: string;
+  serverAPIKey?: string;
 }
 
 function GlobalVarList({ 
@@ -17,16 +19,22 @@ function GlobalVarList({
   onAddChart, 
   onAddLabel, 
   onAddInput, 
-  onAddToggle 
+  onAddToggle,
+  projectId,
+  serverAPIKey
 }: GlobalVarListProps) {
   const params = useParams();
-  const navigate = useNavigate()
-  // Use '!' to assert that the value will always be present in the params
-  const projectId = params.projectId!;
+  const navigate = useNavigate();
+  const projectIdToUse = params.projectId || projectId!;
 
   const { socket } = useContext(SocketContext);
   const [selectedKey, setSelectedKey] = useState<string>('');
-  const { handleDelete } = useGlobalVarActionsModal({ socket, projectId });
+  // Update to pass serverAPIKey to handleDelete
+  const { handleDelete } = useGlobalVarActionsModal({ 
+    socket, 
+    projectId: projectIdToUse,
+    serverAPIKey
+  });
 
   // Add pagination state
   const [currentPage, setCurrentPage] = useState(1);

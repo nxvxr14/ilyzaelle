@@ -12,10 +12,16 @@ import ScadaBackground from "@/components/dashboard/ScadaBackground";
 import ScadaComponentSelector from "@/components/dashboard/ScadaComponentSelector";
 import { useState } from "react";
 
-function DashboardZoneView({ gVarData }: { gVarData: any }) {
+type DashboardZoneViewProps = {
+    gVarData: any;
+    projectId?: string;
+    serverAPIKey?: string;
+}
+
+function DashboardZoneView({ gVarData, projectId, serverAPIKey }: DashboardZoneViewProps) {
     const navigate = useNavigate();
     const params = useParams();
-    const projectId = params.projectId || 'default';
+    const projectIdFromParams = params.projectId || projectId || 'default';
     const [activeTab, setActiveTab] = useState<'hmi' | 'scada'>('hmi');
     
     const {
@@ -43,8 +49,8 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
         removeScadaComponent,
         updateScadaComponentPosition,
         updateScadaComponentTitle,
-        updateScadaComponentFontSize, // Añadir la nueva función
-    } = useComponentManager(projectId, gVarData);
+        updateScadaComponentFontSize,
+    } = useComponentManager(projectIdFromParams, gVarData);
 
     if (!gVarData) {
         return <div className="flex items-center justify-center min-h-64 bg-white rounded-xl shadow-md p-8">
@@ -83,6 +89,8 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                     onAddLabel={addLabel}
                     onAddInput={addInput}
                     onAddToggle={addToggle}
+                    projectId={projectIdFromParams}
+                    serverAPIKey={serverAPIKey}
                 />
             </div>
 
@@ -234,7 +242,7 @@ function DashboardZoneView({ gVarData }: { gVarData: any }) {
                             onRemoveComponent={removeScadaComponent}
                             onUpdatePosition={updateScadaComponentPosition}
                             onUpdateTitle={updateScadaComponentTitle}
-                            onUpdateFontSize={updateScadaComponentFontSize} // Pasar la nueva función
+                            onUpdateFontSize={updateScadaComponentFontSize}
                             gVarData={gVarData}
                         />
                     </>

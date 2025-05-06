@@ -1,31 +1,60 @@
-import { useCallback } from 'react';
-import { Socket } from 'socket.io-client';
+import { Socket } from "socket.io-client";
+import { toast } from "react-toastify";
 
-interface UseGlobalVarActionsProps {
-    socket: Socket | null;
-    projectId: string;
-}
+type UseGlobalVarActionsModalProps = {
+  socket: Socket | null;
+  projectId: string;
+  serverAPIKey?: string;
+};
 
-export const useGlobalVarActionsModal = ({ socket, projectId }: UseGlobalVarActionsProps) => {
+export const useGlobalVarActionsModal = ({
+  socket,
+  projectId,
+  serverAPIKey,
+}: UseGlobalVarActionsModalProps) => {
+  const handleDelete = (key: string) => {
+    if (socket) {
+      // Ahora pasamos el serverAPIKey para asegurar que el evento vaya solo al servidor correcto
+      socket.emit("request-gVariable-delete-f-b", projectId, key, serverAPIKey);
+      toast.success(`Variable ${key} reiniciada correctamente.`);
+    } else {
+      toast.error("No hay conexión con el servidor.");
+    }
+  };
 
-    // const handleSave = useCallback((key: string, gVarData: any) => {
-    //     navigate(location.pathname + '?saveGlobalVar=true')
-    //     console.log(projectId, key, gVarData[key]);
-    //     // console.log(`Guardando variable: ${key}`);
-    //     // if (socket) {
-    //     //     socket.emit('save-variable', projectId, key);
-    //     // }
-    // }, [socket, projectId]);
+  const handleUpdateVariable = (selectedVar: string, inputVar: any) => {
+    if (socket) {
+      // Incluimos el serverAPIKey en cada emisión de socket
+      socket.emit(
+        "request-gVariable-change-f-b",
+        selectedVar,
+        inputVar,
+        projectId,
+        serverAPIKey
+      );
+    } else {
+      toast.error("No hay conexión con el servidor.");
+    }
+  };
 
-    const handleDelete = useCallback((key: string) => {
-        console.log(`Eliminando variable: ${key}`);
-        if (socket) {
-            socket.emit('request-gVariable-delete-f-b', projectId, key);
-        }
-    }, [socket, projectId]);
+  const handleInitializeVariable = (nameGlobalVar: string, initialValue: any) => {
+    if (socket) {
+      // Incluimos el serverAPIKey en la inicialización
+      socket.emit(
+        "request-gVarriable-initialize-f-b",
+        projectId,
+        nameGlobalVar,
+        initialValue,
+        serverAPIKey
+      );
+    } else {
+      toast.error("No hay conexión con el servidor.");
+    }
+  };
 
-    return {
-        // handleSave,
-        handleDelete
-    };
+  return {
+    handleDelete,
+    handleUpdateVariable,
+    handleInitializeVariable,
+  };
 };
