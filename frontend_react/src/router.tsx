@@ -6,6 +6,9 @@ import EditProjectView from "./views/projects/EditProjectView";
 import ProjectDetailsView from "./views/projects/ProjectDetailsView";
 import CodeEditorBoardView from "./views/boards/CodeEditorBoardView";
 import ProjectDashboardView from "./views/projects/ProjectDashboardView";
+import FdnView from "./views/fdn/fdn";
+
+// Importar el contexto del socket
 import { SocketProvider } from "./context/SocketContext";
 
 // Wrapper component for SocketProvider
@@ -31,6 +34,7 @@ const router = () => {
         // dashboard view es el componente hijo, si no se usa la funcion especial outlet en applayout, no se va a renderizar el componente hijo. applayout es el padre
         <BrowserRouter>
             <Routes>
+            <Route path="/fdn" element={<FdnView/>} />
                 <Route element={<AppLayout />}>
                     <Route path="/" element={<DashboardView />} index />
                     <Route path="/projects/create" element={<CreateProjectView />} />
