@@ -1,10 +1,9 @@
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Board, Project } from '@/types/index';
 import { toast } from 'react-toastify';
-import { pollingCodes, updateCodeBoardById } from '@/api/BoardApi';
-import { isAxiosError } from 'axios';
-import { getProjectById } from '@/api/ProjectApi';
+import { updateCodeBoardById } from '@/api/BoardApi';
+import { useContext } from 'react';
+import { SocketContext } from '@/context/SocketContext';
 
 type CodeEditorModalProps = {
     projectId: Project['_id'],
@@ -13,12 +12,7 @@ type CodeEditorModalProps = {
 }
 
 function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps) {
-    const navigate = useNavigate();
-
-    const { data: project, isLoading, isError } = useQuery({
-        queryKey: ['project', projectId],
-        queryFn: () => getProjectById(projectId)
-    });
+    const { pollingCodesViaSocket } = useContext(SocketContext);
 
     // Query client for cache invalidation
     const queryClient = useQueryClient();
@@ -35,7 +29,7 @@ function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps
         }
     });
 
-    // Handle code burning with connection check
+    // Handle code burning with connection check via socket
     const handleCodeEditorBoard = async () => {
         const data = {
             projectId,
@@ -49,11 +43,17 @@ function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps
             boardCode: boardCode
         };
 
-        const response = await pollingCodes({ pollingDataCodes }, project.server);
-        if (isAxiosError(response)) {
-            return toast.error("localhost sin conexión");
+        console.log("[CodeEditorModal] Sending polling codes request via socket...");
+        const response = await pollingCodesViaSocket(pollingDataCodes);
+        console.log("[CodeEditorModal] Response:", response);
+        
+        if (!response.success) {
+            const errorMsg = response.error || "Error de conexión con el servidor local";
+            console.error("[CodeEditorModal] Error:", errorMsg);
+            return toast.error(errorMsg);
         }
 
+        toast.success("Código enviado correctamente");
         mutate(data);
     };
 
