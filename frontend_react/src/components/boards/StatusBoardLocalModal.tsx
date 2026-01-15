@@ -1,26 +1,18 @@
-import { getStatusLocal } from "@/api/ProjectApi";
 import { updateActiveBoardById } from '@/api/BoardApi';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "react-router-dom";
 import { Board } from "@/types/index";
 import { toast } from 'react-toastify';
-import { useEffect } from "react";
+import { useEffect, useContext, useState, useRef } from "react";
+import { SocketContext } from '@/context/SocketContext';
 
 function StatusLocalModal({ boards, server }: { boards: Board[]; server: string }) {
-    // function StatusLocalModal({ boards, server }: { boards: Board[]; server: string }) {
-    // para ahorrar la delaracion lo hice en SocketContext.tsx, de lo contrario deberia hacerlo asi
-    // const { socket, online } = useContext(SocketContext);
-    // me ahorro el argumento de la funcion
     const params = useParams();
     const projectId = params.projectId!;
     const queryClient = useQueryClient();
-
-    const { data = {}, isError, isFetching } = useQuery({
-        queryKey: ['apiLocalStatus'],
-        queryFn: () => getStatusLocal(server),
-        refetchInterval: 5000,
-        retry: false
-    });
+    const { getStatusLocalViaSocket, online } = useContext(SocketContext);
+    const [isLocalOnline, setIsLocalOnline] = useState<boolean | null>(null);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const { mutate } = useMutation({
         mutationFn: updateActiveBoardById,
@@ -33,20 +25,44 @@ function StatusLocalModal({ boards, server }: { boards: Board[]; server: string 
         }
     });
 
-    // con isFetcing puedo saber cuando se esta ejecutando la queryFn y asi poder actualizar el estado de la board cuando el servidor este caido
+    // Check status via socket periodically
     useEffect(() => {
-        if (isError) {
-            boards.forEach(board => {
-                if (!board.active) return
-                const updatedData = {
-                    projectId,
-                    boardId: board._id,
-                    active: false
-                };
-                mutate(updatedData); // Se llama a la mutación solo cuando hay un error
-            });
+        const checkStatus = async () => {
+            const response = await getStatusLocalViaSocket();
+            setIsLocalOnline(response.online);
+            
+            // If not online, deactivate active boards
+            if (!response.online) {
+                boards.forEach(board => {
+                    if (!board.active) return;
+                    const updatedData = {
+                        projectId,
+                        boardId: board._id,
+                        active: false
+                    };
+                    mutate(updatedData);
+                });
+            }
+        };
+
+        // Initial check
+        if (online) {
+            checkStatus();
         }
-    }, [isFetching]);
+
+        // Set up interval for periodic checks (every 5 seconds)
+        intervalRef.current = setInterval(() => {
+            if (online) {
+                checkStatus();
+            }
+        }, 5000);
+
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, [online, boards, projectId, getStatusLocalViaSocket, mutate]);
 
     return (
         <>

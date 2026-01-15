@@ -3,18 +3,15 @@ import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import AddGlobalVarForm from './AddGlobalVarForm';
 import { AddGlobalVarFormData } from '@/types/index';
 import { SocketContext } from '@/context/SocketContext';
 
 export default function AddGlobalVarModal() {
-    const { socket } = useContext(SocketContext)
+    const { socket, serverAPI } = useContext(SocketContext)
 
     // para quitar el parametro de la url 
     const navigate = useNavigate()
-
-    // con todo este codigo puedo leer los datos que se envian por medio de la url
     const location = useLocation()
     const queryParams = new URLSearchParams(location.search)
     const modalGlobalVar = queryParams.get('newGlobalVar')
@@ -41,7 +38,8 @@ export default function AddGlobalVarModal() {
     const handleAddGlobalVar = (formData: AddGlobalVarFormData) => {
         const { nameGlobalVar, initialValue } = formData;
         console.log(formData)
-        if (socket) socket.emit('request-gVarriable-initialize-f-b', projectId, nameGlobalVar, initialValue);
+        // Add serverAPI as the last parameter to match the pattern in sockets.ts
+        if (socket) socket.emit('request-gVarriable-initialize-f-b', projectId, nameGlobalVar, initialValue, serverAPI);
         queryClient.invalidateQueries({ queryKey: ['project'] })
         reset();
         navigate(location.pathname, { replace: true })

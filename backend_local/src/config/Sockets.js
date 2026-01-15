@@ -1,16 +1,19 @@
 // backendlocal/Sockets.js
 import { gVar } from "../controllers/UpdateCodeBoardController.js";
 import { io } from "socket.io-client";
+import { generateBoardController } from "../controllers/GenerateBoardController.js";
+import { updateCodeBoardController } from "../controllers/UpdateCodeBoardController.js";
 
 class Sockets {
   constructor(url, serverAPIKey) {
-    console.log(`Initializing socket connection with serverAPIKey: ${serverAPIKey}`);
+    console.log(`Initializing socket connection to: ${url}`);
+    console.log(`Using serverAPIKey: ${serverAPIKey}`);
     this.serverAPIKey = serverAPIKey;
     this.socket = io(url, {
       transports: ["websocket"],
       query: {
         serverAPIKey,
-        type: "server", // Identificamos que es una conexión de servidor
+        type: "server",
       },
     });
 
@@ -19,13 +22,17 @@ class Sockets {
 
   socketsEvents() {
     this.socket.on("connect", () => {
-      console.log(`[devMessage] backend_local connected to Socket.IO server with API key: ${this.serverAPIKey}`);
+      console.log(`[devMessage] backend_local connected to Socket.IO server`);
+      console.log(`[devMessage] Socket ID: ${this.socket.id}`);
+      console.log(`[devMessage] API key: ${this.serverAPIKey}`);
     });
 
-    this.socket.on("disconnect", () => {
-      console.log(
-        "[devMessage] backend_local disconnected from Socket.IO server"
-      );
+    this.socket.on("connect_error", (error) => {
+      console.error(`[devMessage] Connection error: ${error.message}`);
+    });
+
+    this.socket.on("disconnect", (reason) => {
+      console.log(`[devMessage] backend_local disconnected: ${reason}`);
     });
 
     /** EVENTOS DE SOCKET **/
@@ -139,6 +146,56 @@ class Sockets {
       console.log("Updated gVar:", Object.keys(gVar[projectId]));
     });
     /** EVENTOS DE SOCKET **/
+
+    // New event: Handle polling boards request from backend_dash
+    this.socket.on("request-polling-boards-b-b", async (pollingData, requestId) => {
+      console.log(`[POLLING BOARDS] Received request: ${requestId}`);
+      console.log(`[POLLING BOARDS] Data:`, JSON.stringify(pollingData, null, 2));
+      try {
+        await generateBoardController(pollingData);
+        console.log(`[POLLING BOARDS] Success for request: ${requestId}`);
+        this.socket.emit("response-polling-boards-b-b", { 
+          success: true, 
+          message: "Boards data polled successfully." 
+        }, requestId);
+      } catch (error) {
+        console.error(`[POLLING BOARDS] Error:`, error);
+        const errorMessage = error?.message || error?.toString() || "An error occurred while polling boards data.";
+        console.error(`[POLLING BOARDS] Error message: ${errorMessage}`);
+        this.socket.emit("response-polling-boards-b-b", { 
+          success: false, 
+          error: errorMessage
+        }, requestId);
+      }
+    });
+
+    // New event: Handle polling codes request from backend_dash
+    this.socket.on("request-polling-codes-b-b", async (pollingDataCodes, requestId) => {
+      console.log(`[POLLING CODES] Received request: ${requestId}`);
+      try {
+        await updateCodeBoardController(pollingDataCodes);
+        console.log(`[POLLING CODES] Success for request: ${requestId}`);
+        this.socket.emit("response-polling-codes-b-b", { 
+          success: true, 
+          message: "Codes data polled successfully." 
+        }, requestId);
+      } catch (error) {
+        console.error(`[POLLING CODES] Error: ${error.message}`);
+        this.socket.emit("response-polling-codes-b-b", { 
+          success: false, 
+          error: error.message || "An error occurred while polling codes data." 
+        }, requestId);
+      }
+    });
+
+    // New event: Handle status local request from backend_dash
+    this.socket.on("request-status-local-b-b", (requestId) => {
+      console.log(`[STATUS LOCAL] Received request: ${requestId}`);
+      this.socket.emit("response-status-local-b-b", { 
+        message: "localhost is online",
+        online: true 
+      }, requestId);
+    });
   }
 
   // New helper method to ensure all arrays have proper time vectors

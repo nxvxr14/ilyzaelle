@@ -1,11 +1,11 @@
-import { Fragment } from 'react';
+import { Fragment, useContext } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBoardById, pollingBoards, updateActiveBoardById } from '@/api/BoardApi';
+import { getBoardById, updateActiveBoardById } from '@/api/BoardApi';
 import { toast } from 'react-toastify';
 import formatDateTime from '@/utils/utils.ts';
-import { isAxiosError } from 'axios';
+import { SocketContext } from '@/context/SocketContext';
 
 const boardNames: { [key: number]: string } = {
     1: 'Arduino',
@@ -24,27 +24,22 @@ const groupNames: { [key: string]: string } = {
 };
 
 export default function BoardDetailsModal({ server }: { server: string }) {
+    const { pollingBoardsViaSocket } = useContext(SocketContext);
 
     const params = useParams()
     const projectId = params.projectId!
 
     const location = useLocation();
     const query = new URLSearchParams(location.search);
-    // con ! nos aseguramos que boardId siempre va a existir
     const boardId = query.get('viewBoard')!
-    // con esto se cierra el modal
     const show = boardId ? true : false;
 
-    // elimia informacion cacheada para realizar otra consulta
     const queryClient = useQueryClient()
-
     const navigate = useNavigate()
 
-    //esto sirve para hacer consultas en ciertos componentes usando useQuerys y no se enviadatos por props
     const { data, isError, error } = useQuery({
         queryKey: ['board', boardId],
         queryFn: () => getBoardById({ projectId, boardId }),
-        // con esto nos aseguramos que solo se realice la consulta si existe el boardId
         enabled: show,
         retry: false,
     })
@@ -62,7 +57,6 @@ export default function BoardDetailsModal({ server }: { server: string }) {
     })
 
     const handleClick = async () => {
-        // se usa if porque data puede ser null, el usuario le podria dar click al boton antes que la api de los valores de data y podria mandar undefined
         if (data) {
             const updatedData = {
                 projectId,
@@ -81,19 +75,25 @@ export default function BoardDetailsModal({ server }: { server: string }) {
                 boardCode: data.boardCode,
                 closing: data.active
             }
-            // pollingboards sirve para verificar si hay conexion con el backend local antes de hacer una escritura a la base de datos
-            const response = await pollingBoards({ pollingData }, server)
-            if (isAxiosError(response)) {
-                return toast.error("localhost sin conexion");
+            
+            // Use socket instead of HTTP request
+            console.log("[BoardDetailsModal] Sending polling request via socket...");
+            const response = await pollingBoardsViaSocket(pollingData);
+            console.log("[BoardDetailsModal] Response:", response);
+            
+            if (!response.success) {
+                const errorMsg = response.error || "Error de conexión con el servidor local";
+                console.error("[BoardDetailsModal] Error:", errorMsg);
+                return toast.error(errorMsg);
             }
+            
+            toast.success("Controlador actualizado correctamente");
             mutate(updatedData);
         }
     }
 
     if (isError) {
         toast.error(error.message, { toastId: 'error' })
-        // componente navigate lleva de forma programada un usuario a otra url
-        // no se puede usar navigate en este caso porque interfiere con react en la renderizacion y linkto funciona de forma distinta
         return <Navigate to={`/projects/${projectId}`} replace />
     }
 
@@ -227,9 +227,6 @@ export default function BoardDetailsModal({ server }: { server: string }) {
                                                     alt={boardNames[data.boardType] || "Dispositivo"}
                                                     className="max-w-full h-auto max-h-64 object-contain mb-4"
                                                 />
-                                                {/* <p className="text-center text-sm text-gray-500 font-medium">
-                                                    ID: <span className="font-mono">{data._id.substring(0, 10)}...</span>
-                                                </p> */}
                                             </div>
                                         </div>
                                     </div>

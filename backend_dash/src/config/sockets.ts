@@ -49,6 +49,24 @@ class Sockets {
           console.log(`Backend local ${serverAPIKey} responded with data for project ${projectId}`);
         });
 
+        // Response from backend_local for polling boards
+        socket.on("response-polling-boards-b-b", (data, requestId) => {
+          this.io.to(serverAPIKey).emit("response-polling-boards-b-f", data, requestId);
+          console.log(`Backend local ${serverAPIKey} responded to polling boards request ${requestId}`);
+        });
+
+        // Response from backend_local for polling codes
+        socket.on("response-polling-codes-b-b", (data, requestId) => {
+          this.io.to(serverAPIKey).emit("response-polling-codes-b-f", data, requestId);
+          console.log(`Backend local ${serverAPIKey} responded to polling codes request ${requestId}`);
+        });
+
+        // Response from backend_local for status local
+        socket.on("response-status-local-b-b", (data, requestId) => {
+          this.io.to(serverAPIKey).emit("response-status-local-b-f", data, requestId);
+          console.log(`Backend local ${serverAPIKey} responded to status local request ${requestId}`);
+        });
+
         // Manejar desconexión del servidor
         socket.on("disconnect", () => {
           if (Array.isArray(serverAPIKey)) {
@@ -114,6 +132,48 @@ class Sockets {
             }
           }
         );
+
+        // New event: Request polling boards from frontend to backend_local
+        socket.on("request-polling-boards-f-b", (pollingData, clientServerAPIKey, requestId) => {
+          if (clientServerAPIKey && this.connectedServers.has(clientServerAPIKey)) {
+            this.io.to(clientServerAPIKey).emit("request-polling-boards-b-b", pollingData, requestId);
+            console.log(`Frontend requesting polling boards from server ${clientServerAPIKey}`);
+          } else {
+            console.log(`No server available for polling boards, API key: ${clientServerAPIKey}`);
+            socket.emit("response-polling-boards-b-f", { 
+              success: false, 
+              error: "Server not available" 
+            }, requestId);
+          }
+        });
+
+        // New event: Request polling codes from frontend to backend_local
+        socket.on("request-polling-codes-f-b", (pollingDataCodes, clientServerAPIKey, requestId) => {
+          if (clientServerAPIKey && this.connectedServers.has(clientServerAPIKey)) {
+            this.io.to(clientServerAPIKey).emit("request-polling-codes-b-b", pollingDataCodes, requestId);
+            console.log(`Frontend requesting polling codes from server ${clientServerAPIKey}`);
+          } else {
+            console.log(`No server available for polling codes, API key: ${clientServerAPIKey}`);
+            socket.emit("response-polling-codes-b-f", { 
+              success: false, 
+              error: "Server not available" 
+            }, requestId);
+          }
+        });
+
+        // New event: Request status local from frontend to backend_local
+        socket.on("request-status-local-f-b", (clientServerAPIKey, requestId) => {
+          if (clientServerAPIKey && this.connectedServers.has(clientServerAPIKey)) {
+            this.io.to(clientServerAPIKey).emit("request-status-local-b-b", requestId);
+            console.log(`Frontend requesting status local from server ${clientServerAPIKey}`);
+          } else {
+            console.log(`No server available for status local, API key: ${clientServerAPIKey}`);
+            socket.emit("response-status-local-b-f", { 
+              online: false, 
+              error: "Server not available" 
+            }, requestId);
+          }
+        });
         /** EVENTOS DE SOCKET **/
 
         // Manejar solicitud de unión a un servidor específico
