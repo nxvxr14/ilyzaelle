@@ -1,1 +1,3 @@
-curl -X POST http://localhost:3001/cukiAPI -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"si"}]}'
+curl -X POST https://undercromo.dev/cukiAPI \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"COMO TE LLAMAS?"}]}'
