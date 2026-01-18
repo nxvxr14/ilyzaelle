@@ -1,8 +1,10 @@
+import { cerebrasService } from "./services/cerebras";
 import { groqService } from "./services/groq";
 import type {IAService, ChatMessage} from './types';
 
 const services: IAService[] = [
-    groqService
+    groqService,
+    cerebrasService
 ];
 
 let currentServiceIndex = 0;
@@ -18,7 +20,7 @@ const server = Bun.serve({
     async fetch(req) {
         const {pathname} = new URL(req.url);
 
-        if(req.method === "POST" && pathname === "/chat") {
+        if(req.method === "POST" && pathname === "/cukiAPI") {
             const {messages} = await req.json() as {messages: ChatMessage[]};
 
             const service = getNextService();

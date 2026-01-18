@@ -1,0 +1,1 @@
+curl -X POST http://localhost:3001/cukiAPI -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"si"}]}'
