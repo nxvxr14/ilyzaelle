@@ -15,6 +15,13 @@ import { IDataVar } from "./DataVar";
 // Este es el export basico de las variables en Ts
 // aca se almacena un arreglo con todas las boards que pertenecen a cada projecto
 
+// Interface para mensajes del chat de IA
+export interface IAIChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
 export interface IProject extends Document {
   projectName: string;
   description: string;
@@ -22,6 +29,8 @@ export interface IProject extends Document {
   server: string;
   serverAPIKey: string;
   AIDash: string; // HTML generado por IA para el dashboard
+  AIDashCode: string; // Codigo unico para acceso publico al dashboard
+  AIChatHistory: IAIChatMessage[]; // Historial de chat con la IA
   // las boards de cada project
   // en boards solo se almacena el objectid del projecto al que pertecene cada board, pero en projects se hace un subdocumento con toda la informacion de las boards que pertenecen a cada projecto
   boards: PopulatedDoc<IBoard & Document>[];
@@ -59,6 +68,28 @@ const ProjectSchema: Schema = new Schema(
     AIDash: {
       type: String,
       default: "",
+    },
+    AIDashCode: {
+      type: String,
+      default: "",
+    },
+    AIChatHistory: {
+      type: [{
+        role: {
+          type: String,
+          enum: ['user', 'assistant'],
+          required: true,
+        },
+        content: {
+          type: String,
+          required: true,
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+      }],
+      default: [],
     },
     boards: [
       {

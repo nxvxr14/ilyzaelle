@@ -36,6 +36,7 @@ import cors from "cors";
 import { connectDB } from "./db";
 import projectRoutes from "../routes/projectRoutes";
 import snippetRoutes from "../routes/snippetRoutes";
+import publicRoutes from "../routes/publicRoutes";
 import { corsConfig } from "./cors";
 import { corsConfigServer } from "./corsSocket";
 import dotenv from "dotenv";
@@ -75,6 +76,8 @@ class ServerApp {
     // Exponemos la direccion de la api para realizar las peticiones CRUD
     this.app.use("/api/projects", projectRoutes);
     this.app.use("/api/snippets", snippetRoutes);
+    // Rutas publicas (sin autenticacion)
+    this.app.use("/api/public", publicRoutes);
   }
 
   socketsConfiguration() {

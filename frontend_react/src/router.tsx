@@ -9,6 +9,7 @@ import ProjectDashboardView from "./views/projects/ProjectDashboardView";
 import FdnView from "./views/fdn/fdn";
 import AIDashboardView from "./views/dashboard/AIDashboardView";
 import ViewAIDashboardView from "./views/dashboard/ViewAIDashboardView";
+import PublicDashboardView from "./views/dashboard/PublicDashboardView";
 
 // Importar el contexto del socket
 import { SocketProvider } from "./context/SocketContext";
@@ -36,6 +37,9 @@ const router = () => {
         // dashboard view es el componente hijo, si no se usa la funcion especial outlet en applayout, no se va a renderizar el componente hijo. applayout es el padre
         <BrowserRouter>
             <Routes>
+            {/* Ruta publica standalone - sin AppLayout */}
+            <Route path="/public/dashboard/:dashCode" element={<PublicDashboardView />} />
+            
             <Route path="/fdn" element={<FdnView/>} />
                 <Route element={<AppLayout />}>
                     <Route path="/" element={<DashboardView />} index />

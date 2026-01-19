@@ -90,6 +90,47 @@ router.get(
   ProjectController.getAIDash
 );
 
+// Guardar AIDash con codigo unico
+router.post(
+  "/:projectId/aidash-with-code",
+  param("projectId").isMongoId().withMessage("ID no valido"),
+  body("AIDash").notEmpty().withMessage("El contenido HTML es obligatorio."),
+  handleInputErrors,
+  ProjectController.updateAIDashWithCode
+);
+
+/* AI CHAT HISTORY */
+router.get(
+  "/:projectId/ai-chat-history",
+  param("projectId").isMongoId().withMessage("ID no valido"),
+  handleInputErrors,
+  ProjectController.getAIChatHistory
+);
+
+router.post(
+  "/:projectId/ai-chat-history",
+  param("projectId").isMongoId().withMessage("ID no valido"),
+  body("role").notEmpty().withMessage("El rol es obligatorio."),
+  body("content").notEmpty().withMessage("El contenido es obligatorio."),
+  handleInputErrors,
+  ProjectController.addAIChatMessage
+);
+
+router.post(
+  "/:projectId/ai-chat-history/bulk",
+  param("projectId").isMongoId().withMessage("ID no valido"),
+  body("messages").isArray().withMessage("Los mensajes deben ser un array."),
+  handleInputErrors,
+  ProjectController.addAIChatMessages
+);
+
+router.delete(
+  "/:projectId/ai-chat-history",
+  param("projectId").isMongoId().withMessage("ID no valido"),
+  handleInputErrors,
+  ProjectController.clearAIChatHistory
+);
+
 /* CONTROLADORES */
 // el middleware se empiezaa poner donde se empieza a necesitar, por ejemplo aca lo necesito por boardId
 // no se pueden ejecutar dos funciones en una instancia de param

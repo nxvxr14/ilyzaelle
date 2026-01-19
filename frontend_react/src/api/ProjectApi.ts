@@ -116,7 +116,76 @@ export async function updateAIDash({ projectId, AIDash }: AIDashAPIType) {
 export async function getAIDash(projectId: Project["_id"]) {
   try {
     const { data } = await api.get(`/projects/${projectId}/aidash`);
-    return data.AIDash;
+    return data; // Ahora retorna { AIDash, AIDashCode }
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}
+
+// Guardar AIDash y generar/obtener codigo unico
+export async function updateAIDashWithCode({ projectId, AIDash }: AIDashAPIType) {
+  try {
+    const { data } = await api.post(`/projects/${projectId}/aidash-with-code`, { AIDash });
+    return data; // Retorna { message, AIDashCode }
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}
+
+// Obtener dashboard publico por codigo (sin autenticacion)
+export async function getAIDashByCode(dashCode: string) {
+  try {
+    const { data } = await api.get(`/public/dashboard/${dashCode}`);
+    return data; // { AIDash, projectName }
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}
+
+/* AI Chat History */
+export interface AIChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: Date;
+}
+
+export async function getAIChatHistory(projectId: Project["_id"]) {
+  try {
+    const { data } = await api.get(`/projects/${projectId}/ai-chat-history`);
+    return data.AIChatHistory as AIChatMessage[];
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}
+
+export async function addAIChatMessage(projectId: Project["_id"], message: AIChatMessage) {
+  try {
+    const { data } = await api.post(`/projects/${projectId}/ai-chat-history`, message);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}
+
+export async function addAIChatMessages(projectId: Project["_id"], messages: AIChatMessage[]) {
+  try {
+    const { data } = await api.post(`/projects/${projectId}/ai-chat-history/bulk`, { messages });
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}
+
+export async function clearAIChatHistory(projectId: Project["_id"]) {
+  try {
+    const { data } = await api.delete(`/projects/${projectId}/ai-chat-history`);
+    return data;
   } catch (error) {
     if (isAxiosError(error) && error.response)
       throw new Error(error.response.data.error);

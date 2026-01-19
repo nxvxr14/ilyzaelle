@@ -1,16 +1,16 @@
 import { getProjectById } from "@/api/ProjectApi";
-import { updateAIDash } from "@/api/ProjectApi";
+import { updateAIDashWithCode, getAIChatHistory, addAIChatMessages, clearAIChatHistory, AIChatMessage } from "@/api/ProjectApi";
 import { SocketContext } from "@/context/SocketContext";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useContext, useEffect, useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useContext, useEffect, useState, useRef } from "react";
+import { Link, Navigate, useParams } from "react-router-dom";
 
 const CUKI_IA_API = import.meta.env.VITE_CUKI_IA_API;
 
 const AIDashboardView = () => {
   const params = useParams();
-  const navigate = useNavigate();
   const projectId = params.projectId!;
+  const queryClient = useQueryClient();
 
   const { socket, setServerAPI } = useContext(SocketContext);
   const [gVarData, setGVarData] = useState<Record<string, unknown>>(null as unknown as Record<string, unknown>);
@@ -19,19 +19,56 @@ const AIDashboardView = () => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [aiResponse, setAiResponse] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([]);
+  const [dashCode, setDashCode] = useState<string>("");
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => getProjectById(projectId),
   });
 
+  // Cargar historial de chat al montar
+  const { data: chatHistoryData } = useQuery({
+    queryKey: ['chatHistory', projectId],
+    queryFn: () => getAIChatHistory(projectId),
+    enabled: !!projectId,
+  });
+
+  useEffect(() => {
+    if (chatHistoryData) {
+      setChatMessages(chatHistoryData);
+    }
+  }, [chatHistoryData]);
+
   const updateAIDashMutation = useMutation({
-    mutationFn: updateAIDash,
-    onSuccess: () => {
-      navigate(`/projects/${projectId}/dashboard`);
+    mutationFn: updateAIDashWithCode,
+    onSuccess: (data) => {
+      if (data?.AIDashCode) {
+        setDashCode(data.AIDashCode);
+      }
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
     },
     onError: (error: Error) => {
       setError(error.message);
+    }
+  });
+
+  const addMessagesMutation = useMutation({
+    mutationFn: ({ messages }: { messages: AIChatMessage[] }) => 
+      addAIChatMessages(projectId, messages),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chatHistory', projectId] });
+    }
+  });
+
+  const clearHistoryMutation = useMutation({
+    mutationFn: () => clearAIChatHistory(projectId),
+    onSuccess: () => {
+      setChatMessages([]);
+      setAiResponse("");
+      setDashCode("");
+      queryClient.invalidateQueries({ queryKey: ['chatHistory', projectId] });
     }
   });
 
@@ -65,6 +102,13 @@ const AIDashboardView = () => {
     return () => {};
   }, [socket, projectId, serverAPIKey]);
 
+  // Auto-scroll al final del chat
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages, aiResponse]);
+
   const extractHtmlFromResponse = (response: string): string | null => {
     const startMarker = "---INICIOHTML---";
     const endMarker = "---FINHTML---";
@@ -78,17 +122,9 @@ const AIDashboardView = () => {
     return null;
   };
 
-  const handleGenerateAI = async () => {
-    if (!prompt.trim()) {
-      setError("Por favor, ingresa un prompt para generar el dashboard.");
-      return;
-    }
-
-    setIsGenerating(true);
-    setError("");
-    setAiResponse("");
-
-const systemPrompt = `Eres un generador de dashboards HTML interactivos. Debes crear una página HTML completa (CSS + JS + HTML en un solo archivo) siguiendo estas instrucciones:
+  // System prompt dinamico con valores reales
+  const getSystemPrompt = (): string => {
+    return `Eres un generador de dashboards HTML interactivos. Debes crear una página HTML completa (CSS + JS + HTML en un solo archivo) siguiendo estas instrucciones:
 
 FORMATO DE RESPUESTA:
 - Devuelve el código dentro de los delimitadores: ---INICIOHTML--- [tu código aquí] ---FINHTML---
@@ -114,11 +150,11 @@ OPERACIONES CRUD DISPONIBLES:
 - deleteVariable(name) → Eliminar/reiniciar variable del servidor
 
 CÓDIGO BASE OBLIGATORIO:
-Siempre incluye este código de inicialización (reemplaza TU_API_KEY y TU_PROJECT_ID con los valores CONFIG):
+Siempre incluye este código de inicialización con los valores de configuración:
 
 const CONFIG = {
-    serverAPIKey: 'SERVER_API_KEY_PLACEHOLDER',
-    projectId: 'PROJECT_ID_PLACEHOLDER',
+    serverAPIKey: '${serverAPIKey}',
+    projectId: '${projectId}',
     socketUrl: 'https://undercromo.dev',
     updateInterval: 500
 };
@@ -182,10 +218,76 @@ document.addEventListener('DOMContentLoaded', initSocket);
 INSTRUCCIONES IMPORTANTES:
 - Implementa la lógica de UI dentro de onDataReceived(data)
 - Usa readVariable() para obtener valores específicos
-- Los placeholders SERVER_API_KEY_PLACEHOLDER y PROJECT_ID_PLACEHOLDER serán reemplazados automáticamente
+- Los valores de serverAPIKey y projectId ya están configurados correctamente
 - Minimiza el CSS pero mantén la funcionalidad y legibilidad
 - Crea dashboards responsive y modernos`;
-    const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+  };
+
+  // Obtener los ultimos 5 mensajes para contexto
+  const getLast5Messages = (): { role: string; content: string }[] => {
+    const systemMessage = { role: 'system', content: getSystemPrompt() };
+    const lastMessages = chatMessages.slice(-5).map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    return [systemMessage, ...lastMessages];
+  };
+
+  // Estimar tokens (aproximacion: ~4 caracteres por token para espanol/codigo)
+  const estimateTokens = (text: string): number => {
+    // Metodo simple: dividir por 4 caracteres
+    // Metodo mas preciso: contar palabras y multiplicar por 1.3
+    const charBasedEstimate = Math.ceil(text.length / 4);
+    const words = text.split(/\s+/).length;
+    const wordBasedEstimate = Math.ceil(words * 1.3);
+    // Promedio de ambos metodos
+    return Math.ceil((charBasedEstimate + wordBasedEstimate) / 2);
+  };
+
+  // Calcular tokens totales de un array de mensajes
+  const calculateTotalTokens = (messages: { role: string; content: string }[]): number => {
+    return messages.reduce((total, msg) => {
+      // Agregar ~4 tokens por mensaje para metadata (role, etc)
+      return total + estimateTokens(msg.content) + 4;
+    }, 0);
+  };
+
+  const handleGenerateAI = async () => {
+    if (!prompt.trim()) {
+      setError("Por favor, ingresa un prompt para generar el dashboard.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setError("");
+    setAiResponse("");
+
+    // Agregar mensaje del usuario al chat local
+    const userMessage: AIChatMessage = { role: 'user', content: prompt };
+    setChatMessages(prev => [...prev, userMessage]);
+
+    // Construir mensajes para la API
+    const contextMessages = getLast5Messages();
+    contextMessages.push({ role: 'user', content: prompt });
+
+    // Log del prompt completo y estimacion de tokens enviados
+    const totalInputTokens = calculateTotalTokens(contextMessages);
+    console.group('%c[AI Dashboard] Enviando mensaje a la API', 'color: #9333ea; font-weight: bold; font-size: 14px;');
+    console.log('%cMensajes enviados:', 'color: #6366f1; font-weight: bold;');
+    contextMessages.forEach((msg, index) => {
+      const tokenCount = estimateTokens(msg.content) + 4;
+      console.log(`  [${index + 1}] ${msg.role.toUpperCase()} (~${tokenCount} tokens):`);
+      if (msg.role === 'system') {
+        console.log(`      (System prompt - ${msg.content.length} caracteres)`);
+      } else {
+        console.log(`      "${msg.content.substring(0, 100)}${msg.content.length > 100 ? '...' : ''}"`);
+      }
+    });
+    console.log('%cTotal mensajes:', 'color: #22c55e; font-weight: bold;', contextMessages.length);
+    console.log('%cTokens estimados (entrada):', 'color: #f59e0b; font-weight: bold;', `~${totalInputTokens} tokens`);
+    console.log('%cPrompt completo (JSON):', 'color: #64748b;');
+    console.log(JSON.stringify({ messages: contextMessages }, null, 2));
+    console.groupEnd();
 
     try {
       const response = await fetch(CUKI_IA_API, {
@@ -194,7 +296,7 @@ INSTRUCCIONES IMPORTANTES:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: fullPrompt }]
+          messages: contextMessages
         }),
       });
 
@@ -224,6 +326,25 @@ INSTRUCCIONES IMPORTANTES:
 
       await readStream();
 
+      // Log de tokens recibidos
+      const outputTokens = estimateTokens(fullText);
+      console.group('%c[AI Dashboard] Respuesta recibida de la API', 'color: #22c55e; font-weight: bold; font-size: 14px;');
+      console.log('%cCaracteres recibidos:', 'color: #6366f1; font-weight: bold;', fullText.length);
+      console.log('%cTokens estimados (salida):', 'color: #f59e0b; font-weight: bold;', `~${outputTokens} tokens`);
+      console.log('%cTotal tokens (entrada + salida):', 'color: #ef4444; font-weight: bold;', `~${totalInputTokens + outputTokens} tokens`);
+      console.log('%cRespuesta completa:', 'color: #64748b;');
+      console.log(fullText);
+      console.groupEnd();
+
+      // Agregar respuesta del asistente al chat local
+      const assistantMessage: AIChatMessage = { role: 'assistant', content: fullText };
+      setChatMessages(prev => [...prev, assistantMessage]);
+
+      // Guardar ambos mensajes en el servidor
+      addMessagesMutation.mutate({
+        messages: [userMessage, assistantMessage]
+      });
+
       const extractedHtml = extractHtmlFromResponse(fullText);
       
       if (extractedHtml) {
@@ -238,6 +359,13 @@ INSTRUCCIONES IMPORTANTES:
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setIsGenerating(false);
+      setPrompt(""); // Limpiar el prompt
+    }
+  };
+
+  const handleNewChat = () => {
+    if (confirm("¿Estás seguro de que deseas iniciar un nuevo chat? Se eliminará todo el historial.")) {
+      clearHistoryMutation.mutate();
     }
   };
 
@@ -290,6 +418,33 @@ INSTRUCCIONES IMPORTANTES:
               </svg>
               Volver al Dashboard
             </Link>
+            
+            {dashCode && (
+              <Link
+                className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-8 py-3 text-lg cursor-pointer transition-all rounded-xl shadow-sm hover:shadow-md flex items-center gap-2"
+                to={`/public/dashboard/${dashCode}`}
+                target="_blank"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Ver Dashboard Publico
+              </Link>
+            )}
+
+            <button
+              onClick={handleNewChat}
+              disabled={chatMessages.length === 0 || clearHistoryMutation.isPending}
+              className={`font-bold px-8 py-3 text-lg transition-all rounded-xl shadow-sm hover:shadow-md flex items-center gap-2
+                ${chatMessages.length === 0 || clearHistoryMutation.isPending
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-red-500 hover:bg-red-600 text-white cursor-pointer'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Nuevo Chat
+            </button>
           </div>
         </div>
       </div>
@@ -353,21 +508,66 @@ INSTRUCCIONES IMPORTANTES:
         )}
       </div>
 
+      {/* Chat History Section */}
+      {chatMessages.length > 0 && (
+        <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-10">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Historial de Conversacion ({chatMessages.length} mensajes)
+          </h2>
+          
+          <div 
+            ref={chatContainerRef}
+            className="max-h-96 overflow-y-auto space-y-4 p-4 bg-gray-50 rounded-lg"
+          >
+            {chatMessages.map((msg, index) => (
+              <div
+                key={index}
+                className={`p-4 rounded-lg ${
+                  msg.role === 'user'
+                    ? 'bg-purple-100 ml-8 border-l-4 border-purple-500'
+                    : 'bg-gray-200 mr-8 border-l-4 border-gray-500'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`font-bold text-sm ${
+                    msg.role === 'user' ? 'text-purple-700' : 'text-gray-700'
+                  }`}>
+                    {msg.role === 'user' ? 'Tu' : 'Asistente IA'}
+                  </span>
+                </div>
+                <p className="text-gray-800 text-sm whitespace-pre-wrap">
+                  {msg.content.length > 500 
+                    ? msg.content.substring(0, 500) + '...' 
+                    : msg.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Prompt Input Section */}
       <div className="bg-[#120d18] rounded-xl shadow-lg overflow-hidden p-6">
         <h2 className="text-2xl font-bold text-white mb-4 border-l-4 border-purple-400 pl-4">
-          Genera tu Dashboard con IA
+          {chatMessages.length > 0 ? 'Continuar Conversacion' : 'Genera tu Dashboard con IA'}
         </h2>
         
         <div className="mb-6">
           <label htmlFor="prompt" className="block text-gray-300 font-medium mb-2">
-            Describe el dashboard que deseas generar:
+            {chatMessages.length > 0 
+              ? 'Describe los cambios o mejoras que deseas:' 
+              : 'Describe el dashboard que deseas generar:'}
           </label>
           <textarea
             id="prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ej: Crea un dashboard con un grafico de barras para la variable temperatura, un indicador de estado para la variable activo, y un panel que muestre el valor de presion..."
+            placeholder={chatMessages.length > 0 
+              ? "Ej: Cambia el color del grafico a azul, agrega un boton para reiniciar los valores..."
+              : "Ej: Crea un dashboard con un grafico de barras para la variable temperatura, un indicador de estado para la variable activo..."}
             className="w-full h-48 px-4 py-3 bg-[#1a1625] text-white border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
             disabled={isGenerating}
           />
@@ -379,9 +579,9 @@ INSTRUCCIONES IMPORTANTES:
           </div>
         )}
 
-        {aiResponse && (
+        {aiResponse && isGenerating && (
           <div className="mb-4 p-4 bg-gray-800 border border-gray-600 rounded-lg">
-            <h3 className="text-white font-bold mb-2">Respuesta de la IA:</h3>
+            <h3 className="text-white font-bold mb-2">Respuesta de la IA (en tiempo real):</h3>
             <pre className="text-gray-300 text-sm whitespace-pre-wrap overflow-x-auto max-h-64 overflow-y-auto">
               {aiResponse}
             </pre>
@@ -409,7 +609,7 @@ INSTRUCCIONES IMPORTANTES:
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              Generar Dashboard con IA
+              {chatMessages.length > 0 ? 'Enviar Mensaje' : 'Generar Dashboard con IA'}
             </>
           )}
         </button>

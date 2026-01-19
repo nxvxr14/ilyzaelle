@@ -1,5 +1,11 @@
 import type { Request, Response } from "express"
 import Project from "../models/Project";
+import crypto from "crypto";
+
+// Funcion para generar un codigo unico de 8 caracteres
+const generateUniqueCode = (): string => {
+    return crypto.randomBytes(4).toString('hex');
+};
 
 // Los controladors siempre son clases para una mejor organizaccion, van a ser metodos estaticos para no ser instanciados
 
@@ -136,10 +142,136 @@ export class ProjectController {
                 const error = new Error('Project not found')
                 return res.status(404).json({ error: error.message })
             }
-            res.json({ AIDash: project.AIDash })
+            res.json({ AIDash: project.AIDash, AIDashCode: project.AIDashCode })
         } catch (error) {
             console.log(error)
             return res.status(500).json({ error: 'Error al obtener AIDash' })
+        }
+    }
+
+    // AIDash - Guardar HTML y generar codigo unico
+    static updateAIDashWithCode = async (req: Request, res: Response) => {
+        const { projectId } = req.params
+        try {
+            const project = await Project.findById(projectId)
+            if (!project) {
+                const error = new Error('Project not found')
+                return res.status(404).json({ error: error.message })
+            }
+            const { AIDash } = req.body
+            project.AIDash = AIDash
+            // Solo generar codigo si no existe uno
+            if (!project.AIDashCode) {
+                project.AIDashCode = generateUniqueCode()
+            }
+            await project.save()
+            res.json({ 
+                message: 'AIDash actualizado correctamente',
+                AIDashCode: project.AIDashCode 
+            })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ error: 'Error al actualizar AIDash' })
+        }
+    }
+
+    // AIDash - Obtener dashboard publico por codigo (sin autenticacion)
+    static getAIDashByCode = async (req: Request, res: Response) => {
+        const { dashCode } = req.params
+        try {
+            const project = await Project.findOne({ AIDashCode: dashCode })
+            if (!project) {
+                const error = new Error('Dashboard not found')
+                return res.status(404).json({ error: error.message })
+            }
+            res.json({ AIDash: project.AIDash, projectName: project.projectName })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ error: 'Error al obtener dashboard' })
+        }
+    }
+
+    // AIChatHistory - Obtener historial de chat
+    static getAIChatHistory = async (req: Request, res: Response) => {
+        const { projectId } = req.params
+        try {
+            const project = await Project.findById(projectId)
+            if (!project) {
+                const error = new Error('Project not found')
+                return res.status(404).json({ error: error.message })
+            }
+            res.json({ AIChatHistory: project.AIChatHistory })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ error: 'Error al obtener historial de chat' })
+        }
+    }
+
+    // AIChatHistory - Agregar mensaje al historial
+    static addAIChatMessage = async (req: Request, res: Response) => {
+        const { projectId } = req.params
+        try {
+            const project = await Project.findById(projectId)
+            if (!project) {
+                const error = new Error('Project not found')
+                return res.status(404).json({ error: error.message })
+            }
+            const { role, content } = req.body
+            project.AIChatHistory.push({
+                role,
+                content,
+                timestamp: new Date()
+            })
+            await project.save()
+            res.json({ message: 'Mensaje agregado al historial' })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ error: 'Error al agregar mensaje' })
+        }
+    }
+
+    // AIChatHistory - Agregar multiples mensajes al historial (user + assistant)
+    static addAIChatMessages = async (req: Request, res: Response) => {
+        const { projectId } = req.params
+        try {
+            const project = await Project.findById(projectId)
+            if (!project) {
+                const error = new Error('Project not found')
+                return res.status(404).json({ error: error.message })
+            }
+            const { messages } = req.body // Array de { role, content }
+            if (Array.isArray(messages)) {
+                messages.forEach(msg => {
+                    project.AIChatHistory.push({
+                        role: msg.role,
+                        content: msg.content,
+                        timestamp: new Date()
+                    })
+                })
+                await project.save()
+            }
+            res.json({ message: 'Mensajes agregados al historial' })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ error: 'Error al agregar mensajes' })
+        }
+    }
+
+    // AIChatHistory - Limpiar historial (Nuevo Chat)
+    static clearAIChatHistory = async (req: Request, res: Response) => {
+        const { projectId } = req.params
+        try {
+            const project = await Project.findById(projectId)
+            if (!project) {
+                const error = new Error('Project not found')
+                return res.status(404).json({ error: error.message })
+            }
+            project.AIChatHistory = []
+            await project.save()
+            res.json({ message: 'Historial de chat eliminado' })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ error: 'Error al limpiar historial' })
         }
     }
 }
