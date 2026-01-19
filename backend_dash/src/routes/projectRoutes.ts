@@ -74,6 +74,22 @@ router.delete(
   ProjectController.deleteProject
 );
 
+/* AIDASH - HTML generado por IA */
+router.post(
+  "/:projectId/aidash",
+  param("projectId").isMongoId().withMessage("ID no valido"),
+  body("AIDash").notEmpty().withMessage("El contenido HTML es obligatorio."),
+  handleInputErrors,
+  ProjectController.updateAIDash
+);
+
+router.get(
+  "/:projectId/aidash",
+  param("projectId").isMongoId().withMessage("ID no valido"),
+  handleInputErrors,
+  ProjectController.getAIDash
+);
+
 /* CONTROLADORES */
 // el middleware se empiezaa poner donde se empieza a necesitar, por ejemplo aca lo necesito por boardId
 // no se pueden ejecutar dos funciones en una instancia de param

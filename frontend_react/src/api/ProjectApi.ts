@@ -96,3 +96,29 @@ export async function getStatusLocal(server: string) {
     }
   }
 }
+
+/* AIDash - Dashboard generado por IA */
+type AIDashAPIType = {
+  projectId: Project["_id"];
+  AIDash: string;
+};
+
+export async function updateAIDash({ projectId, AIDash }: AIDashAPIType) {
+  try {
+    const { data } = await api.post(`/projects/${projectId}/aidash`, { AIDash });
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}
+
+export async function getAIDash(projectId: Project["_id"]) {
+  try {
+    const { data } = await api.get(`/projects/${projectId}/aidash`);
+    return data.AIDash;
+  } catch (error) {
+    if (isAxiosError(error) && error.response)
+      throw new Error(error.response.data.error);
+  }
+}

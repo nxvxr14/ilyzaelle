@@ -7,6 +7,8 @@ import ProjectDetailsView from "./views/projects/ProjectDetailsView";
 import CodeEditorBoardView from "./views/boards/CodeEditorBoardView";
 import ProjectDashboardView from "./views/projects/ProjectDashboardView";
 import FdnView from "./views/fdn/fdn";
+import AIDashboardView from "./views/dashboard/AIDashboardView";
+import ViewAIDashboardView from "./views/dashboard/ViewAIDashboardView";
 
 // Importar el contexto del socket
 import { SocketProvider } from "./context/SocketContext";
@@ -45,6 +47,8 @@ const router = () => {
                         <Route path="/projects/:projectId" element={<ProjectDetailsView />} />
                         <Route path="/projects/:projectId/dashboard" element={<ProjectDashboardView />} />
                         <Route path="/projects/:projectId/boards/:boardId/editor" element={<CodeEditorBoardView />} />
+                        <Route path="/projects/:projectId/ai-dashboard" element={<AIDashboardView />} />
+                        <Route path="/projects/:projectId/view-ai-dashboard" element={<ViewAIDashboardView />} />
                     </Route>
                 </Route>
             </Routes>

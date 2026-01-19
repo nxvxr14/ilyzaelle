@@ -21,6 +21,7 @@ export interface IProject extends Document {
   status: boolean;
   server: string;
   serverAPIKey: string;
+  AIDash: string; // HTML generado por IA para el dashboard
   // las boards de cada project
   // en boards solo se almacena el objectid del projecto al que pertecene cada board, pero en projects se hace un subdocumento con toda la informacion de las boards que pertenecen a cada projecto
   boards: PopulatedDoc<IBoard & Document>[];
@@ -54,6 +55,10 @@ const ProjectSchema: Schema = new Schema(
     serverAPIKey: {
       type: String,
       default: "a9b3f0d5123b7a6e9f41c2d3",
+    },
+    AIDash: {
+      type: String,
+      default: "",
     },
     boards: [
       {

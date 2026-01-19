@@ -107,4 +107,39 @@ export class ProjectController {
             })
         }
     }
+
+    // AIDash - Guardar HTML generado por IA
+    static updateAIDash = async (req: Request, res: Response) => {
+        const { projectId } = req.params
+        try {
+            const project = await Project.findById(projectId)
+            if (!project) {
+                const error = new Error('Project not found')
+                return res.status(404).json({ error: error.message })
+            }
+            const { AIDash } = req.body
+            project.AIDash = AIDash
+            await project.save()
+            res.send('AIDash actualizado correctamente')
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ error: 'Error al actualizar AIDash' })
+        }
+    }
+
+    // AIDash - Obtener HTML generado por IA
+    static getAIDash = async (req: Request, res: Response) => {
+        const { projectId } = req.params
+        try {
+            const project = await Project.findById(projectId)
+            if (!project) {
+                const error = new Error('Project not found')
+                return res.status(404).json({ error: error.message })
+            }
+            res.json({ AIDash: project.AIDash })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ error: 'Error al obtener AIDash' })
+        }
+    }
 }
