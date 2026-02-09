@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global pixel art styles */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-pixel-darker text-white font-body;
+  image-rendering: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-pixel-darker;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-pixel-secondary rounded;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-pixel-primary;
+}
+
+/* Pixel art border utility */
+@layer components {
+  .pixel-border {
+    border: 3px solid;
+    border-color: #fff;
+    box-shadow:
+      4px 4px 0px 0px rgba(0, 0, 0, 0.8),
+      inset -2px -2px 0px 0px rgba(0, 0, 0, 0.2);
+  }
+
+  .pixel-border-primary {
+    border: 3px solid;
+    border-color: #e94560;
+    box-shadow:
+      4px 4px 0px 0px rgba(233, 69, 96, 0.4),
+      inset -2px -2px 0px 0px rgba(0, 0, 0, 0.2);
+  }
+
+  .pixel-border-gold {
+    border: 3px solid;
+    border-color: #f5c518;
+    box-shadow:
+      4px 4px 0px 0px rgba(245, 197, 24, 0.4),
+      inset -2px -2px 0px 0px rgba(0, 0, 0, 0.2);
+  }
+
+  .pixel-text-shadow {
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+  }
+
+  .pixel-btn {
+    @apply font-pixel text-xs px-6 py-3 border-2 border-white bg-pixel-primary
+           text-white transition-all duration-150 cursor-pointer
+           active:translate-x-[2px] active:translate-y-[2px]
+           active:shadow-none;
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.8);
+  }
+
+  .pixel-btn:hover {
+    @apply bg-pixel-secondary;
+  }
+
+  .pixel-btn-secondary {
+    @apply pixel-btn bg-pixel-accent;
+  }
+
+  .pixel-btn-secondary:hover {
+    @apply bg-pixel-secondary;
+  }
+
+  .pixel-input {
+    @apply w-full px-4 py-3 bg-pixel-dark border-2 border-gray-600
+           text-white font-body text-base rounded-none
+           focus:outline-none focus:border-pixel-primary
+           transition-colors;
+  }
+
+  .pixel-card {
+    @apply bg-pixel-dark border-2 border-gray-700 p-4
+           transition-all duration-200;
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.6);
+  }
+
+  .pixel-card:hover {
+    @apply border-pixel-primary;
+    box-shadow: 6px 6px 0px 0px rgba(233, 69, 96, 0.3);
+  }
+
+  /* Study card - full screen on mobile */
+  .study-card {
+    @apply min-h-[calc(100vh-4rem)] w-full flex flex-col items-center
+           justify-center p-6 bg-pixel-dark;
+  }
+
+  /* no scrollbar for study mode */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Pixel art image rendering for actual pixel art assets */
+.pixel-render {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
