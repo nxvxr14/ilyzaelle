@@ -1,32 +1,40 @@
 import { useEffect, useRef, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import gsap from 'gsap';
-import type { Module, Progress, CardBlock, QuizBlock } from '@/types';
+import * as endpoints from '@/api/endpoints';
+import { useAuth } from '@/context/AuthContext';
+import WigglingChest from '@/components/gamification/WigglingChest';
+import RewardBox from '@/components/gamification/RewardBox';
 import {
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/solid';
+import type { Module, Progress, CardBlock, QuizBlock, RewardResult } from '@/types';
 
 interface QuizResultItem {
   question: string;
   correct: boolean;
+  correctAnswer: string;
+  selectedAnswer: string;
   points: number;
 }
+
+type Phase = 'quiz' | 'points' | 'chest' | 'reward' | 'done';
 
 interface ModuleResultsProps {
   mod: Module;
   progress: Progress;
-  onContinue: () => void;
+  courseId: string;
+  moduleId: string;
+  onFinished: () => void;
 }
 
 /**
- * Collects all quiz results from the module's cards progress.
- * For each card, iterates its blocks to find quiz blocks, then
- * checks quizCorrect from the card progress entry.
+ * Collects quiz results with correct/selected answer text.
  */
 const collectQuizResults = (mod: Module, progress: Progress): QuizResultItem[] => {
-  const moduleId = mod._id;
   const mp = progress.modulesProgress.find(
-    (m) => m.module === moduleId || (m.module as any)?._id === moduleId
+    (m) => m.module === mod._id || (m.module as unknown as { _id: string })?._id === mod._id
   );
   if (!mp) return [];
 
@@ -42,9 +50,14 @@ const collectQuizResults = (mod: Module, progress: Progress): QuizResultItem[] =
       if (block.type !== 'quiz') return;
       const quizBlock = block as QuizBlock;
       const isCorrect = cp.quizCorrect?.[blockIndex.toString()] ?? false;
+      const selectedIdx = cp.quizAnswers?.[blockIndex.toString()];
       results.push({
         question: quizBlock.question,
         correct: isCorrect,
+        correctAnswer: quizBlock.options[quizBlock.correctIndex] ?? '',
+        selectedAnswer: selectedIdx !== undefined
+          ? quizBlock.options[selectedIdx] ?? ''
+          : '(sin respuesta)',
         points: quizBlock.points,
       });
     });
@@ -53,143 +66,286 @@ const collectQuizResults = (mod: Module, progress: Progress): QuizResultItem[] =
   return results;
 };
 
-const ModuleResults = ({ mod, progress, onContinue }: ModuleResultsProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const pointsRef = useRef<HTMLSpanElement>(null);
-  const bienHechoRef = useRef<HTMLParagraphElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [animDone, setAnimDone] = useState(false);
+const ModuleResults = ({
+  mod,
+  progress,
+  courseId,
+  moduleId,
+  onFinished,
+}: ModuleResultsProps) => {
+  const { user, updateUser } = useAuth();
+  const queryClient = useQueryClient();
+
+  const [phase, setPhase] = useState<Phase>('quiz');
+  const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
+  const [showRewardBox, setShowRewardBox] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(0);
+
+  // Refs for GSAP animations
+  const quizRef = useRef<HTMLDivElement>(null);
+  const pointsContainerRef = useRef<HTMLDivElement>(null);
+  const pointsNumberRef = useRef<HTMLSpanElement>(null);
+  const chestContainerRef = useRef<HTMLDivElement>(null);
+  const doneContainerRef = useRef<HTMLDivElement>(null);
 
   const quizResults = collectQuizResults(mod, progress);
   const correctCount = quizResults.filter((r) => r.correct).length;
   const totalQuizzes = quizResults.length;
-  const totalPoints = quizResults.reduce(
-    (sum, r) => sum + (r.correct ? r.points : 0),
-    0
-  );
 
+  // --- Mutations ---
+  const completeModuleMutation = useMutation({
+    mutationFn: () => endpoints.completeModuleProgress(courseId, moduleId),
+    onSuccess: (response) => {
+      const { reward, updatedTotalPoints } = response.data;
+      setEarnedPoints(reward.points);
+
+      // Store the reward result for when they open the chest
+      setRewardResult(reward);
+
+      // Update user totalPoints in AuthContext
+      if (user) {
+        updateUser({ ...user, totalPoints: updatedTotalPoints });
+      }
+
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['progress', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['user-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-badges'] });
+    },
+  });
+
+  const openRewardBoxMutation = useMutation({
+    mutationFn: () => endpoints.openRewardBox(courseId, moduleId),
+    onSuccess: (response) => {
+      // Use the populated badge from openRewardBox response
+      setRewardResult(response.data);
+      setShowRewardBox(true);
+    },
+  });
+
+  // --- Phase transitions ---
+
+  // Phase: quiz -> animate in quiz results
   useEffect(() => {
-    const container = containerRef.current;
-    const pointsEl = pointsRef.current;
-    const bienHecho = bienHechoRef.current;
-    const btn = buttonRef.current;
-    if (!container || !pointsEl || !bienHecho || !btn) return;
+    if (phase !== 'quiz' || !quizRef.current) return;
+    const tl = gsap.timeline();
+    tl.fromTo(
+      quizRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.5 }
+    );
+    return () => { tl.kill(); };
+  }, [phase]);
+
+  // Phase: points -> animate counter, then transition to chest
+  useEffect(() => {
+    if (phase !== 'points') return;
+    const container = pointsContainerRef.current;
+    const numEl = pointsNumberRef.current;
+    if (!container || !numEl) return;
 
     const tl = gsap.timeline();
 
-    // Fade in the container
-    tl.fromTo(container, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 });
+    tl.fromTo(container, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4 });
 
-    // Animate points counter from 0 to totalPoints
     const counter = { val: 0 };
     tl.to(counter, {
-      val: totalPoints,
+      val: earnedPoints,
       duration: 1.5,
       ease: 'power1.out',
       onUpdate: () => {
-        pointsEl.textContent = `+${Math.round(counter.val)}`;
+        numEl.textContent = `+${Math.round(counter.val)}`;
       },
-    }, '+=0.3');
+    }, '+=0.2');
 
-    // Show "Bien hecho!" after counter finishes
+    // Auto-advance to chest phase after counter
+    tl.call(() => setPhase('chest'), [], '+=0.8');
+
+    return () => { tl.kill(); };
+  }, [phase, earnedPoints]);
+
+  // Phase: chest -> animate in chest
+  useEffect(() => {
+    if (phase !== 'chest' || !chestContainerRef.current) return;
+    const tl = gsap.timeline();
     tl.fromTo(
-      bienHecho,
-      { opacity: 0, scale: 0.5 },
-      { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.7)' }
+      chestContainerRef.current,
+      { opacity: 0, scale: 0.8 },
+      { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.7)' }
     );
+    return () => { tl.kill(); };
+  }, [phase]);
 
-    // Show continue button
+  // Phase: done -> animate in done button
+  useEffect(() => {
+    if (phase !== 'done' || !doneContainerRef.current) return;
+    const tl = gsap.timeline();
     tl.fromTo(
-      btn,
-      { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.3 }
-    ).call(() => setAnimDone(true));
+      doneContainerRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.5 }
+    );
+    return () => { tl.kill(); };
+  }, [phase]);
 
-    return () => {
-      tl.kill();
-    };
-  }, [totalPoints]);
+  // --- Handlers ---
+
+  const handleQuizContinue = () => {
+    // Call completeModule, then transition to points phase
+    completeModuleMutation.mutate(undefined, {
+      onSuccess: () => {
+        setPhase('points');
+      },
+      onError: () => {
+        // If module already completed, still show points
+        setEarnedPoints(mod.points);
+        setPhase('points');
+      },
+    });
+  };
+
+  const handleChestClick = () => {
+    openRewardBoxMutation.mutate();
+  };
+
+  const handleRewardBoxClose = () => {
+    setShowRewardBox(false);
+    setPhase('done');
+  };
+
+  // --- Render ---
 
   return (
-    <div
-      ref={containerRef}
-      className="flex-1 flex flex-col items-center justify-center px-4"
-      style={{ opacity: 0 }}
-    >
-      <div className="card w-full max-w-lg p-6 text-center">
-        {/* Title */}
-        <h3 className="text-lg font-bold mb-4 text-lab-text">
-          Resultados del modulo
-        </h3>
+    <div className="flex-1 flex flex-col items-center justify-center px-4">
+      {/* Phase 1: Quiz Results */}
+      {phase === 'quiz' && (
+        <div ref={quizRef} className="w-full max-w-lg" style={{ opacity: 0 }}>
+          <div className="card p-6 text-center">
+            <h3 className="text-lg font-bold mb-4 text-lab-text">
+              Resultados del modulo
+            </h3>
 
-        {/* Quiz results list */}
-        {totalQuizzes > 0 ? (
-          <div className="space-y-2 mb-6 text-left">
-            {quizResults.map((result, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2 p-3 rounded-xl bg-lab-bg/50 border border-lab-border"
-              >
-                {result.correct ? (
-                  <CheckCircleIcon className="w-5 h-5 text-lab-secondary flex-shrink-0 mt-0.5" />
-                ) : (
-                  <XCircleIcon className="w-5 h-5 text-lab-accent flex-shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-lab-text">{result.question}</p>
-                  <p className={`text-xs mt-0.5 ${
-                    result.correct ? 'text-lab-secondary' : 'text-lab-accent'
-                  }`}>
-                    {result.correct
-                      ? `+${result.points} pts`
-                      : 'Incorrecta'}
-                  </p>
-                </div>
+            {totalQuizzes > 0 ? (
+              <div className="space-y-2 mb-6 text-left">
+                {quizResults.map((result, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-xl bg-lab-bg/50 border border-lab-border"
+                  >
+                    <div className="flex items-start gap-2">
+                      {result.correct ? (
+                        <CheckCircleIcon className="w-5 h-5 text-lab-secondary flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <XCircleIcon className="w-5 h-5 text-lab-accent flex-shrink-0 mt-0.5" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-lab-text">{result.question}</p>
+                        {result.correct ? (
+                          <p className="text-xs mt-1 text-lab-secondary">
+                            +{result.points} pts
+                          </p>
+                        ) : (
+                          <div className="mt-1">
+                            <p className="text-xs text-lab-accent">
+                              Tu respuesta: {result.selectedAnswer}
+                            </p>
+                            <p className="text-xs text-lab-secondary mt-0.5">
+                              Correcta: {result.correctAnswer}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <p className="text-xs text-lab-text-muted text-center pt-2">
+                  {correctCount} de {totalQuizzes} correctas
+                </p>
               </div>
-            ))}
+            ) : (
+              <p className="text-sm text-lab-text-muted mb-6">
+                Este modulo no tenia preguntas
+              </p>
+            )}
 
-            {/* Summary line */}
-            <p className="text-xs text-lab-text-muted text-center pt-2">
-              {correctCount} de {totalQuizzes} correctas
-            </p>
+            <button
+              onClick={handleQuizContinue}
+              disabled={completeModuleMutation.isPending}
+              className="btn-primary w-full py-3 text-base font-semibold"
+            >
+              {completeModuleMutation.isPending ? 'Procesando...' : 'Continuar'}
+            </button>
           </div>
-        ) : (
-          <p className="text-sm text-lab-text-muted mb-6">
-            Este modulo no tenia preguntas
-          </p>
-        )}
+        </div>
+      )}
 
-        {/* Points animation */}
-        <div className="my-4">
+      {/* Phase 2: Points Animation */}
+      {phase === 'points' && (
+        <div
+          ref={pointsContainerRef}
+          className="text-center"
+          style={{ opacity: 0 }}
+        >
+          <p className="text-lab-text-muted text-sm mb-2">Puntos ganados</p>
           <span
-            ref={pointsRef}
-            className="text-4xl font-black text-lab-gold"
+            ref={pointsNumberRef}
+            className="text-5xl font-black text-lab-gold"
           >
             +0
           </span>
-          <p className="text-lab-text-muted text-sm mt-1">puntos ganados</p>
+          <p className="text-lab-text-muted text-xs mt-2">
+            {mod.points} base{totalQuizzes > 0 ? ` + ${earnedPoints - mod.points} quiz bonus` : ''}
+          </p>
         </div>
+      )}
 
-        {/* Bien hecho! */}
-        <p
-          ref={bienHechoRef}
-          className="text-xl font-bold text-lab-secondary mb-6"
+      {/* Phase 3: Wiggling Chest */}
+      {phase === 'chest' && (
+        <div
+          ref={chestContainerRef}
+          className="w-full max-w-sm"
           style={{ opacity: 0 }}
         >
-          Bien hecho!
-        </p>
+          <p className="text-center text-lab-text-muted text-sm mb-4">
+            Tienes una recompensa esperando
+          </p>
+          <WigglingChest
+            onClick={handleChestClick}
+            disabled={openRewardBoxMutation.isPending}
+          />
+        </div>
+      )}
 
-        {/* Continue button */}
-        <button
-          ref={buttonRef}
-          onClick={onContinue}
-          disabled={!animDone}
-          className="btn-primary w-full py-3 text-base font-semibold"
+      {/* Phase 4: RewardBox overlay */}
+      {showRewardBox && rewardResult && (
+        <RewardBox
+          result={rewardResult}
+          onClose={handleRewardBoxClose}
+        />
+      )}
+
+      {/* Phase 5: Done — Volver al curso */}
+      {phase === 'done' && (
+        <div
+          ref={doneContainerRef}
+          className="text-center"
           style={{ opacity: 0 }}
         >
-          Continuar
-        </button>
-      </div>
+          <p className="text-lab-secondary font-bold text-lg mb-2">
+            Modulo completado
+          </p>
+          <p className="text-lab-text-muted text-sm mb-6">
+            Has ganado {earnedPoints} puntos en total
+          </p>
+          <button
+            onClick={onFinished}
+            className="btn-primary px-8 py-3 text-base font-semibold"
+          >
+            Volver al curso
+          </button>
+        </div>
+      )}
     </div>
   );
 };

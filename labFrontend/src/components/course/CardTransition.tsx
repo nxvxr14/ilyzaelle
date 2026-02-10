@@ -37,9 +37,10 @@ const CardTransition = ({ transitionKey, children }: CardTransitionProps) => {
   }, [transitionKey]);
 
   return (
-    <div style={{ perspective: '1200px' }}>
+    <div className="flex-1 flex flex-col min-h-0" style={{ perspective: '1200px' }}>
       <div
         ref={containerRef}
+        className="flex-1 flex flex-col min-h-0"
         style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' }}
       >
         {children}

@@ -3,6 +3,7 @@ import { Progress } from '../models/Progress';
 import { Module } from '../models/Module';
 import { Course } from '../models/Course';
 import { Card, IQuizBlock } from '../models/Card';
+import { Badge } from '../models/Badge';
 import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 
@@ -124,15 +125,33 @@ export const completeModule = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const mod = await Module.findById(moduleId);
+    const mod = await Module.findById(moduleId).populate('badge');
     if (!mod) {
       res.status(404).json({ error: 'Module not found' });
       return;
     }
 
+    // Calculate quiz bonus: sum points from correctly answered quiz blocks
+    let quizBonus = 0;
+    const cards = await Card.find({ module: moduleId });
+    for (const card of cards) {
+      const cp = modProgress.cardsProgress.find(
+        (c) => c.card.toString() === card._id.toString()
+      );
+      if (!cp) continue;
+      for (const [blockIndex, isCorrect] of Object.entries(cp.quizCorrect || {})) {
+        if (isCorrect) {
+          const block = card.blocks[parseInt(blockIndex, 10)];
+          if (block && block.type === 'quiz') {
+            quizBonus += (block as IQuizBlock).points;
+          }
+        }
+      }
+    }
+
     modProgress.completed = true;
     modProgress.completedAt = new Date();
-    modProgress.pointsEarned = mod.points;
+    modProgress.pointsEarned = mod.points + quizBonus;
 
     // Reward box logic: roll for badge
     let badgeEarned = null;
@@ -140,7 +159,7 @@ export const completeModule = async (req: AuthRequest, res: Response): Promise<v
       const roll = Math.random() * 100;
       if (roll < mod.badgeDropChance) {
         modProgress.badgeEarned = mod.badge;
-        badgeEarned = mod.badge;
+        badgeEarned = mod.badge; // Already populated from .populate('badge')
       }
     }
 
@@ -160,16 +179,17 @@ export const completeModule = async (req: AuthRequest, res: Response): Promise<v
 
     // Update user total points
     const allProgress = await Progress.find({ user: req.user?._id });
-    const totalPoints = allProgress.reduce((sum, p) => sum + p.totalPoints, 0);
-    await User.findByIdAndUpdate(req.user?._id, { totalPoints });
+    const userTotalPoints = allProgress.reduce((sum, p) => sum + p.totalPoints, 0);
+    await User.findByIdAndUpdate(req.user?._id, { totalPoints: userTotalPoints });
 
     res.json({
       progress,
       reward: {
-        points: mod.points,
+        points: mod.points + quizBonus,
         badgeEarned,
         courseCompleted: allCompleted,
       },
+      updatedTotalPoints: userTotalPoints,
     });
   } catch (error) {
     console.error('Complete module error:', error);
@@ -213,9 +233,15 @@ export const openRewardBox = async (req: AuthRequest, res: Response): Promise<vo
     modProgress.rewardBoxOpened = true;
     await progress.save();
 
+    // Populate badge document if one was earned
+    let populatedBadge = null;
+    if (modProgress.badgeEarned) {
+      populatedBadge = await Badge.findById(modProgress.badgeEarned);
+    }
+
     res.json({
       points: modProgress.pointsEarned,
-      badgeEarned: modProgress.badgeEarned,
+      badgeEarned: populatedBadge,
     });
   } catch (error) {
     console.error('Open reward box error:', error);

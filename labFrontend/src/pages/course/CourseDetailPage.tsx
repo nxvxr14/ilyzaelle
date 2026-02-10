@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
-import gsap from 'gsap';
+import { useState } from 'react';
 import * as endpoints from '@/api/endpoints';
 import { useAuth } from '@/context/AuthContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import RewardBox from '@/components/gamification/RewardBox';
+import WigglingChest from '@/components/gamification/WigglingChest';
 import { getImageUrl } from '@/utils/helpers';
 import { toast } from 'react-toastify';
 import {
@@ -15,51 +15,6 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/solid';
 import type { RewardResult } from '@/types';
-
-/** Wiggling chest shown when all cards of a module are done */
-const WigglingChest = ({ onClick, disabled }: { onClick: () => void; disabled: boolean }) => {
-  const chestRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = chestRef.current;
-    if (!el) return;
-
-    // Continuous subtle wiggle animation
-    const tl = gsap.timeline({ repeat: -1, repeatDelay: 1.5 });
-    tl.to(el, { rotation: -5, duration: 0.1, ease: 'power1.inOut' })
-      .to(el, { rotation: 5, duration: 0.1, ease: 'power1.inOut' })
-      .to(el, { rotation: -4, duration: 0.1, ease: 'power1.inOut' })
-      .to(el, { rotation: 4, duration: 0.08, ease: 'power1.inOut' })
-      .to(el, { rotation: 0, duration: 0.15, ease: 'power2.out' });
-
-    return () => {
-      tl.kill();
-    };
-  }, []);
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="card-hover flex items-center gap-3 w-full text-left"
-    >
-      <div
-        ref={chestRef}
-        className="w-14 h-14 rounded-xl bg-gradient-to-br from-lab-gold/20 via-lab-primary/10 to-lab-gold/20 border border-lab-gold/30 flex items-center justify-center flex-shrink-0"
-      >
-        <span className="text-2xl">🎁</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate text-lab-gold">
-          {disabled ? 'Abriendo...' : 'Abrir Caja de Recompensas'}
-        </p>
-        <p className="text-xs text-lab-text-muted mt-0.5">
-          Toca para reclamar tu recompensa
-        </p>
-      </div>
-    </button>
-  );
-};
 
 const CourseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -92,19 +47,6 @@ const CourseDetailPage = () => {
       }
     },
     onError: () => toast.error('Error al inscribirse'),
-  });
-
-  const completeModuleMutation = useMutation({
-    mutationFn: (moduleId: string) => endpoints.completeModuleProgress(id!, moduleId),
-    onSuccess: (response) => {
-      const result = response.data.reward;
-      setRewardResult(result);
-      setShowReward(true);
-      queryClient.invalidateQueries({ queryKey: ['progress', id] });
-      queryClient.invalidateQueries({ queryKey: ['user-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['user-badges'] });
-    },
-    onError: () => toast.error('Error al completar modulo'),
   });
 
   const claimCourseRewardMutation = useMutation({
@@ -178,59 +120,41 @@ const CourseDetailPage = () => {
           const isCompleted = moduleProgress?.completed;
           const isUnlocked = isEnrolled;
 
-          // Check if all cards completed but module not finalized
-          const allCardsCompleted = !isCompleted &&
-            (mod.cards?.length || 0) > 0 &&
-            moduleProgress?.cardsProgress &&
-            mod.cards?.every((card) => {
-              const cardId = typeof card === 'string' ? card : card._id;
-              return moduleProgress.cardsProgress.some(
-                (cp) => cp.card.toString() === cardId.toString() && cp.completed
-              );
-            });
-
           return (
             <div key={mod._id} className="relative">
               {isUnlocked ? (
-                allCardsCompleted ? (
-                  <WigglingChest
-                    onClick={() => completeModuleMutation.mutate(mod._id)}
-                    disabled={completeModuleMutation.isPending}
-                  />
-                ) : (
-                  <Link
-                    to={`/courses/${course._id}/modules/${mod._id}`}
-                    className="card-hover flex items-center gap-3"
-                  >
-                    {/* Module cover */}
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-lab-bg flex-shrink-0">
-                      {mod.coverImage ? (
-                        <img
-                          src={getImageUrl(mod.coverImage)}
-                          alt={mod.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-lab-border font-bold">
-                          {index + 1}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{mod.title}</p>
-                      <p className="text-xs text-lab-text-muted mt-0.5">
-                        {mod.cards?.length || 0} tarjetas &middot; {mod.points} pts
-                      </p>
-                    </div>
-
-                    {isCompleted ? (
-                      <CheckCircleIcon className="w-6 h-6 text-lab-secondary flex-shrink-0" />
+                <Link
+                  to={`/courses/${course._id}/modules/${mod._id}`}
+                  className="card-hover flex items-center gap-3"
+                >
+                  {/* Module cover */}
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-lab-bg flex-shrink-0">
+                    {mod.coverImage ? (
+                      <img
+                        src={getImageUrl(mod.coverImage)}
+                        alt={mod.title}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <PlayIcon className="w-6 h-6 text-lab-primary flex-shrink-0" />
+                      <div className="w-full h-full flex items-center justify-center text-lab-border font-bold">
+                        {index + 1}
+                      </div>
                     )}
-                  </Link>
-                )
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{mod.title}</p>
+                    <p className="text-xs text-lab-text-muted mt-0.5">
+                      {mod.cards?.length || 0} tarjetas &middot; {mod.points} pts
+                    </p>
+                  </div>
+
+                  {isCompleted ? (
+                    <CheckCircleIcon className="w-6 h-6 text-lab-secondary flex-shrink-0" />
+                  ) : (
+                    <PlayIcon className="w-6 h-6 text-lab-primary flex-shrink-0" />
+                  )}
+                </Link>
               ) : (
                 <div className="card flex items-center gap-3 opacity-50">
                   <div className="w-14 h-14 rounded-xl bg-lab-bg flex items-center justify-center flex-shrink-0">

@@ -114,6 +114,12 @@ const ModuleViewPage = () => {
   if (loadingModule || loadingProgress) return <LoadingSpinner />;
   if (!mod) return <p className="p-6 text-lab-text-muted">Modulo no encontrado</p>;
 
+  // Check if module was already completed previously
+  const moduleProgress = progress?.modulesProgress.find(
+    (m) => m.module === moduleId || (m.module as any)?._id === moduleId
+  );
+  const alreadyCompleted = moduleProgress?.completed ?? false;
+
   const totalCards = mod.cards.length;
   const safeIndex = currentIndex ?? 0;
   const isLastCard = safeIndex === totalCards - 1;
@@ -163,29 +169,41 @@ const ModuleViewPage = () => {
           <ModuleResults
             mod={mod}
             progress={progress}
-            onContinue={() => navigate(`/courses/${courseId}`)}
+            courseId={courseId!}
+            moduleId={moduleId!}
+            onFinished={() => navigate(`/courses/${courseId}`)}
           />
         ) : allDone ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="card text-center py-12 w-full max-w-lg">
-              <p className="text-lab-secondary font-bold text-lg mb-2">
-                Todas las tarjetas completadas
-              </p>
-              <p className="text-lab-text-muted text-sm mb-6">
-                Vuelve al curso para abrir tu caja de recompensas
-              </p>
-              <Link to={`/courses/${courseId}`} className="btn-primary">
-                Volver al curso
-              </Link>
+          alreadyCompleted ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="card text-center py-12 w-full max-w-lg">
+                <p className="text-lab-secondary font-bold text-lg mb-2">
+                  Modulo completado
+                </p>
+                <p className="text-lab-text-muted text-sm mb-6">
+                  Ya completaste este modulo anteriormente
+                </p>
+                <Link to={`/courses/${courseId}`} className="btn-primary">
+                  Volver al curso
+                </Link>
+              </div>
             </div>
-          </div>
+          ) : (
+            <ModuleResults
+              mod={mod}
+              progress={progress!}
+              courseId={courseId!}
+              moduleId={moduleId!}
+              onFinished={() => navigate(`/courses/${courseId}`)}
+            />
+          )
         ) : currentCard ? (
           <>
             {/* Card content — fills available space, scrolls internally */}
-            <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden w-full">
-              <div className="w-full max-w-lg lg:max-w-4xl h-full flex items-center justify-center">
+            <div className="flex-1 flex items-stretch min-h-0 overflow-hidden w-full justify-center">
+              <div className="w-full max-w-lg lg:max-w-4xl flex flex-col min-h-0">
                 <CardTransition transitionKey={currentCard._id}>
-                  <div className="card w-full max-h-full overflow-y-auto p-4">
+                  <div className="card w-full flex-1 min-h-0 overflow-y-auto p-4">
                     <CardRenderer
                       card={currentCard}
                       quizAnswers={quizAnswers}

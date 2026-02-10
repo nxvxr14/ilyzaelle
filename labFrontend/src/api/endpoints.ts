@@ -135,7 +135,10 @@ export const completeCard = (courseId: string, moduleId: string, cardId: string,
   api.post<Progress>(`/progress/course/${courseId}/module/${moduleId}/card/${cardId}/complete`, { quizAnswers });
 
 export const completeModuleProgress = (courseId: string, moduleId: string) =>
-  api.post<{ progress: Progress; reward: RewardResult }>(`/progress/course/${courseId}/module/${moduleId}/complete`);
+  api.post<{ progress: Progress; reward: RewardResult; updatedTotalPoints: number }>(`/progress/course/${courseId}/module/${moduleId}/complete`);
+
+export const openRewardBox = (courseId: string, moduleId: string) =>
+  api.post<RewardResult>(`/progress/course/${courseId}/module/${moduleId}/reward`);
 
 export const getUserBadges = () =>
   api.get<UserBadge[]>('/progress/badges');

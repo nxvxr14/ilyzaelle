@@ -92,11 +92,11 @@ const CardRenderer = ({ card, quizAnswers, onQuizAnswer }: CardRendererProps) =>
 
       case 'code':
         return (
-          <div key={blockIndex} className="rounded-xl overflow-hidden">
+          <div key={blockIndex} className="rounded-xl overflow-hidden max-w-full">
             <div className="bg-lab-bg px-4 py-2 text-xs text-lab-text-muted border-b border-lab-border">
               {block.language}
             </div>
-            <pre className="bg-lab-bg p-4 overflow-x-auto text-sm font-mono">
+            <pre className="bg-lab-bg p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap break-words md:whitespace-pre md:break-normal max-w-full">
               <code>{block.content}</code>
             </pre>
           </div>
