@@ -4,6 +4,8 @@
 **.vscode
 **/dist/
 
+labBackend/uploads/
+
 # Logs
 logs
 *.log
