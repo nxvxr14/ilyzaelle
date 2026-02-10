@@ -1,23 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useMemo } from 'react';
 import * as endpoints from '@/api/endpoints';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CardRenderer from '@/components/course/CardRenderer';
-import RewardBox from '@/components/gamification/RewardBox';
-import { getImageUrl } from '@/utils/helpers';
+import CardTransition from '@/components/course/CardTransition';
 import { toast } from 'react-toastify';
-import {
-  ArrowLeftIcon,
-  CheckCircleIcon,
-} from '@heroicons/react/24/solid';
-import type { RewardResult } from '@/types';
+import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 
 const ModuleViewPage = () => {
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
   const queryClient = useQueryClient();
-  const [showReward, setShowReward] = useState(false);
-  const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
+  const navigate = useNavigate();
+
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: mod, isLoading: loadingModule } = useQuery({
     queryKey: ['module', moduleId],
@@ -25,132 +23,184 @@ const ModuleViewPage = () => {
     enabled: !!moduleId,
   });
 
-  const { data: progress } = useQuery({
+  const { data: progress, isLoading: loadingProgress } = useQuery({
     queryKey: ['progress', courseId],
     queryFn: () => endpoints.getCourseProgress(courseId!).then((r) => r.data).catch(() => null),
     enabled: !!courseId,
   });
 
+  // Compute which cards are already completed from saved progress
+  const completedCardIds = useMemo(() => {
+    if (!progress || !moduleId) return new Set<string>();
+    const mp = progress.modulesProgress.find(
+      (m) => m.module === moduleId || (m.module as any)?._id === moduleId
+    );
+    return new Set(
+      mp?.cardsProgress.filter((cp) => cp.completed).map((cp) => cp.card) || []
+    );
+  }, [progress, moduleId]);
+
+  // Determine the resume index (first uncompleted card)
+  const resumeIndex = useMemo(() => {
+    if (!mod) return 0;
+    const firstUncompleted = mod.cards.findIndex(
+      (card) => !completedCardIds.has(card._id)
+    );
+    return firstUncompleted === -1 ? mod.cards.length : firstUncompleted;
+  }, [mod, completedCardIds]);
+
+  // Set initial index once data is loaded
+  if (currentIndex === null && mod && !loadingProgress) {
+    setCurrentIndex(resumeIndex);
+  }
+
   const completeCardMutation = useMutation({
-    mutationFn: ({ cardId, quizAnswers }: { cardId: string; quizAnswers?: Record<string, number> }) =>
-      endpoints.completeCard(courseId!, moduleId!, cardId, quizAnswers),
+    mutationFn: ({ cardId, answers }: { cardId: string; answers?: Record<string, number> }) =>
+      endpoints.completeCard(courseId!, moduleId!, cardId, answers),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['progress', courseId] });
     },
   });
 
-  const completeModuleMutation = useMutation({
-    mutationFn: () => endpoints.completeModuleProgress(courseId!, moduleId!),
-    onSuccess: (response) => {
-      const result = response.data.reward;
-      setRewardResult(result);
-      setShowReward(true);
-      queryClient.invalidateQueries({ queryKey: ['progress', courseId] });
-      queryClient.invalidateQueries({ queryKey: ['user-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['user-badges'] });
-    },
-    onError: () => toast.error('Error al completar modulo'),
-  });
+  const handleQuizAnswer = (blockIndex: number, optionIndex: number) => {
+    setQuizAnswers((prev) => ({
+      ...prev,
+      [blockIndex.toString()]: optionIndex,
+    }));
+  };
 
-  if (loadingModule) return <LoadingSpinner />;
+  const saveAndAdvance = async () => {
+    if (!mod || currentIndex === null) return;
+
+    const card = mod.cards[currentIndex];
+    if (!card) return;
+
+    setIsSaving(true);
+    try {
+      const answers = Object.keys(quizAnswers).length > 0 ? quizAnswers : undefined;
+      await completeCardMutation.mutateAsync({ cardId: card._id, answers });
+      setQuizAnswers({});
+      setCurrentIndex(currentIndex + 1);
+    } catch {
+      toast.error('Error al guardar progreso');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFinalize = async () => {
+    if (!mod || currentIndex === null) return;
+
+    const card = mod.cards[currentIndex];
+    if (!card) return;
+
+    setIsSaving(true);
+    try {
+      const answers = Object.keys(quizAnswers).length > 0 ? quizAnswers : undefined;
+      await completeCardMutation.mutateAsync({ cardId: card._id, answers });
+      setQuizAnswers({});
+      navigate(`/courses/${courseId}`);
+    } catch {
+      toast.error('Error al guardar progreso');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (loadingModule || loadingProgress) return <LoadingSpinner />;
   if (!mod) return <p className="p-6 text-lab-text-muted">Modulo no encontrado</p>;
 
-  const moduleProgress = progress?.modulesProgress.find(
-    (mp) => mp.module === moduleId || (mp.module as any)?._id === moduleId
-  );
-  const isModuleCompleted = moduleProgress?.completed;
+  const totalCards = mod.cards.length;
+  const safeIndex = currentIndex ?? 0;
+  const isLastCard = safeIndex === totalCards - 1;
+  const allDone = safeIndex >= totalCards;
 
-  const completedCardIds = new Set(
-    moduleProgress?.cardsProgress
-      .filter((cp) => cp.completed)
-      .map((cp) => cp.card) || []
-  );
+  // Progress percentage: completed cards out of total
+  const progressPercent = totalCards > 0
+    ? Math.round((Math.min(safeIndex, totalCards) / totalCards) * 100)
+    : 0;
 
-  const allCardsCompleted = mod.cards.length > 0 &&
-    mod.cards.every((card) => completedCardIds.has(card._id));
-
-  const handleCardComplete = (cardId: string, quizAnswers?: Record<string, number>) => {
-    completeCardMutation.mutate({ cardId, quizAnswers });
-  };
-
-  const handleCompleteModule = () => {
-    completeModuleMutation.mutate();
-  };
+  const currentCard = allDone ? null : mod.cards[safeIndex];
 
   return (
-    <div className="py-4">
-      {/* Back */}
-      <Link
-        to={`/courses/${courseId}`}
-        className="flex items-center gap-2 text-lab-text-muted hover:text-lab-text mb-4 text-sm"
-      >
-        <ArrowLeftIcon className="w-4 h-4" />
-        Volver al curso
-      </Link>
-
-      {/* Module header */}
-      <div className="card mb-6 overflow-hidden p-0">
-        {mod.coverImage && (
-          <div className="h-32 overflow-hidden">
-            <img
-              src={getImageUrl(mod.coverImage)}
-              alt={mod.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-        <div className="p-4">
-          <h2 className="text-xl font-bold">{mod.title}</h2>
-          {mod.description && (
-            <p className="text-lab-text-muted text-sm mt-1">{mod.description}</p>
-          )}
-          <div className="flex items-center gap-4 mt-3 text-xs text-lab-text-muted">
-            <span>{mod.cards.length} tarjetas</span>
-            <span>{mod.points} puntos</span>
-            {isModuleCompleted && (
-              <span className="flex items-center gap-1 text-lab-secondary">
-                <CheckCircleIcon className="w-4 h-4" /> Completado
-              </span>
-            )}
-          </div>
+    <div className="fixed inset-0 flex flex-col bg-lab-bg z-50">
+      {/* Header row */}
+      <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+        <Link
+          to={`/courses/${courseId}`}
+          className="text-lab-text-muted hover:text-lab-text"
+        >
+          <ArrowLeftIcon className="w-5 h-5" />
+        </Link>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm font-bold truncate">{mod.title}</h2>
+          <p className="text-xs text-lab-text-muted">
+            {allDone
+              ? `${totalCards}/${totalCards} tarjetas`
+              : `${safeIndex + 1} de ${totalCards}`}
+          </p>
         </div>
       </div>
 
-      {/* Cards - scrollable */}
-      <div className="space-y-6">
-        {mod.cards.map((card, index) => (
-          <CardRenderer
-            key={card._id}
-            card={card}
-            index={index}
-            isCompleted={completedCardIds.has(card._id)}
-            onComplete={handleCardComplete}
+      {/* Progress bar */}
+      <div className="px-4 pb-3">
+        <div className="h-2 bg-lab-surface rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-lab-primary to-lab-secondary rounded-full transition-all duration-500"
+            style={{ width: `${progressPercent}%` }}
           />
-        ))}
+        </div>
+        <p className="text-xs text-lab-text-muted text-right mt-1">{progressPercent}%</p>
       </div>
 
-      {/* Complete module button */}
-      {!isModuleCompleted && allCardsCompleted && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={handleCompleteModule}
-            disabled={completeModuleMutation.isPending}
-            className="btn-primary animate-glow text-lg px-8 py-4"
-          >
-            {completeModuleMutation.isPending
-              ? 'Completando...'
-              : 'Abrir Caja de Recompensas'}
-          </button>
-        </div>
-      )}
+      {/* Card area — fills remaining space */}
+      <div className="flex-1 flex flex-col min-h-0 px-4 pb-4">
+        {allDone ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="card text-center py-12 w-full max-w-lg">
+              <p className="text-lab-secondary font-bold text-lg mb-2">
+                Todas las tarjetas completadas
+              </p>
+              <p className="text-lab-text-muted text-sm mb-6">
+                Vuelve al curso para abrir tu caja de recompensas
+              </p>
+              <Link to={`/courses/${courseId}`} className="btn-primary">
+                Volver al curso
+              </Link>
+            </div>
+          </div>
+        ) : currentCard ? (
+          <>
+            {/* Card content — fills available space, no scroll */}
+            <div className="flex-1 flex items-center justify-center min-h-0">
+              <CardTransition transitionKey={currentCard._id}>
+                <div className="card w-full max-w-lg lg:max-w-4xl h-full max-h-full overflow-hidden p-4">
+                  <CardRenderer
+                    card={currentCard}
+                    quizAnswers={quizAnswers}
+                    onQuizAnswer={handleQuizAnswer}
+                  />
+                </div>
+              </CardTransition>
+            </div>
 
-      {/* Reward box animation */}
-      {showReward && rewardResult && (
-        <RewardBox
-          result={rewardResult}
-          onClose={() => setShowReward(false)}
-        />
-      )}
+            {/* Navigation button — always at bottom */}
+            <div className="pt-3">
+              <button
+                onClick={isLastCard ? handleFinalize : saveAndAdvance}
+                disabled={isSaving}
+                className="btn-primary w-full py-4 text-base font-semibold max-w-lg lg:max-w-4xl mx-auto block"
+              >
+                {isSaving
+                  ? 'Guardando...'
+                  : isLastCard
+                  ? 'Finalizar'
+                  : 'Siguiente'}
+              </button>
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 };

@@ -151,7 +151,14 @@ const ProfilePage = () => {
           )}
         </div>
 
-        <p className="text-sm text-lab-text-muted">{user?.email}</p>
+        {user?.username && (
+          <p className="text-sm text-lab-secondary">@{user.username}</p>
+        )}
+        {user?.slogan && (
+          <p className="text-sm text-lab-text-muted italic mt-1">"{user.slogan}"</p>
+        )}
+
+        <p className="text-sm text-lab-text-muted mt-1">{user?.email}</p>
         <p className="text-xs text-lab-text-muted mt-1">
           Miembro desde {user?.createdAt ? formatDate(user.createdAt) : ''}
         </p>

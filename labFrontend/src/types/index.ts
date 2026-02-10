@@ -3,6 +3,8 @@ export interface User {
   _id: string;
   email: string;
   name: string;
+  username: string;
+  slogan: string;
   profileImage: string;
   isAdmin: boolean;
   enrolledCourses: string[];
@@ -14,6 +16,14 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+// Check email response (step 1 of auth flow)
+export interface CheckEmailResponse {
+  exists: boolean;
+  isAdmin?: boolean;
+  token?: string;
+  user?: User;
 }
 
 // Course

@@ -19,7 +19,7 @@ const BottomNav = () => {
 
   const navItems = [
     {
-      to: '/',
+      to: '/home',
       label: 'Inicio',
       icon: HomeIcon,
       activeIcon: HomeIconSolid,
@@ -53,8 +53,8 @@ const BottomNav = () => {
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
         {navItems.map((item) => {
           const isActive =
-            item.to === '/'
-              ? location.pathname === '/'
+            item.to === '/home'
+              ? location.pathname === '/home'
               : location.pathname.startsWith(item.to);
           const Icon = isActive ? item.activeIcon : item.icon;
 

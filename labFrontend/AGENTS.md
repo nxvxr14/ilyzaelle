@@ -17,7 +17,7 @@ labFrontend/
 │   ├── components/
 │   │   ├── layout/        # App shell: Header, BottomNav, AppLayout
 │   │   ├── ui/            # Reusable UI: Modal, LoadingSpinner, ImageCropper
-│   │   ├── course/        # Course-related components: CardRenderer
+│   │   ├── course/        # Course-related components: CardRenderer, CardTransition
 │   │   ├── editor/        # Admin card editor: CardEditor, CardBlockEditor, CardPreview
 │   │   ├── gamification/  # Reward system: RewardBox (GSAP animations)
 │   │   └── admin/         # Admin-specific components (future)
@@ -67,7 +67,7 @@ labFrontend/
 - **@tanstack/react-query**: Server state management
 - **react-router-dom**: Routing
 - **axios**: HTTP client
-- **gsap**: Complex animations (RewardBox)
+- **gsap**: Complex animations (RewardBox, CardTransition)
 - **react-easy-crop**: Image cropping before upload
 - **@headlessui/react**: Accessible UI primitives (Modal, etc.)
 - **@heroicons/react**: Icons

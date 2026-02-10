@@ -5,45 +5,113 @@ import { config } from '../config/constants';
 import { AuthRequest } from '../middleware/auth';
 import { processProfileImage, deleteImage } from '../utils/imageProcessing';
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+const generateToken = (userId: string): string => {
+  return jwt.sign({ userId }, config.jwtSecret, { expiresIn: '30d' });
+};
+
+const userResponse = (user: any) => ({
+  _id: user._id,
+  email: user.email,
+  name: user.name,
+  username: user.username || '',
+  slogan: user.slogan || '',
+  profileImage: user.profileImage,
+  isAdmin: user.isAdmin,
+  enrolledCourses: user.enrolledCourses || [],
+  totalPoints: user.totalPoints,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+});
+
+// POST /auth/check-email — Step 1: check if email exists
+export const checkEmail = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, name } = req.body;
+    const { email } = req.body;
 
     if (!email) {
       res.status(400).json({ error: 'Email is required' });
       return;
     }
 
-    let user = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase().trim();
 
-    if (!user) {
-      // Auto-register
-      const isAdmin = email.toLowerCase() === config.adminEmail.toLowerCase();
-      user = await User.create({
-        email: email.toLowerCase(),
-        name: name || email.split('@')[0],
-        isAdmin,
-      });
+    // Admin email → auto-create if needed, return token immediately
+    if (normalizedEmail === config.adminEmail.toLowerCase()) {
+      let admin = await User.findOne({ email: normalizedEmail });
+      if (!admin) {
+        admin = await User.create({
+          email: normalizedEmail,
+          name: 'Admin',
+          isAdmin: true,
+        });
+      }
+      const token = generateToken(admin._id.toString());
+      res.json({ exists: true, isAdmin: true, token, user: userResponse(admin) });
+      return;
     }
 
-    const token = jwt.sign({ userId: user._id }, config.jwtSecret, {
-      expiresIn: '30d',
+    // Regular user → check existence
+    const user = await User.findOne({ email: normalizedEmail });
+    if (user) {
+      const token = generateToken(user._id.toString());
+      res.json({ exists: true, isAdmin: false, token, user: userResponse(user) });
+      return;
+    }
+
+    // New user → needs registration
+    res.json({ exists: false });
+  } catch (error) {
+    console.error('Check email error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// POST /auth/register — Step 2: create new user with full profile
+export const register = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, name, username, slogan } = req.body;
+
+    if (!email || !name || !username) {
+      res.status(400).json({ error: 'Email, name, and username are required' });
+      return;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if email already exists
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) {
+      res.status(409).json({ error: 'Este correo ya esta registrado' });
+      return;
+    }
+
+    // Check if username is taken
+    const usernameTaken = await User.findOne({ username: username.toLowerCase().trim() });
+    if (usernameTaken) {
+      res.status(409).json({ error: 'Este usuario ya esta en uso' });
+      return;
+    }
+
+    // Process avatar if uploaded
+    let profileImage = '';
+    if (req.file) {
+      profileImage = await processProfileImage(req.file.buffer, req.file.originalname);
+    }
+
+    const user = await User.create({
+      email: normalizedEmail,
+      name: name.trim(),
+      username: username.toLowerCase().trim(),
+      slogan: slogan?.trim() || '',
+      profileImage,
+      isAdmin: false,
     });
 
-    res.json({
-      token,
-      user: {
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        profileImage: user.profileImage,
-        isAdmin: user.isAdmin,
-        totalPoints: user.totalPoints,
-      },
-    });
+    const token = generateToken(user._id.toString());
+    res.status(201).json({ token, user: userResponse(user) });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Server error during login' });
+    console.error('Register error:', error);
+    res.status(500).json({ error: 'Server error during registration' });
   }
 };
 
@@ -67,10 +135,12 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name } = req.body;
+    const { name, username, slogan } = req.body;
     const updates: Record<string, unknown> = {};
 
     if (name) updates.name = name;
+    if (username !== undefined) updates.username = username.toLowerCase().trim();
+    if (slogan !== undefined) updates.slogan = slogan;
 
     if (req.file) {
       const oldImage = req.user?.profileImage;

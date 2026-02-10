@@ -1,6 +1,7 @@
 import api from './client';
 import type {
   AuthResponse,
+  CheckEmailResponse,
   User,
   Course,
   Module,
@@ -13,8 +14,13 @@ import type {
 } from '@/types';
 
 // Auth
-export const login = (email: string, name?: string) =>
-  api.post<AuthResponse>('/auth/login', { email, name });
+export const checkEmail = (email: string) =>
+  api.post<CheckEmailResponse>('/auth/check-email', { email });
+
+export const registerUser = (data: FormData) =>
+  api.post<AuthResponse>('/auth/register', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 
 export const getProfile = () =>
   api.get<User>('/auth/profile');
@@ -130,9 +136,6 @@ export const completeCard = (courseId: string, moduleId: string, cardId: string,
 
 export const completeModuleProgress = (courseId: string, moduleId: string) =>
   api.post<{ progress: Progress; reward: RewardResult }>(`/progress/course/${courseId}/module/${moduleId}/complete`);
-
-export const openRewardBox = (courseId: string, moduleId: string) =>
-  api.post<RewardResult>(`/progress/course/${courseId}/module/${moduleId}/reward`);
 
 export const getUserBadges = () =>
   api.get<UserBadge[]>('/progress/badges');

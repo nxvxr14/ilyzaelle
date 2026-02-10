@@ -1,13 +1,12 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { User } from '@/types';
-import * as endpoints from '@/api/endpoints';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   isAdmin: boolean;
-  loginWithEmail: (email: string, name?: string) => Promise<void>;
+  loginUser: (token: string, user: User) => void;
   logout: () => void;
   updateUser: (user: User) => void;
 }
@@ -35,12 +34,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  const loginWithEmail = async (email: string, name?: string) => {
-    const { data } = await endpoints.login(email, name);
-    setToken(data.token);
-    setUser(data.user);
-    localStorage.setItem('lab_token', data.token);
-    localStorage.setItem('lab_user', JSON.stringify(data.user));
+  const loginUser = (newToken: string, newUser: User) => {
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem('lab_token', newToken);
+    localStorage.setItem('lab_user', JSON.stringify(newUser));
   };
 
   const logout = () => {
@@ -62,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         token,
         isLoading,
         isAdmin: user?.isAdmin ?? false,
-        loginWithEmail,
+        loginUser,
         logout,
         updateUser,
       }}

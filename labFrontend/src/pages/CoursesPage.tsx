@@ -34,8 +34,8 @@ const CoursesPage = () => {
                 to={`/courses/${course._id}`}
                 className="card-hover overflow-hidden p-0 group"
               >
-                {/* Cover image 9:16 */}
-                <div className="aspect-[9/16] bg-lab-bg relative overflow-hidden">
+                {/* Cover image 16:9 */}
+                <div className="aspect-video bg-lab-bg relative overflow-hidden">
                   {course.coverImage ? (
                     <img
                       src={getImageUrl(course.coverImage)}

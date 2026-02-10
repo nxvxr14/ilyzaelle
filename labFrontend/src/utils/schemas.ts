@@ -5,10 +5,26 @@ export const loginSchema = z.object({
     .string()
     .min(1, 'El correo es obligatorio')
     .email('Ingresa un correo valido'),
-  name: z.string().optional(),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
+
+export const registerSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'El nombre es obligatorio')
+    .max(50, 'Maximo 50 caracteres'),
+  username: z
+    .string()
+    .min(1, 'El usuario es obligatorio')
+    .max(20, 'Maximo 20 caracteres')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Solo letras, numeros y guion bajo'),
+  slogan: z
+    .string()
+    .max(100, 'Maximo 100 caracteres'),
+});
+
+export type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const createCourseSchema = z.object({
   title: z

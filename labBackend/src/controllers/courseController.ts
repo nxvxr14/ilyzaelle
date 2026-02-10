@@ -49,9 +49,10 @@ export const getCourseById = async (req: Request, res: Response): Promise<void> 
       .populate({
         path: 'modules',
         options: { sort: { order: 1 } },
-        populate: {
-          path: 'badge',
-        },
+        populate: [
+          { path: 'badge' },
+          { path: 'cards', select: '_id order' },
+        ],
       })
       .populate('completionBadge');
 

@@ -3,9 +3,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:2525/api';
 export const getImageUrl = (path: string): string => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  // Remove /api from the base URL for uploads
   const baseUrl = API_URL.replace('/api', '');
-  return `${baseUrl}${path}`;
+  return `${baseUrl}/api${path}`;
 };
 
 export const formatDate = (date: string): string => {

@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
+import * as endpoints from '@/api/endpoints';
 import { toast } from 'react-toastify';
 import { loginSchema, type LoginFormData } from '@/utils/schemas';
 
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { loginWithEmail } = useAuth();
+  const { loginUser } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -17,18 +18,30 @@ const LoginPage = () => {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', name: '' },
+    defaultValues: { email: '' },
   });
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      await loginWithEmail(data.email.trim(), data.name?.trim() || undefined);
-      toast.success('Bienvenido a Laboratorio');
-      navigate('/');
+      const { data: result } = await endpoints.checkEmail(data.email.trim());
+
+      if (result.exists && result.token && result.user) {
+        loginUser(result.token, result.user);
+        toast.success('Bienvenido a Laboratorio');
+
+        if (result.isAdmin) {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/home', { replace: true });
+        }
+      } else {
+        // New user — redirect to registration
+        navigate(`/register?email=${encodeURIComponent(data.email.trim())}`);
+      }
     } catch (error) {
-      toast.error('Error al iniciar sesion. Intenta de nuevo.');
-      console.error('Login error:', error);
+      toast.error('Error al verificar correo. Intenta de nuevo.');
+      console.error('Check email error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +57,7 @@ const LoginPage = () => {
             <span className="text-lab-text">oratorio</span>
           </h1>
           <p className="text-lab-text-muted text-sm">
-            Plataforma de aprendizaje interactivo
+            Ingresa tu correo para continuar
           </p>
         </div>
 
@@ -67,31 +80,17 @@ const LoginPage = () => {
             )}
           </div>
 
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-lab-text-muted mb-1">
-              Nombre (opcional, solo primera vez)
-            </label>
-            <input
-              id="name"
-              type="text"
-              {...register('name')}
-              placeholder="Tu nombre"
-              className="input-field"
-              autoComplete="name"
-            />
-          </div>
-
           <button
             type="submit"
             disabled={isLoading}
             className="btn-primary w-full"
           >
-            {isLoading ? 'Entrando...' : 'Entrar'}
+            {isLoading ? 'Verificando...' : 'Continuar'}
           </button>
         </form>
 
         <p className="text-center text-xs text-lab-text-muted mt-6">
-          Si es tu primera vez, se creara tu cuenta automaticamente.
+          Si es tu primera vez, te pediremos crear tu perfil.
         </p>
       </div>
     </div>

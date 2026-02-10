@@ -6,7 +6,9 @@ import LoadingSpinner from './components/ui/LoadingSpinner';
 import AppLayout from './components/layout/AppLayout';
 
 // Pages
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/course/CourseDetailPage';
@@ -20,6 +22,15 @@ import AdminCourseEditPage from './pages/admin/AdminCourseEditPage';
 import AdminModuleEditPage from './pages/admin/AdminModuleEditPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminBadgesPage from './pages/admin/AdminBadgesPage';
+
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <LoadingSpinner />;
+  if (user) return <Navigate to="/home" replace />;
+
+  return <>{children}</>;
+};
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
@@ -35,13 +46,13 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (isLoading) return <LoadingSpinner />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!isAdmin) return <Navigate to="/home" replace />;
 
   return <>{children}</>;
 };
 
 const App = () => {
-  const { user, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -54,10 +65,9 @@ const App = () => {
   return (
     <Routes>
       {/* Public */}
-      <Route
-        path="/login"
-        element={user ? <Navigate to="/" replace /> : <LoginPage />}
-      />
+      <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+      <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
       {/* Protected - with layout */}
       <Route
@@ -67,7 +77,7 @@ const App = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<HomePage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/courses" element={<CoursesPage />} />
         <Route path="/courses/:id" element={<CourseDetailPage />} />
         <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleViewPage />} />

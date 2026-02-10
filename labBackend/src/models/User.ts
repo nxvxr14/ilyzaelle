@@ -3,6 +3,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IUser extends Document {
   email: string;
   name: string;
+  username: string;
+  slogan: string;
   profileImage: string;
   isAdmin: boolean;
   enrolledCourses: mongoose.Types.ObjectId[];
@@ -23,6 +25,18 @@ const userSchema = new Schema<IUser>(
     name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+    },
+    slogan: {
+      type: String,
+      default: '',
       trim: true,
     },
     profileImage: {
