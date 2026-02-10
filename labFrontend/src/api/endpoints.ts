@@ -140,6 +140,9 @@ export const completeModuleProgress = (courseId: string, moduleId: string) =>
 export const getUserBadges = () =>
   api.get<UserBadge[]>('/progress/badges');
 
+export const claimCourseReward = (courseId: string) =>
+  api.post<RewardResult>(`/progress/course/${courseId}/claim-course-reward`);
+
 export const getUserActivity = () =>
   api.get<Progress[]>('/progress/activity');
 

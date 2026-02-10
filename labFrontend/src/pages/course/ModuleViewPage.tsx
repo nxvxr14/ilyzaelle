@@ -5,6 +5,7 @@ import * as endpoints from '@/api/endpoints';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CardRenderer from '@/components/course/CardRenderer';
 import CardTransition from '@/components/course/CardTransition';
+import ModuleResults from '@/components/course/ModuleResults';
 import { toast } from 'react-toastify';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 
@@ -16,6 +17,7 @@ const ModuleViewPage = () => {
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   const { data: mod, isLoading: loadingModule } = useQuery({
     queryKey: ['module', moduleId],
@@ -99,7 +101,9 @@ const ModuleViewPage = () => {
       const answers = Object.keys(quizAnswers).length > 0 ? quizAnswers : undefined;
       await completeCardMutation.mutateAsync({ cardId: card._id, answers });
       setQuizAnswers({});
-      navigate(`/courses/${courseId}`);
+      // Wait for progress refetch so quizCorrect data is available for results
+      await queryClient.refetchQueries({ queryKey: ['progress', courseId] });
+      setShowResults(true);
     } catch {
       toast.error('Error al guardar progreso');
     } finally {
@@ -123,7 +127,7 @@ const ModuleViewPage = () => {
   const currentCard = allDone ? null : mod.cards[safeIndex];
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-lab-bg z-50">
+    <div className="fixed inset-0 flex flex-col bg-lab-bg z-[60]">
       {/* Header row */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-2">
         <Link
@@ -155,7 +159,13 @@ const ModuleViewPage = () => {
 
       {/* Card area — fills remaining space */}
       <div className="flex-1 flex flex-col min-h-0 px-4 pb-4">
-        {allDone ? (
+        {showResults && progress ? (
+          <ModuleResults
+            mod={mod}
+            progress={progress}
+            onContinue={() => navigate(`/courses/${courseId}`)}
+          />
+        ) : allDone ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="card text-center py-12 w-full max-w-lg">
               <p className="text-lab-secondary font-bold text-lg mb-2">
@@ -171,17 +181,19 @@ const ModuleViewPage = () => {
           </div>
         ) : currentCard ? (
           <>
-            {/* Card content — fills available space, no scroll */}
-            <div className="flex-1 flex items-center justify-center min-h-0">
-              <CardTransition transitionKey={currentCard._id}>
-                <div className="card w-full max-w-lg lg:max-w-4xl h-full max-h-full overflow-hidden p-4">
-                  <CardRenderer
-                    card={currentCard}
-                    quizAnswers={quizAnswers}
-                    onQuizAnswer={handleQuizAnswer}
-                  />
-                </div>
-              </CardTransition>
+            {/* Card content — fills available space, scrolls internally */}
+            <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden w-full">
+              <div className="w-full max-w-lg lg:max-w-4xl h-full flex items-center justify-center">
+                <CardTransition transitionKey={currentCard._id}>
+                  <div className="card w-full max-h-full overflow-y-auto p-4">
+                    <CardRenderer
+                      card={currentCard}
+                      quizAnswers={quizAnswers}
+                      onQuizAnswer={handleQuizAnswer}
+                    />
+                  </div>
+                </CardTransition>
+              </div>
             </div>
 
             {/* Navigation button — always at bottom */}

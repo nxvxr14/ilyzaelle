@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { Progress } from '../models/Progress';
 import { Module } from '../models/Module';
 import { Course } from '../models/Course';
+import { Card, IQuizBlock } from '../models/Card';
 import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 
@@ -49,6 +50,21 @@ export const completeCard = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
+    // Evaluate quiz correctness by loading card blocks
+    let quizCorrect: Record<string, boolean> = {};
+    if (quizAnswers && Object.keys(quizAnswers).length > 0) {
+      const card = await Card.findById(cardId);
+      if (card) {
+        for (const [blockIndex, selectedOption] of Object.entries(quizAnswers)) {
+          const block = card.blocks[parseInt(blockIndex, 10)];
+          if (block && block.type === 'quiz') {
+            const quizBlock = block as IQuizBlock;
+            quizCorrect[blockIndex] = Number(selectedOption) === quizBlock.correctIndex;
+          }
+        }
+      }
+    }
+
     // Find or create card progress
     let cardProgress = modProgress.cardsProgress.find(
       (cp) => cp.card.toString() === cardId
@@ -59,7 +75,7 @@ export const completeCard = async (req: AuthRequest, res: Response): Promise<voi
         card: cardId as any,
         completed: true,
         quizAnswers: quizAnswers || {},
-        quizCorrect: {},
+        quizCorrect,
         completedAt: new Date(),
       };
       modProgress.cardsProgress.push(cardProgress);
@@ -69,6 +85,7 @@ export const completeCard = async (req: AuthRequest, res: Response): Promise<voi
       if (quizAnswers) {
         cardProgress.quizAnswers = quizAnswers;
       }
+      cardProgress.quizCorrect = quizCorrect;
     }
 
     await progress.save();
@@ -137,12 +154,6 @@ export const completeModule = async (req: AuthRequest, res: Response): Promise<v
     if (allCompleted) {
       progress.completed = true;
       progress.completedAt = new Date();
-
-      // Award course completion badge
-      const course = await Course.findById(courseId);
-      if (course?.completionBadge) {
-        progress.completionBadgeEarned = true;
-      }
     }
 
     await progress.save();
@@ -158,7 +169,6 @@ export const completeModule = async (req: AuthRequest, res: Response): Promise<v
         points: mod.points,
         badgeEarned,
         courseCompleted: allCompleted,
-        completionBadge: allCompleted ? (await Course.findById(courseId))?.completionBadge : null,
       },
     });
   } catch (error) {
@@ -209,6 +219,50 @@ export const openRewardBox = async (req: AuthRequest, res: Response): Promise<vo
     });
   } catch (error) {
     console.error('Open reward box error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const claimCourseReward = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { courseId } = req.params;
+
+    const progress = await Progress.findOne({
+      user: req.user?._id,
+      course: courseId,
+    });
+
+    if (!progress) {
+      res.status(404).json({ error: 'Progress not found' });
+      return;
+    }
+
+    if (!progress.completed) {
+      res.status(400).json({ error: 'Course not completed yet' });
+      return;
+    }
+
+    if (progress.completionBadgeEarned) {
+      res.status(400).json({ error: 'Course reward already claimed' });
+      return;
+    }
+
+    const course = await Course.findById(courseId).populate('completionBadge');
+    if (!course) {
+      res.status(404).json({ error: 'Course not found' });
+      return;
+    }
+
+    progress.completionBadgeEarned = true;
+    await progress.save();
+
+    res.json({
+      points: progress.totalPoints,
+      badgeEarned: course.completionBadge || null,
+      courseCompleted: true,
+    });
+  } catch (error) {
+    console.error('Claim course reward error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

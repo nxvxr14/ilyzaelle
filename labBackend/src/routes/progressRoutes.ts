@@ -4,6 +4,7 @@ import {
   completeCard,
   completeModule,
   openRewardBox,
+  claimCourseReward,
   getUserBadges,
   getAdminStats,
   getUserActivity,
@@ -17,6 +18,7 @@ router.get('/course/:courseId', authenticate, getCourseProgress);
 router.post('/course/:courseId/module/:moduleId/card/:cardId/complete', authenticate, completeCard);
 router.post('/course/:courseId/module/:moduleId/complete', authenticate, completeModule);
 router.post('/course/:courseId/module/:moduleId/reward', authenticate, openRewardBox);
+router.post('/course/:courseId/claim-course-reward', authenticate, claimCourseReward);
 router.get('/badges', authenticate, getUserBadges);
 router.get('/activity', authenticate, getUserActivity);
 

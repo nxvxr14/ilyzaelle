@@ -107,6 +107,19 @@ const CourseDetailPage = () => {
     onError: () => toast.error('Error al completar modulo'),
   });
 
+  const claimCourseRewardMutation = useMutation({
+    mutationFn: () => endpoints.claimCourseReward(id!),
+    onSuccess: (response) => {
+      const result = response.data;
+      setRewardResult(result);
+      setShowReward(true);
+      queryClient.invalidateQueries({ queryKey: ['progress', id] });
+      queryClient.invalidateQueries({ queryKey: ['user-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['user-badges'] });
+    },
+    onError: () => toast.error('Error al reclamar recompensa del curso'),
+  });
+
   if (isLoading) return <LoadingSpinner />;
   if (!course) return <p className="p-6 text-lab-text-muted">Curso no encontrado</p>;
 
@@ -233,6 +246,19 @@ const CourseDetailPage = () => {
           );
         })}
       </div>
+
+      {/* Course completion reward box */}
+      {progress?.completed && !progress.completionBadgeEarned && (
+        <div className="mt-6">
+          <h3 className="font-semibold mb-3 text-lab-gold">
+            Recompensa del curso
+          </h3>
+          <WigglingChest
+            onClick={() => claimCourseRewardMutation.mutate()}
+            disabled={claimCourseRewardMutation.isPending}
+          />
+        </div>
+      )}
 
       {/* Reward box animation */}
       {showReward && rewardResult && (
