@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-lab-bg text-lab-text antialiased;
+    min-height: 100dvh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-lab-bg;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-lab-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-lab-primary;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-lab-primary hover:bg-lab-primary-light text-white font-semibold
+           px-6 py-3 rounded-xl transition-all duration-200
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-lab-card hover:bg-lab-border text-lab-text font-medium
+           px-6 py-3 rounded-xl border border-lab-border transition-all duration-200
+           active:scale-95;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-semibold
+           px-6 py-3 rounded-xl transition-all duration-200
+           active:scale-95;
+  }
+
+  .input-field {
+    @apply w-full bg-lab-card border border-lab-border rounded-xl px-4 py-3
+           text-lab-text placeholder-lab-text-muted
+           focus:outline-none focus:border-lab-primary focus:ring-1 focus:ring-lab-primary
+           transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-lab-card border border-lab-border rounded-2xl p-4
+           transition-all duration-200;
+  }
+
+  .card-hover {
+    @apply card hover:border-lab-primary hover:shadow-lg
+           hover:shadow-lab-primary/10 cursor-pointer;
+  }
+}
