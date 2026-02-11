@@ -168,7 +168,7 @@ const AdminModuleEditPage = () => {
         <h2 className="text-xl font-bold">{mod.title}</h2>
         <p className="text-sm text-lab-text-muted mt-1">{mod.description}</p>
         <p className="text-xs text-lab-text-muted mt-2">
-          {mod.cards.length} tarjetas &middot; {mod.points} puntos
+          {`${mod.cards.length} tarjetas`} &middot; {mod.points} puntos
         </p>
       </div>
 

@@ -3,14 +3,14 @@ import gsap from 'gsap';
 
 interface WigglingChestProps {
   onClick: () => void;
-  disabled: boolean;
+  disabled?: boolean;
   label?: string;
   subtitle?: string;
 }
 
 const WigglingChest = ({
   onClick,
-  disabled,
+  disabled = false,
   label = 'Abrir Caja de Recompensas',
   subtitle = 'Toca para reclamar tu recompensa',
 }: WigglingChestProps) => {

@@ -381,7 +381,7 @@ const AdminCourseEditPage = () => {
                           {index + 1}. {mod.title}
                         </p>
                         <p className="text-xs text-lab-text-muted">
-                          {mod.cards?.length || 0} tarjetas &middot; {mod.points} pts
+                          {`${mod.cards?.length || 0} tarjetas`} &middot; {mod.points} pts
                         </p>
                       </div>
 

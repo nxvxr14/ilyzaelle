@@ -1,200 +1,184 @@
 # AGENTS.md
 
-This file provides essential commands, code-style conventions, and guidelines for agentic coding agents operating in this repository. It is the single source of truth for any coding automation or agent-based work—keep it up-to-date with any new conventions, scripts, or standards.
+This file is the source of truth for agentic work in this repository.
+Follow these instructions before modifying code.
 
-## Table of Contents
-1. [Project Structure](#project-structure)
-2. [Build/Lint/Test Commands](#buildlinttest-commands)
-    - [frontend_react](#frontend-frontend_react)
-    - [backend_local](#backend-backend_local)
-    - [backend_dash](#backend-backend_dash)
-    - [cuki_api_ia](#cuki-api-ia)
-    - [How to Run a Single Test](#how-to-run-a-single-test)
-3. [Code Style Guidelines](#code-style-guidelines)
-    - [Imports](#imports)
-    - [Formatting](#formatting)
-    - [Types](#types)
-    - [Naming Conventions](#naming-conventions)
-    - [Error Handling](#error-handling)
-4. [Linting and TypeScript (Frontend)](#linting-and-typescript-frontend)
-5. [Agent-Specific Guidelines](#agent-specific-guidelines)
-6. [Contributing & Expansion](#contributing--expansion)
-7. [Cursor / Copilot Rules](#cursor--copilot-rules)
+## Quick Orientation
 
----
+- This repo hosts multiple apps (frontend + backend variants).
+- Use the correct subproject and its scripts.
+- Do not invent commands that are not in package.json.
+- No Cursor or Copilot custom rules are present.
 
-## Project Structure
+## Projects
 
-- `frontend_react/` — React + TypeScript, Vite for build/dev, ESLint for linting
-- `backend_local/` — Node.js (JavaScript), Express server
-- `backend_dash/` — Node.js (JS/TS), Express server with TypeScript and nodemon
-- `cuki_api_ia/` — Bun runtime (TypeScript), standalone API agent
+- `labFrontend/` — React + TypeScript + Vite + TailwindCSS (mobile-first, dark mode)
+- `labBackend/` — Express + TypeScript + MongoDB (Mongoose)
+- `frontend_react/` — React + TypeScript + Vite + TailwindCSS
+- `backend_local/` — Node.js (ESM) Express + hardware/IoT integration
+- `backend_dash/` — Node.js + TypeScript Express
+- `cuki_api_ia/` — Bun runtime + TypeScript (AI API)
 
-_No monorepo-wide test/lint/build commands exist; use each project's package manager and scripts._
+## Build / Lint / Test Commands
 
----
+### labFrontend
 
-## Build/Lint/Test Commands
+```bash
+cd labFrontend
+npm install
+npm run dev       # Vite dev server (port 6789)
+npm run build     # tsc + vite build
+npm run lint      # eslint . --ext ts,tsx --max-warnings 0
+npm run preview
+```
+
+Single-test: no test runner configured.
+
+### labBackend
+
+```bash
+cd labBackend
+npm install
+npm run dev       # nodemon + ts-node
+npm run build     # tsc
+npm start         # node dist/index.js
+```
+
+Single-test: no test runner configured.
 
 ### frontend_react
-- **Install:**
-  ```bash
-  cd frontend_react && npm install
-  ```
-- **Start Dev Server:**
-  ```bash
-  npm run dev
-  ```
-- **Build:**
-  ```bash
-  npm run build
-  ```
-- **Lint:**
-  ```bash
-  npm run lint
-  # Or directly:
-  npx eslint . --ext ts,tsx
-  ```
-- **Preview:**
-  ```bash
-  npm run preview
-  ```
-- **Test:**
-  _No default test script. Recommend adding Jest or Vitest for robust testing._
+
+```bash
+cd frontend_react
+npm install
+npm run dev
+npm run build
+npm run lint
+npm run preview
+```
+
+Single-test: no test runner configured.
 
 ### backend_local
-- **Install:**
-  ```bash
-  cd backend_local && npm install
-  ```
-- **Dev:**
-  ```bash
-  npm run dev
-  ```
-- **Test:**
-  _No real test or lint script; recommend adding as project grows (e.g., Mocha/Jest and ESLint)._
+
+```bash
+cd backend_local
+npm install
+npm run dev       # node ./src/index.js
+```
+
+`npm test` exits with error (placeholder).
+Single-test: not available.
 
 ### backend_dash
-- **Install:**
-  ```bash
-  cd backend_dash && npm install
-  ```
-- **Dev (TypeScript):**
-  ```bash
-  npm run dev
-  # Runs: nodemon --exec ts-node src/index.ts
-  ```
-- **Test:**
-  _No current test script; recommend adding test framework and script._
 
-### cuki_api_ia
-- **Install:**
-  ```bash
-  cd cuki_api_ia && bun install
-  ```
-- **Run:**
-  ```bash
-  bun run index.ts
-  ```
-- **Dev:**
-  ```bash
-  bun --watch run index.ts
-  ```
-- **Test/Lint:**
-  _No scripts by default; recommend Bun-compatible test framework._
+```bash
+cd backend_dash
+npm install
+npm run dev       # nodemon --exec ts-node src/index.ts
+```
 
----
+`npm test` exits with error (placeholder).
+Single-test: not available.
 
-### How to Run a Single Test
-- _No projects currently have test runners set up. When test support is added, follow these typical patterns:_
-  - **Jest/Vitest**: `npm test -- <pattern>`
-  - **Mocha**: `npm test -- -g "pattern"`
-  - **Bun test**: `bun test <pattern>`
-  - _For example:_
-    ```bash
-    npm test -- userService    # Run tests for a file or test case containing 'userService'
-    npm test -- -t "should render"   # Run Jest test with exact name match
-    bun test login
-    ```
-- _Recommend documenting here the exact command once a framework is installed._
+### cuki_api_ia (Bun)
 
----
+```bash
+cd cuki_api_ia
+bun install
+bun run index.ts  # same as npm start
+bun --watch run index.ts
+```
 
-## Code Style Guidelines
+Single-test: no test runner configured.
+
+### If/When Tests Are Added
+
+- Jest/Vitest: `npm test -- <pattern>`
+- Mocha: `npm test -- -g "pattern"`
+- Bun: `bun test <pattern>`
+
+Add the exact command to this file after installing a test framework.
+
+## Code Style Guidelines (All Projects)
 
 ### Imports
-- Always use `import`/`export` ES module syntax.
-- Prefer absolute imports via project config and path aliases (e.g., `@/components/*` in frontend_react with `tsconfig.json`).
-- Group third-party imports first, then local imports; remove unused or wildcard imports.
-- For new files, check for use of path aliases in tsconfig/json.
+
+- Use ESM `import`/`export` syntax.
+- Group imports: external first, then internal, then relative.
+- Keep imports ordered and remove unused imports.
+- Prefer alias imports when configured (`@/` in labFrontend).
 
 ### Formatting
-- 2-space indentation everywhere (JS/TS, React, etc).
-- Lines ≤ 100 characters recommended.
-- Trailing commas on multi-line arrays/objects where supported.
-- Prefer single quotes `'`, except when using template literals.
-- Always enable and use Prettier (via plugin or CLI; recommend VSCode extension).
+
+- Indentation: 2 spaces.
+- Line length: keep near 100 chars; wrap before 120.
+- Use trailing commas on multi-line objects/arrays.
+- Use single quotes for JS/TS, backticks for templates.
+- Keep JSX props wrapped and aligned when long.
 
 ### Types
-- Use TypeScript throughout frontend and, where feasible, in all backend projects.
-- Prefer explicit types for any exported function/module boundary.
-- Use Zod or similar runtime schema for validating user/API input.
-- `interface` for objects to extend; `type` for unions/intersections.
-- Avoid `any`—prefer `unknown` and proper guards.
-- Inherit/extend strict TS settings (e.g., `noUncheckedIndexedAccess`, strict null checks) as much as practical.
 
-### Naming Conventions
-- `camelCase` for variables, functions, props, regular parameters.
-- `PascalCase` for React components, type/interface names, and classes.
-- `SCREAMING_SNAKE_CASE` for global/shared constants.
-- Be descriptive and semantic; no cryptic abbreviations except for widely understood terms (`id`, `req`, `res`).
+- Avoid `any`; use `unknown` + narrowing or precise types.
+- Exported functions and public module boundaries must be typed.
+- Prefer `interface` for extendable object shapes, `type` for unions.
+- Validate runtime input with `zod` when used in the project.
+
+### Naming
+
+- `camelCase`: variables, functions, hooks, file names for utilities.
+- `PascalCase`: React components, classes, types, files for components.
+- `SCREAMING_SNAKE_CASE`: constants.
+- Avoid abbreviations except common ones (`id`, `req`, `res`).
 
 ### Error Handling
-- Always wrap async code in try/catch blocks.
-- Log errors with diagnostic details (avoid leaking sensitive data).
-- Return user-facing errors in UI/API response, put stack traces and internal error details only in logs.
-- REST: use correct HTTP status codes and JSON error response bodies.
-- Never silently swallow exceptions—handle, log, or propagate them.
 
----
+- Always handle async errors with `try/catch` or middleware.
+- Do not swallow errors; log and return clear, user-safe messages.
+- APIs return JSON error payloads with correct HTTP status codes.
+- Never log secrets or tokens.
 
-## Linting and TypeScript (Frontend)
-- ESLint config (`.eslintrc.cjs`) extends:
-  - `eslint:recommended`
-  - `plugin:@typescript-eslint/recommended`
-  - `plugin:react-hooks/recommended`
-  - Plugin: `react-refresh/only-export-components` (for HMR safety)
-- Suggestions for stricter linting (see `frontend_react/README.md`):
-  - Add `parserOptions.project` and enable type-aware lint rules.
-  - Use stricter configs: `plugin:@typescript-eslint/recommended-type-checked` or `strict-type-checked`.
-  - Optionally include `plugin:@typescript-eslint/stylistic-type-checked`.
-  - Install and extend with `eslint-plugin-react`.
-- Ignore patterns: `/dist`, `.eslintrc.cjs`
+### State / Data
 
----
+- Keep side effects isolated (React hooks, Express middleware).
+- Prefer pure helpers in `utils/` where available.
+- If a file grows too large, split into focused modules.
 
-## Agent-Specific Guidelines
-- Always check for existing files before creating new files.
-- Whenever adding new lint/test/formatting scripts, document the commands and update the relevant `package.json`.
-- Always leverage `.env` for API keys, secrets, and all external credentials (never hardcode in code or configs).
-- If adding support for a new dependency, script, or environment, update both code and this documentation accordingly.
-- Refer to this file for any automation or code standard questions.
+## Frontend Rules (labFrontend)
 
----
+These are mandatory and come from `labFrontend/AGENTS.md`.
 
-## Contributing & Expansion
-- For significant changes: recommend updating and documenting lint/test scripts in the relevant sub-project (especially for backend and Bun-based projects).
-- Encourage adoption of test (Jest/Vitest/Mocha/Bun, etc.), lint, and formatting as projects mature.
-- When adding a test runner, include explicit instructions on how to run a single test and update this document immediately.
-- Use end-to-end/component testing frameworks (e.g., Jest, Vitest, testing-library/react, Cypress) as project needs grow.
-- Keep naming, formatting, and error handling crisp, consistent, and as strict as reasonable; favor explicitness and safety.
+- One component per file; keep components under ~150 lines.
+- New pages go in `labFrontend/src/pages/` and route in `App.tsx`.
+- API calls only via `labFrontend/src/api/endpoints.ts`.
+- Shared types live in `labFrontend/src/types/index.ts`.
+- Use React Query for server state and Context for auth.
+- TailwindCSS only; dark mode by default; `lab-*` palette.
+- Use GSAP for complex animations.
+- Use `@/` path aliases for imports.
+- Use `getImageUrl()` for server images.
 
----
+## Backend Rules (labBackend)
+
+These are mandatory and come from `labBackend/AGENTS.md`.
+
+- One file per resource (model/controller/route).
+- Split controllers > ~200 lines into helpers in `utils/`.
+- Auth: use `authenticate`, add `requireAdmin` for admin routes.
+- Image processing goes through `utils/imageProcessing.ts`.
+- Use Multer memory storage -> Sharp -> `uploads/`.
+- All secrets in `.env`, loaded via `config/constants.ts`.
+
+## Linting / TypeScript Notes
+
+- Frontends use ESLint with TypeScript + React hooks rules.
+- Keep `eslint` errors at 0 before committing changes.
 
 ## Cursor / Copilot Rules
-- No Cursor or Copilot custom rules currently exist in this repository.
-- If files such as `.github/copilot-instructions.md`, `.cursor/rules/`, or `.cursorrules` are added, include a summary or direct reference to their standards here.
 
----
+- No `.cursor/rules/`, `.cursorrules`, or `.github/copilot-instructions.md` present.
 
-_Keep AGENTS.md up to date—this is the single source of truth for automated or agent-driven development work in this repository._
+## Updating This File
+
+- If you add scripts, tools, or frameworks, update commands here.
+- Prefer concise, copy-pasteable commands and real script names.

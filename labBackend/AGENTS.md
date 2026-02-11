@@ -65,9 +65,70 @@ labBackend/
 - `npm start` — Run compiled JS from dist/
 
 ## Data Hierarchy
-Course > Module > Card (with blocks: text, image, button, quiz, code, download)
+Course > Module > Card (with blocks)
+
+### Card Block Types
+`TextBlock | ImageBlock | ButtonBlock | QuizBlock | CodeBlock | DownloadBlock | SeparatorBlock`
+
+### Image Processing Dimensions
+- Course covers: 800x450 (16:9) WebP
+- Module covers: 400x711 (9:16) WebP
+- Profile images: 200x200 WebP
+- Badge images: 40x40 WebP
+- Card images: 800w WebP
 
 ## Auth
 - Login by email only (no password)
 - JWT token, 30 day expiry
 - Admin determined by ADMIN_EMAIL env var
+- `userResponse()` helper returns: `_id, email, name, username, slogan, profileImage, isAdmin, enrolledCourses, totalPoints, createdAt, updatedAt`
+
+## Key Data Models
+
+### User
+`email, name, username, slogan, profileImage, isAdmin, enrolledCourses[], totalPoints`
+
+### Course
+`title, description, coverImage, modules[], published`
+
+### Module
+`title, description, coverImage, course, cards[], badge, badgeDropChance, points (default 100), order`
+
+### Card
+`title, module, order, blocks: CardBlock[]` — NO points field on Card
+
+### Badge
+`name, description, image, rarity (common|rare|epic|legendary)`
+
+### Progress
+```
+{
+  user, course,
+  modulesProgress: [{
+    module, completed, completedAt,
+    cardsProgress: [{
+      card, completed, completedAt,
+      quizAnswers: Record<string, number>,
+      quizCorrect: Record<string, boolean>
+    }],
+    pointsEarned, badgeEarned, rewardBoxOpened
+  }],
+  totalPoints, completed, completionBadgeEarned,
+  completedAt, createdAt, updatedAt
+}
+```
+
+## Key Endpoints
+
+### Auth
+- `POST /auth/check-email` — Step 1: check if email exists
+- `POST /auth/register` — Step 2: register with avatar upload
+
+### Progress
+- `GET /progress/course/:courseId` — Get user progress for a course
+- `POST /progress/course/:courseId/module/:moduleId/card/:cardId/complete` — Mark card complete (evaluates quiz answers)
+- `POST /progress/course/:courseId/module/:moduleId/complete` — Complete module, returns `{ progress, reward: { points, badgeEarned, courseCompleted }, updatedTotalPoints }`
+- `POST /progress/course/:courseId/module/:moduleId/reward` — Open reward box, returns RewardResult
+- `POST /progress/course/:courseId/claim-course-reward` — Claim course completion reward
+- `GET /progress/badges` — Get user's earned badges
+- `GET /progress/activity` — Get user's activity log

@@ -67,6 +67,26 @@ const ModuleViewPage = () => {
   if (currentIndex === null && mod && !loadingProgress) {
     setCurrentIndex(resumeIndex);
     setMaxReachedIndex(resumeIndex);
+
+    // Restore saved quiz answers from backend progress
+    if (moduleProgress) {
+      const restored: Record<number, Record<string, number>> = {};
+      mod.cards.forEach((card, cardIndex) => {
+        const cp = moduleProgress.cardsProgress.find(
+          (c) => c.card === card._id || c.card.toString() === card._id
+        );
+        if (cp?.quizAnswers && Object.keys(cp.quizAnswers).length > 0) {
+          restored[cardIndex] = cp.quizAnswers;
+        }
+      });
+      if (Object.keys(restored).length > 0) {
+        setSavedAnswers(restored);
+        // Pre-load quiz answers for the card we're resuming at
+        if (restored[resumeIndex]) {
+          setQuizAnswers(restored[resumeIndex]);
+        }
+      }
+    }
   }
 
   const completeCardMutation = useMutation({

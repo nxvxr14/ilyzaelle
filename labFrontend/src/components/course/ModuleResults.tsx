@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import gsap from 'gsap';
 import * as endpoints from '@/api/endpoints';
 import { useAuth } from '@/context/AuthContext';
-import { getImageUrl, getRarityColor } from '@/utils/helpers';
+import { getImageUrl } from '@/utils/helpers';
 import RewardBox from '@/components/gamification/RewardBox';
 import {
   CheckCircleIcon,
@@ -442,7 +442,7 @@ const ModuleResults = ({
                     alt={(rewardResult.badgeEarned as any).name || 'Badge'}
                     className="w-14 h-14"
                   />
-                  <p className={`font-bold ${getRarityColor((rewardResult.badgeEarned as any).rarity || 'common')}`}>
+                  <p className="font-bold text-lab-gold">
                     {(rewardResult.badgeEarned as any).name || 'Insignia'}
                   </p>
                 </div>

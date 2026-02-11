@@ -4,7 +4,7 @@ import { useState } from 'react';
 import * as endpoints from '@/api/endpoints';
 import { useAuth } from '@/context/AuthContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import RewardBox from '@/components/gamification/RewardBox';
+import CourseResults from '@/components/course/CourseResults';
 import WigglingChest from '@/components/gamification/WigglingChest';
 import { getImageUrl } from '@/utils/helpers';
 import { toast } from 'react-toastify';
@@ -14,14 +14,12 @@ import {
   CheckCircleIcon,
   PlayIcon,
 } from '@heroicons/react/24/solid';
-import type { RewardResult } from '@/types';
 
 const CourseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user, updateUser } = useAuth();
   const queryClient = useQueryClient();
-  const [showReward, setShowReward] = useState(false);
-  const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
+  const [showCourseResults, setShowCourseResults] = useState(false);
 
   const { data: course, isLoading } = useQuery({
     queryKey: ['course', id],
@@ -48,19 +46,6 @@ const CourseDetailPage = () => {
       }
     },
     onError: () => toast.error('Error al inscribirse'),
-  });
-
-  const claimCourseRewardMutation = useMutation({
-    mutationFn: () => endpoints.claimCourseReward(id!),
-    onSuccess: (response) => {
-      const result = response.data;
-      setRewardResult(result);
-      setShowReward(true);
-      queryClient.invalidateQueries({ queryKey: ['progress', id] });
-      queryClient.invalidateQueries({ queryKey: ['user-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['user-badges'] });
-    },
-    onError: () => toast.error('Error al reclamar recompensa del curso'),
   });
 
   if (isLoading) return <LoadingSpinner />;
@@ -115,8 +100,7 @@ const CourseDetailPage = () => {
             Recompensa del curso
           </h3>
           <WigglingChest
-            onClick={() => claimCourseRewardMutation.mutate()}
-            disabled={claimCourseRewardMutation.isPending}
+            onClick={() => setShowCourseResults(true)}
           />
         </div>
       )}
@@ -169,7 +153,7 @@ const CourseDetailPage = () => {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{mod.title}</p>
                     <p className="text-xs text-lab-text-muted mt-0.5">
-                      {mod.cards?.length || 0} tarjetas &middot; {mod.points} pts
+                      {`${mod.cards?.length || 0} tarjetas`} &middot; {mod.points} pts
                       {isInProgress && (
                         <span className="text-lab-primary ml-1">&middot; {modulePercent}%</span>
                       )}
@@ -210,11 +194,15 @@ const CourseDetailPage = () => {
         })}
       </div>
 
-      {/* Reward box animation */}
-      {showReward && rewardResult && (
-        <RewardBox
-          result={rewardResult}
-          onClose={() => setShowReward(false)}
+      {/* Course results fullscreen flow */}
+      {showCourseResults && progress && (
+        <CourseResults
+          courseId={id!}
+          progress={progress}
+          onFinished={() => {
+            setShowCourseResults(false);
+            queryClient.invalidateQueries({ queryKey: ['progress', id] });
+          }}
         />
       )}
     </div>

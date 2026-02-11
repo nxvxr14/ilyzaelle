@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import type { RewardResult } from '@/types';
-import { getImageUrl, getRarityColor } from '@/utils/helpers';
+import { getImageUrl } from '@/utils/helpers';
 
 interface RewardBoxProps {
   result: RewardResult;
@@ -23,6 +23,7 @@ const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
   const resultRef = useRef<HTMLDivElement>(null);
   const starsRef = useRef<HTMLDivElement>(null);
   const pointsRef = useRef<HTMLSpanElement>(null);
+  const badgeImgRef = useRef<HTMLImageElement>(null);
   const [phase, setPhase] = useState<'spinning' | 'revealed'>('spinning');
 
   useEffect(() => {
@@ -156,6 +157,32 @@ const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
     };
   }, [result, hidePoints]);
 
+  // Badge image animation: subtle float + 360 spin every 5 seconds
+  useEffect(() => {
+    if (phase !== 'revealed' || !badgeImgRef.current) return;
+
+    const img = badgeImgRef.current;
+
+    // Continuous subtle float
+    const float = gsap.to(img, {
+      y: -4,
+      duration: 1.5,
+      yoyo: true,
+      repeat: -1,
+      ease: 'sine.inOut',
+    });
+
+    // 360 spin every 5 seconds
+    const spin = gsap.timeline({ repeat: -1, delay: 2 });
+    spin.to(img, { rotationY: 360, duration: 0.8, ease: 'power2.inOut' });
+    spin.to({}, { duration: 5 }); // wait 5 seconds before next spin
+
+    return () => {
+      float.kill();
+      spin.kill();
+    };
+  }, [phase]);
+
   const badge = result.badgeEarned as any;
 
   return (
@@ -221,24 +248,24 @@ const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
           {/* Badge earned */}
           {badge && (
             <div className="my-6 p-4 rounded-2xl bg-lab-bg/50 border border-lab-gold/30">
-              <p className="text-xs text-lab-gold font-semibold mb-3 uppercase tracking-wider">
+              <p className="text-lg text-lab-gold font-bold mb-3 uppercase tracking-wider">
                 {badge.name || 'Insignia'}
               </p>
               <div className="flex flex-col items-center gap-2">
-                <img
-                  src={getImageUrl(badge.image || '')}
-                  alt={badge.name || 'Badge'}
-                  className="w-16 h-16"
-                />
-                <p className={`font-bold text-lg ${getRarityColor(badge.rarity || 'common')}`}>
-                  {badge.name || 'Insignia'}
-                </p>
+                <div style={{ perspective: '600px' }}>
+                  <img
+                    ref={badgeImgRef}
+                    src={getImageUrl(badge.image || '')}
+                    alt={badge.name || 'Badge'}
+                    className="w-16 h-16"
+                  />
+                </div>
                 {badge.description && (
-                  <p className="text-xs text-lab-text-muted">
+                  <p className="text-xs text-lab-text-muted mt-1">
                     {badge.description}
                   </p>
                 )}
-                <span className={`text-xs capitalize px-2 py-0.5 rounded-full border ${
+                <span className={`text-xs capitalize px-2 py-0.5 rounded-full border mt-2 ${
                   badge.rarity === 'legendary' ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-400'
                   : badge.rarity === 'epic' ? 'border-purple-500/40 bg-purple-500/10 text-purple-400'
                   : badge.rarity === 'rare' ? 'border-blue-500/40 bg-blue-500/10 text-blue-400'
