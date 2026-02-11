@@ -6,6 +6,7 @@ import { getImageUrl, getRarityColor } from '@/utils/helpers';
 interface RewardBoxProps {
   result: RewardResult;
   onClose: () => void;
+  hidePoints?: boolean;
 }
 
 const RARITY_LABELS: Record<string, string> = {
@@ -15,7 +16,7 @@ const RARITY_LABELS: Record<string, string> = {
   legendary: 'Legendario',
 };
 
-const RewardBox = ({ result, onClose }: RewardBoxProps) => {
+const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const chestRef = useRef<HTMLDivElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
@@ -130,8 +131,8 @@ const RewardBox = ({ result, onClose }: RewardBoxProps) => {
     // Fade out stars
     tl.to(stars, { opacity: 0, duration: 0.5, ease: 'power2.in' }, '-=0.3');
 
-    // Animate points counter
-    if (pointsRef.current) {
+    // Animate points counter (skip if hidePoints)
+    if (pointsRef.current && !hidePoints) {
       const counter = { val: 0 };
       tl.to(
         counter,
@@ -153,7 +154,7 @@ const RewardBox = ({ result, onClose }: RewardBoxProps) => {
       tl.kill();
       stars.forEach((s) => s.remove());
     };
-  }, [result]);
+  }, [result, hidePoints]);
 
   const badge = result.badgeEarned as any;
 
@@ -209,15 +210,17 @@ const RewardBox = ({ result, onClose }: RewardBoxProps) => {
           </h3>
 
           {/* Points */}
-          <div className="my-6">
-            <span
-              ref={pointsRef}
-              className="text-5xl font-black text-lab-gold"
-            >
-              +0
-            </span>
-            <p className="text-lab-text-muted text-sm mt-1">puntos ganados</p>
-          </div>
+          {!hidePoints && (
+            <div className="my-6">
+              <span
+                ref={pointsRef}
+                className="text-5xl font-black text-lab-gold"
+              >
+                +0
+              </span>
+              <p className="text-lab-text-muted text-sm mt-1">puntos ganados</p>
+            </div>
+          )}
 
           {/* Badge earned */}
           {badge && (

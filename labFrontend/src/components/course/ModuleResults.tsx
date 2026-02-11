@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import gsap from 'gsap';
 import * as endpoints from '@/api/endpoints';
 import { useAuth } from '@/context/AuthContext';
-import WigglingChest from '@/components/gamification/WigglingChest';
 import RewardBox from '@/components/gamification/RewardBox';
 import {
   CheckCircleIcon,
@@ -19,7 +18,7 @@ interface QuizResultItem {
   points: number;
 }
 
-type Phase = 'quiz' | 'points' | 'chest' | 'reward' | 'done';
+type Phase = 'quiz' | 'points' | 'chest' | 'reward';
 
 interface ModuleResultsProps {
   mod: Module;
@@ -80,13 +79,15 @@ const ModuleResults = ({
   const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
   const [showRewardBox, setShowRewardBox] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
+  const [pointsReady, setPointsReady] = useState(false);
 
   // Refs for GSAP animations
   const quizRef = useRef<HTMLDivElement>(null);
   const pointsContainerRef = useRef<HTMLDivElement>(null);
   const pointsNumberRef = useRef<HTMLSpanElement>(null);
+  const pointsButtonRef = useRef<HTMLButtonElement>(null);
   const chestContainerRef = useRef<HTMLDivElement>(null);
-  const doneContainerRef = useRef<HTMLDivElement>(null);
+  const chestEmojiRef = useRef<HTMLDivElement>(null);
 
   const quizResults = collectQuizResults(mod, progress);
   const correctCount = quizResults.filter((r) => r.correct).length;
@@ -137,12 +138,13 @@ const ModuleResults = ({
     return () => { tl.kill(); };
   }, [phase]);
 
-  // Phase: points -> animate counter, then transition to chest
+  // Phase: points -> animate counter, then show "Continuar" button (no auto-advance)
   useEffect(() => {
     if (phase !== 'points') return;
     const container = pointsContainerRef.current;
     const numEl = pointsNumberRef.current;
-    if (!container || !numEl) return;
+    const btnEl = pointsButtonRef.current;
+    if (!container || !numEl || !btnEl) return;
 
     const tl = gsap.timeline();
 
@@ -158,34 +160,59 @@ const ModuleResults = ({
       },
     }, '+=0.2');
 
-    // Auto-advance to chest phase after counter
-    tl.call(() => setPhase('chest'), [], '+=0.8');
+    // After counter finishes, animate in the "Continuar" button
+    tl.call(() => setPointsReady(true), [], '+=0.3');
+    tl.fromTo(
+      btnEl,
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+    );
 
     return () => { tl.kill(); };
   }, [phase, earnedPoints]);
 
-  // Phase: chest -> animate in chest
+  // Phase: chest -> dramatic GSAP animation on standalone chest
   useEffect(() => {
-    if (phase !== 'chest' || !chestContainerRef.current) return;
-    const tl = gsap.timeline();
-    tl.fromTo(
-      chestContainerRef.current,
-      { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.7)' }
-    );
-    return () => { tl.kill(); };
-  }, [phase]);
+    if (phase !== 'chest' || !chestContainerRef.current || !chestEmojiRef.current) return;
+    const container = chestContainerRef.current;
+    const chest = chestEmojiRef.current;
 
-  // Phase: done -> animate in done button
-  useEffect(() => {
-    if (phase !== 'done' || !doneContainerRef.current) return;
     const tl = gsap.timeline();
+
+    // Fade in container
     tl.fromTo(
-      doneContainerRef.current,
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.5 }
+      container,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.3 }
     );
-    return () => { tl.kill(); };
+
+    // Chest enters with a dramatic scale + bounce
+    tl.fromTo(
+      chest,
+      { scale: 0, rotation: -20 },
+      { scale: 1, rotation: 0, duration: 0.6, ease: 'back.out(2)' }
+    );
+
+    // Continuous floating/bobbing animation
+    tl.to(chest, {
+      y: -12,
+      duration: 1.2,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: -1,
+    });
+
+    // Subtle glow pulse (via boxShadow)
+    gsap.to(chest, {
+      boxShadow: '0 0 40px rgba(253, 203, 110, 0.6), 0 0 80px rgba(108, 92, 231, 0.3)',
+      duration: 1.5,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: -1,
+      delay: 0.6,
+    });
+
+    return () => { tl.kill(); gsap.killTweensOf(chest); };
   }, [phase]);
 
   // --- Handlers ---
@@ -204,13 +231,17 @@ const ModuleResults = ({
     });
   };
 
+  const handlePointsContinue = () => {
+    setPhase('chest');
+  };
+
   const handleChestClick = () => {
     openRewardBoxMutation.mutate();
   };
 
   const handleRewardBoxClose = () => {
     setShowRewardBox(false);
-    setPhase('done');
+    onFinished();
   };
 
   // --- Render ---
@@ -280,7 +311,7 @@ const ModuleResults = ({
         </div>
       )}
 
-      {/* Phase 2: Points Animation */}
+      {/* Phase 2: Points Animation + Continuar button */}
       {phase === 'points' && (
         <div
           ref={pointsContainerRef}
@@ -297,23 +328,33 @@ const ModuleResults = ({
           <p className="text-lab-text-muted text-xs mt-2">
             {mod.points} base{totalQuizzes > 0 ? ` + ${earnedPoints - mod.points} quiz bonus` : ''}
           </p>
+          <button
+            ref={pointsButtonRef}
+            onClick={handlePointsContinue}
+            className="btn-primary mt-8 px-10 py-3 text-base font-semibold"
+            style={{ opacity: 0 }}
+            disabled={!pointsReady}
+          >
+            Continuar
+          </button>
         </div>
       )}
 
-      {/* Phase 3: Wiggling Chest */}
+      {/* Phase 3: Standalone animated chest + "Toca" */}
       {phase === 'chest' && (
         <div
           ref={chestContainerRef}
-          className="w-full max-w-sm"
+          className="flex flex-col items-center justify-center gap-6"
           style={{ opacity: 0 }}
         >
-          <p className="text-center text-lab-text-muted text-sm mb-4">
-            Tienes una recompensa esperando
-          </p>
-          <WigglingChest
-            onClick={handleChestClick}
-            disabled={openRewardBoxMutation.isPending}
-          />
+          <p className="text-lab-text-muted text-sm">Toca</p>
+          <div
+            ref={chestEmojiRef}
+            onClick={openRewardBoxMutation.isPending ? undefined : handleChestClick}
+            className="w-32 h-32 rounded-2xl bg-gradient-to-br from-lab-gold/20 via-lab-primary/10 to-lab-gold/20 border-2 border-lab-gold/40 flex items-center justify-center cursor-pointer select-none active:scale-95 transition-transform"
+          >
+            <span className="text-7xl">🎁</span>
+          </div>
         </div>
       )}
 
@@ -322,29 +363,8 @@ const ModuleResults = ({
         <RewardBox
           result={rewardResult}
           onClose={handleRewardBoxClose}
+          hidePoints
         />
-      )}
-
-      {/* Phase 5: Done — Volver al curso */}
-      {phase === 'done' && (
-        <div
-          ref={doneContainerRef}
-          className="text-center"
-          style={{ opacity: 0 }}
-        >
-          <p className="text-lab-secondary font-bold text-lg mb-2">
-            Modulo completado
-          </p>
-          <p className="text-lab-text-muted text-sm mb-6">
-            Has ganado {earnedPoints} puntos en total
-          </p>
-          <button
-            onClick={onFinished}
-            className="btn-primary px-8 py-3 text-base font-semibold"
-          >
-            Volver al curso
-          </button>
-        </div>
       )}
     </div>
   );

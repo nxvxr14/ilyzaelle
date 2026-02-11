@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import * as endpoints from '@/api/endpoints';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { formatPoints } from '@/utils/helpers';
+import { formatPoints, getImageUrl } from '@/utils/helpers';
 import {
   AcademicCapIcon,
   TrophyIcon,
@@ -161,7 +161,7 @@ const HomePage = () => {
                 className="card flex-shrink-0 flex flex-col items-center p-3 w-20"
               >
                 <img
-                  src={ub.badge.image}
+                  src={getImageUrl(ub.badge.image)}
                   alt={ub.badge.name}
                   className="w-10 h-10"
                 />
