@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import type { Card, CardBlock } from '@/types';
 import { getImageUrl } from '@/utils/helpers';
-import { ChevronDownIcon } from '@heroicons/react/24/solid';
+import { ChevronDownIcon, ClipboardIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/solid';
 
 interface CardRendererProps {
   card: Card;
@@ -9,6 +10,18 @@ interface CardRendererProps {
 }
 
 const CardRenderer = ({ card, quizAnswers, onQuizAnswer }: CardRendererProps) => {
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  const handleCopyCode = async (content: string, blockIndex: number) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(blockIndex);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch {
+      // Clipboard API not available
+    }
+  };
+
   const renderBlock = (block: CardBlock, blockIndex: number) => {
     switch (block.type) {
       case 'text':
@@ -93,8 +106,24 @@ const CardRenderer = ({ card, quizAnswers, onQuizAnswer }: CardRendererProps) =>
       case 'code':
         return (
           <div key={blockIndex} className="rounded-xl overflow-hidden max-w-full">
-            <div className="bg-lab-bg px-4 py-2 text-xs text-lab-text-muted border-b border-lab-border">
-              {block.language}
+            <div className="bg-lab-bg px-4 py-2 text-xs text-lab-text-muted border-b border-lab-border flex items-center justify-between">
+              <span>{block.language}</span>
+              <button
+                onClick={() => handleCopyCode(block.content, blockIndex)}
+                className="flex items-center gap-1 text-lab-text-muted hover:text-lab-text transition-colors"
+              >
+                {copiedIndex === blockIndex ? (
+                  <>
+                    <ClipboardDocumentCheckIcon className="w-3.5 h-3.5 text-lab-secondary" />
+                    <span className="text-lab-secondary">Copiado</span>
+                  </>
+                ) : (
+                  <>
+                    <ClipboardIcon className="w-3.5 h-3.5" />
+                    <span>Copiar</span>
+                  </>
+                )}
+              </button>
             </div>
             <pre className="bg-lab-bg p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap break-words md:whitespace-pre md:break-normal max-w-full">
               <code>{block.content}</code>
@@ -120,6 +149,14 @@ const CardRenderer = ({ card, quizAnswers, onQuizAnswer }: CardRendererProps) =>
           </a>
         );
 
+      case 'separator':
+        return (
+          <hr
+            key={blockIndex}
+            className="border-0 h-px bg-gradient-to-r from-transparent via-lab-border to-transparent my-2"
+          />
+        );
+
       default:
         return null;
     }
@@ -127,7 +164,7 @@ const CardRenderer = ({ card, quizAnswers, onQuizAnswer }: CardRendererProps) =>
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-bold">{card.title}</h3>
+      <h3 className="text-lg font-bold text-center">{card.title}</h3>
       {card.blocks.map((block, i) => renderBlock(block, i))}
     </div>
   );

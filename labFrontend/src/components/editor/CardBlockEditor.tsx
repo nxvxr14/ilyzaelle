@@ -272,6 +272,16 @@ const CardBlockEditor = ({ block, index, totalBlocks, onUpdate, onRemove, onMove
           </div>
         );
 
+      case 'separator':
+        return (
+          <div className="py-2">
+            <hr className="border-0 h-px bg-gradient-to-r from-transparent via-lab-border to-transparent" />
+            <p className="text-xs text-lab-text-muted text-center mt-2">
+              Linea divisora — sin opciones
+            </p>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -284,6 +294,7 @@ const CardBlockEditor = ({ block, index, totalBlocks, onUpdate, onRemove, onMove
     quiz: 'Quiz',
     code: 'Codigo',
     download: 'Descarga',
+    separator: 'Separador',
   };
 
   return (

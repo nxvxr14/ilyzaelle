@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import * as endpoints from '@/api/endpoints';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CardRenderer from '@/components/course/CardRenderer';
@@ -18,6 +18,7 @@ const ModuleViewPage = () => {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const startTimeRef = useRef(Date.now());
 
   const { data: mod, isLoading: loadingModule } = useQuery({
     queryKey: ['module', moduleId],
@@ -171,6 +172,7 @@ const ModuleViewPage = () => {
             progress={progress}
             courseId={courseId!}
             moduleId={moduleId!}
+            startTime={startTimeRef.current}
             onFinished={() => navigate(`/courses/${courseId}`)}
           />
         ) : allDone ? (
@@ -194,6 +196,7 @@ const ModuleViewPage = () => {
               progress={progress!}
               courseId={courseId!}
               moduleId={moduleId!}
+              startTime={startTimeRef.current}
               onFinished={() => navigate(`/courses/${courseId}`)}
             />
           )

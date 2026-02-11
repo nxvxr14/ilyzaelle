@@ -104,6 +104,14 @@ const CardPreview = ({ title, blocks }: CardPreviewProps) => {
                   </div>
                 );
 
+              case 'separator':
+                return (
+                  <hr
+                    key={i}
+                    className="border-0 h-px bg-gradient-to-r from-transparent via-lab-border to-transparent my-2"
+                  />
+                );
+
               default:
                 return null;
             }

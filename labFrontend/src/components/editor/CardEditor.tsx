@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CardBlock, TextBlock, ImageBlock, ButtonBlock, QuizBlock, CodeBlock, DownloadBlock } from '@/types';
+import type { CardBlock } from '@/types';
 import CardBlockEditor from './CardBlockEditor';
 import CardPreview from './CardPreview';
 import {
@@ -57,6 +57,9 @@ const BLOCK_TEMPLATES: Record<string, () => CardBlock> = {
     fileUrl: '',
     fileName: '',
   }),
+  separator: () => ({
+    type: 'separator',
+  }),
 };
 
 const CardEditor = ({ isOpen, onClose, initialTitle, initialBlocks, onSave, isSaving }: CardEditorProps) => {
@@ -97,7 +100,7 @@ const CardEditor = ({ isOpen, onClose, initialTitle, initialBlocks, onSave, isSa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-lab-bg overflow-y-auto">
+    <div className="fixed inset-0 z-[60] bg-lab-bg overflow-y-auto">
       {/* Toolbar */}
       <div className="sticky top-0 z-10 bg-lab-surface border-b border-lab-border px-4 py-3">
         <div className="flex items-center justify-between max-w-3xl mx-auto">
@@ -163,6 +166,7 @@ const CardEditor = ({ isOpen, onClose, initialTitle, initialBlocks, onSave, isSa
                   { type: 'quiz', label: 'Quiz' },
                   { type: 'code', label: 'Codigo' },
                   { type: 'download', label: 'Descarga' },
+                  { type: 'separator', label: 'Separador' },
                 ].map((item) => (
                   <button
                     key={item.type}

@@ -3,10 +3,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import gsap from 'gsap';
 import * as endpoints from '@/api/endpoints';
 import { useAuth } from '@/context/AuthContext';
+import { getImageUrl, getRarityColor } from '@/utils/helpers';
 import RewardBox from '@/components/gamification/RewardBox';
 import {
   CheckCircleIcon,
   XCircleIcon,
+  ClockIcon,
+  TrophyIcon,
+  StarIcon,
 } from '@heroicons/react/24/solid';
 import type { Module, Progress, CardBlock, QuizBlock, RewardResult } from '@/types';
 
@@ -18,13 +22,14 @@ interface QuizResultItem {
   points: number;
 }
 
-type Phase = 'quiz' | 'points' | 'chest' | 'reward';
+type Phase = 'quiz' | 'points' | 'chest' | 'reward' | 'summary';
 
 interface ModuleResultsProps {
   mod: Module;
   progress: Progress;
   courseId: string;
   moduleId: string;
+  startTime: number;
   onFinished: () => void;
 }
 
@@ -88,11 +93,27 @@ const createParticles = (container: HTMLDivElement, count: number): HTMLDivEleme
   return particles;
 };
 
+/**
+ * Formats elapsed time in mm:ss or hh:mm:ss.
+ */
+const formatElapsedTime = (ms: number): string => {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+  }
+  return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+};
+
 const ModuleResults = ({
   mod,
   progress,
   courseId,
   moduleId,
+  startTime,
   onFinished,
 }: ModuleResultsProps) => {
   const { user, updateUser } = useAuth();
@@ -103,6 +124,7 @@ const ModuleResults = ({
   const [showRewardBox, setShowRewardBox] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [pointsReady, setPointsReady] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   // Refs for GSAP animations
   const quizRef = useRef<HTMLDivElement>(null);
@@ -110,8 +132,7 @@ const ModuleResults = ({
   const pointsNumberRef = useRef<HTMLSpanElement>(null);
   const pointsButtonRef = useRef<HTMLButtonElement>(null);
   const particlesRef = useRef<HTMLDivElement>(null);
-  const chestContainerRef = useRef<HTMLDivElement>(null);
-  const chestEmojiRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
 
   const quizResults = collectQuizResults(mod, progress);
   const correctCount = quizResults.filter((r) => r.correct).length;
@@ -157,14 +178,15 @@ const ModuleResults = ({
     return () => { tl.kill(); };
   }, [phase]);
 
-  // Phase: points -> animate counter + particle burst + show button
+  // Phase: points -> animate counter + particle burst + glow + show button
   useEffect(() => {
     if (phase !== 'points') return;
     const container = pointsContainerRef.current;
     const numEl = pointsNumberRef.current;
     const btnEl = pointsButtonRef.current;
     const particleContainer = particlesRef.current;
-    if (!container || !numEl || !btnEl || !particleContainer) return;
+    const glowEl = glowRef.current;
+    if (!container || !numEl || !btnEl || !particleContainer || !glowEl) return;
 
     // Create particles for the burst
     const particles = createParticles(particleContainer, 30);
@@ -211,6 +233,17 @@ const ModuleResults = ({
       ease: 'power2.in',
     }, '-=0.1');
 
+    // Breathing glow appears after particles fade
+    tl.to(glowEl, {
+      opacity: 1,
+      duration: 0.5,
+      ease: 'power2.out',
+      onComplete: () => {
+        // Add the CSS animation class for continuous breathing
+        glowEl.classList.add('animate-glow-pulse');
+      },
+    });
+
     // Show "Continuar" button
     tl.call(() => setPointsReady(true), [], '+=0.2');
     tl.fromTo(
@@ -224,52 +257,6 @@ const ModuleResults = ({
       particles.forEach((p) => p.remove());
     };
   }, [phase, earnedPoints]);
-
-  // Phase: chest -> entrance animation, then start continuous loops separately
-  useEffect(() => {
-    if (phase !== 'chest') return;
-    const container = chestContainerRef.current;
-    const chest = chestEmojiRef.current;
-    if (!container || !chest) return;
-
-    // Entrance timeline (finite — will complete)
-    const entranceTl = gsap.timeline({
-      onComplete: () => {
-        // Start continuous animations AFTER entrance finishes
-        gsap.to(chest, {
-          y: -12,
-          duration: 1.2,
-          ease: 'sine.inOut',
-          yoyo: true,
-          repeat: -1,
-        });
-        gsap.to(chest, {
-          boxShadow: '0 0 40px rgba(253, 203, 110, 0.6), 0 0 80px rgba(108, 92, 231, 0.3)',
-          duration: 1.5,
-          ease: 'sine.inOut',
-          yoyo: true,
-          repeat: -1,
-        });
-      },
-    });
-
-    entranceTl.fromTo(
-      container,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.3 }
-    );
-
-    entranceTl.fromTo(
-      chest,
-      { scale: 0, rotation: -20 },
-      { scale: 1, rotation: 0, duration: 0.6, ease: 'back.out(2)' }
-    );
-
-    return () => {
-      entranceTl.kill();
-      gsap.killTweensOf(chest);
-    };
-  }, [phase]);
 
   // --- Handlers ---
 
@@ -295,7 +282,8 @@ const ModuleResults = ({
 
   const handleRewardBoxClose = () => {
     setShowRewardBox(false);
-    onFinished();
+    setElapsedTime(Date.now() - startTime);
+    setPhase('summary');
   };
 
   // --- Render ---
@@ -365,7 +353,7 @@ const ModuleResults = ({
         </div>
       )}
 
-      {/* Phase 2: Points Animation + particle burst + Continuar button */}
+      {/* Phase 2: Points Animation + particle burst + breathing glow + Continuar button */}
       {phase === 'points' && (
         <div
           ref={pointsContainerRef}
@@ -374,9 +362,15 @@ const ModuleResults = ({
         >
           <p className="text-lab-text-muted text-sm mb-2">Puntos ganados</p>
           <div className="relative inline-block">
+            {/* Breathing glow behind the number */}
+            <div
+              ref={glowRef}
+              className="absolute inset-0 -inset-x-8 -inset-y-4 rounded-full bg-lab-primary/30 blur-2xl pointer-events-none"
+              style={{ opacity: 0 }}
+            />
             <span
               ref={pointsNumberRef}
-              className="text-5xl font-black text-lab-gold inline-block"
+              className="text-5xl font-black text-lab-gold inline-block relative"
             >
               +0
             </span>
@@ -401,18 +395,12 @@ const ModuleResults = ({
         </div>
       )}
 
-      {/* Phase 3: Standalone animated chest + "Toca" */}
+      {/* Phase 3: Chest — pure CSS animations, no GSAP */}
       {phase === 'chest' && (
-        <div
-          ref={chestContainerRef}
-          className="flex flex-col items-center justify-center gap-6"
-          style={{ opacity: 0 }}
-        >
-          <p className="text-lab-text-muted text-sm">Toca</p>
+        <div className="flex flex-col items-center justify-center gap-6">
           <div
-            ref={chestEmojiRef}
             onClick={openRewardBoxMutation.isPending ? undefined : handleChestClick}
-            className="w-32 h-32 rounded-2xl bg-gradient-to-br from-lab-gold/20 via-lab-primary/10 to-lab-gold/20 border-2 border-lab-gold/40 flex items-center justify-center cursor-pointer select-none active:scale-95 transition-transform"
+            className="w-32 h-32 rounded-2xl bg-gradient-to-br from-lab-gold/20 via-lab-primary/10 to-lab-gold/20 border-2 border-lab-gold/40 flex items-center justify-center cursor-pointer select-none active:scale-95 transition-transform animate-float animate-chest-glow"
           >
             <span className="text-7xl">🎁</span>
           </div>
@@ -426,6 +414,72 @@ const ModuleResults = ({
           onClose={handleRewardBoxClose}
           hidePoints
         />
+      )}
+
+      {/* Phase 5: Summary screen */}
+      {phase === 'summary' && (
+        <div className="w-full max-w-lg">
+          <div className="card p-6 text-center space-y-6">
+            <div>
+              <TrophyIcon className="w-10 h-10 text-lab-gold mx-auto mb-2" />
+              <h3 className="text-lg font-bold text-lab-text">
+                Modulo completado
+              </h3>
+            </div>
+
+            {/* Badge earned */}
+            {rewardResult?.badgeEarned && (
+              <div className="p-4 rounded-2xl bg-lab-bg/50 border border-lab-gold/30">
+                <p className="text-xs text-lab-gold font-semibold mb-3 uppercase tracking-wider">
+                  Insignia obtenida
+                </p>
+                <div className="flex flex-col items-center gap-2">
+                  <img
+                    src={getImageUrl((rewardResult.badgeEarned as any).image || '')}
+                    alt={(rewardResult.badgeEarned as any).name || 'Badge'}
+                    className="w-14 h-14"
+                  />
+                  <p className={`font-bold ${getRarityColor((rewardResult.badgeEarned as any).rarity || 'common')}`}>
+                    {(rewardResult.badgeEarned as any).name || 'Insignia'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Stats row */}
+            <div className="flex items-center justify-center gap-6">
+              {/* Points */}
+              <div className="flex items-center gap-2">
+                <StarIcon className="w-5 h-5 text-lab-gold" />
+                <div className="text-left">
+                  <p className="text-lg font-bold text-lab-gold">+{earnedPoints}</p>
+                  <p className="text-xs text-lab-text-muted">puntos</p>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-10 w-px bg-lab-border" />
+
+              {/* Time */}
+              <div className="flex items-center gap-2">
+                <ClockIcon className="w-5 h-5 text-lab-secondary" />
+                <div className="text-left">
+                  <p className="text-lg font-bold text-lab-secondary">
+                    {formatElapsedTime(elapsedTime)}
+                  </p>
+                  <p className="text-xs text-lab-text-muted">tiempo</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={onFinished}
+              className="btn-primary w-full py-3 text-base font-semibold"
+            >
+              Volver al curso
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -102,7 +102,11 @@ export interface DownloadBlock {
   fileName: string;
 }
 
-export type CardBlock = TextBlock | ImageBlock | ButtonBlock | QuizBlock | CodeBlock | DownloadBlock;
+export interface SeparatorBlock {
+  type: 'separator';
+}
+
+export type CardBlock = TextBlock | ImageBlock | ButtonBlock | QuizBlock | CodeBlock | DownloadBlock | SeparatorBlock;
 
 export interface Card {
   _id: string;
