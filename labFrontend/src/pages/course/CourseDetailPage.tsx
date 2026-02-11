@@ -79,7 +79,7 @@ const CourseDetailPage = () => {
       {/* Header */}
       <div className="card overflow-hidden p-0 mb-6">
         {course.coverImage && (
-          <div className="aspect-video max-h-48 overflow-hidden">
+          <div className="aspect-video overflow-hidden">
             <img
               src={getImageUrl(course.coverImage)}
               alt={course.title}
@@ -97,7 +97,7 @@ const CourseDetailPage = () => {
               disabled={enrollMutation.isPending}
               className="btn-primary w-full mt-4"
             >
-              {enrollMutation.isPending ? 'Inscribiendo...' : 'Inscribirse gratis'}
+              {enrollMutation.isPending ? 'Inscribiendo...' : 'Inscribirse'}
             </button>
           ) : (
             <div className="flex items-center gap-2 mt-4 text-lab-secondary text-sm">
@@ -107,6 +107,19 @@ const CourseDetailPage = () => {
           )}
         </div>
       </div>
+
+      {/* Course completion reward box */}
+      {progress?.completed && !progress.completionBadgeEarned && (
+        <div className="mb-6">
+          <h3 className="font-semibold mb-3 text-lab-gold">
+            Recompensa del curso
+          </h3>
+          <WigglingChest
+            onClick={() => claimCourseRewardMutation.mutate()}
+            disabled={claimCourseRewardMutation.isPending}
+          />
+        </div>
+      )}
 
       {/* Modules */}
       <h3 className="font-semibold mb-3">
@@ -120,6 +133,16 @@ const CourseDetailPage = () => {
           );
           const isCompleted = moduleProgress?.completed;
           const isUnlocked = isEnrolled;
+
+          // Calculate module progress %
+          const totalModuleCards = mod.cards?.length || 0;
+          const completedCards = moduleProgress
+            ? moduleProgress.cardsProgress.filter((cp) => cp.completed).length
+            : 0;
+          const modulePercent = totalModuleCards > 0
+            ? Math.round((completedCards / totalModuleCards) * 100)
+            : 0;
+          const isInProgress = modulePercent > 0 && !isCompleted;
 
           return (
             <div key={mod._id} className="relative">
@@ -147,11 +170,26 @@ const CourseDetailPage = () => {
                     <p className="font-medium text-sm truncate">{mod.title}</p>
                     <p className="text-xs text-lab-text-muted mt-0.5">
                       {mod.cards?.length || 0} tarjetas &middot; {mod.points} pts
+                      {isInProgress && (
+                        <span className="text-lab-primary ml-1">&middot; {modulePercent}%</span>
+                      )}
+                      {isCompleted && (
+                        <span className="text-lab-secondary ml-1">&middot; 100%</span>
+                      )}
                     </p>
                   </div>
 
                   {isCompleted ? (
                     <CheckCircleIcon className="w-6 h-6 text-lab-secondary flex-shrink-0" />
+                  ) : isInProgress ? (
+                    <div className="w-6 h-6 flex-shrink-0 relative">
+                      <svg className="w-6 h-6 -rotate-90" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" className="text-lab-border" strokeWidth="2" />
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" className="text-lab-primary" strokeWidth="2"
+                          strokeDasharray={`${(modulePercent / 100) * 62.83} 62.83`}
+                        />
+                      </svg>
+                    </div>
                   ) : (
                     <PlayIcon className="w-6 h-6 text-lab-primary flex-shrink-0" />
                   )}
@@ -171,19 +209,6 @@ const CourseDetailPage = () => {
           );
         })}
       </div>
-
-      {/* Course completion reward box */}
-      {progress?.completed && !progress.completionBadgeEarned && (
-        <div className="mt-6">
-          <h3 className="font-semibold mb-3 text-lab-gold">
-            Recompensa del curso
-          </h3>
-          <WigglingChest
-            onClick={() => claimCourseRewardMutation.mutate()}
-            disabled={claimCourseRewardMutation.isPending}
-          />
-        </div>
-      )}
 
       {/* Reward box animation */}
       {showReward && rewardResult && (

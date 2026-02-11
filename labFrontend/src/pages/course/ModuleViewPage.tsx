@@ -7,7 +7,7 @@ import CardRenderer from '@/components/course/CardRenderer';
 import CardTransition from '@/components/course/CardTransition';
 import ModuleResults from '@/components/course/ModuleResults';
 import { toast } from 'react-toastify';
-import { ArrowLeftIcon } from '@heroicons/react/24/solid';
+import { ArrowLeftIcon, ChevronLeftIcon } from '@heroicons/react/24/solid';
 
 const ModuleViewPage = () => {
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
@@ -15,7 +15,9 @@ const ModuleViewPage = () => {
   const navigate = useNavigate();
 
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [maxReachedIndex, setMaxReachedIndex] = useState<number>(0);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
+  const [savedAnswers, setSavedAnswers] = useState<Record<number, Record<string, number>>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const startTimeRef = useRef(Date.now());
@@ -43,18 +45,28 @@ const ModuleViewPage = () => {
     );
   }, [progress, moduleId]);
 
-  // Determine the resume index (first uncompleted card)
+  // Check if module was already completed previously
+  const moduleProgress = useMemo(() => {
+    return progress?.modulesProgress.find(
+      (m) => m.module === moduleId || (m.module as any)?._id === moduleId
+    );
+  }, [progress, moduleId]);
+  const alreadyCompleted = moduleProgress?.completed ?? false;
+
+  // Determine the resume index (first uncompleted card), or 0 if re-viewing
   const resumeIndex = useMemo(() => {
     if (!mod) return 0;
+    if (alreadyCompleted) return 0;
     const firstUncompleted = mod.cards.findIndex(
       (card) => !completedCardIds.has(card._id)
     );
     return firstUncompleted === -1 ? mod.cards.length : firstUncompleted;
-  }, [mod, completedCardIds]);
+  }, [mod, completedCardIds, alreadyCompleted]);
 
   // Set initial index once data is loaded
   if (currentIndex === null && mod && !loadingProgress) {
     setCurrentIndex(resumeIndex);
+    setMaxReachedIndex(resumeIndex);
   }
 
   const completeCardMutation = useMutation({
@@ -72,6 +84,18 @@ const ModuleViewPage = () => {
     }));
   };
 
+  const goBack = () => {
+    if (currentIndex === null || currentIndex <= 0) return;
+    // Save current quiz answers for this card index before navigating away
+    if (Object.keys(quizAnswers).length > 0) {
+      setSavedAnswers((prev) => ({ ...prev, [currentIndex]: quizAnswers }));
+    }
+    const prevIndex = currentIndex - 1;
+    setCurrentIndex(prevIndex);
+    // Restore previously saved answers for the card we're going back to
+    setQuizAnswers(savedAnswers[prevIndex] || {});
+  };
+
   const saveAndAdvance = async () => {
     if (!mod || currentIndex === null) return;
 
@@ -82,8 +106,15 @@ const ModuleViewPage = () => {
     try {
       const answers = Object.keys(quizAnswers).length > 0 ? quizAnswers : undefined;
       await completeCardMutation.mutateAsync({ cardId: card._id, answers });
-      setQuizAnswers({});
-      setCurrentIndex(currentIndex + 1);
+
+      const nextIndex = currentIndex + 1;
+      // Save current answers in case user comes back
+      if (Object.keys(quizAnswers).length > 0) {
+        setSavedAnswers((prev) => ({ ...prev, [currentIndex]: quizAnswers }));
+      }
+      setQuizAnswers(savedAnswers[nextIndex] || {});
+      setCurrentIndex(nextIndex);
+      setMaxReachedIndex((prev) => Math.max(prev, nextIndex));
     } catch {
       toast.error('Error al guardar progreso');
     } finally {
@@ -115,21 +146,17 @@ const ModuleViewPage = () => {
   if (loadingModule || loadingProgress) return <LoadingSpinner />;
   if (!mod) return <p className="p-6 text-lab-text-muted">Modulo no encontrado</p>;
 
-  // Check if module was already completed previously
-  const moduleProgress = progress?.modulesProgress.find(
-    (m) => m.module === moduleId || (m.module as any)?._id === moduleId
-  );
-  const alreadyCompleted = moduleProgress?.completed ?? false;
-
   const totalCards = mod.cards.length;
   const safeIndex = currentIndex ?? 0;
   const isLastCard = safeIndex === totalCards - 1;
   const allDone = safeIndex >= totalCards;
 
-  // Progress percentage: completed cards out of total
-  const progressPercent = totalCards > 0
-    ? Math.round((Math.min(safeIndex, totalCards) / totalCards) * 100)
-    : 0;
+  // Progress percentage: use maxReachedIndex for progress, 100% during results
+  const progressPercent = (showResults || allDone)
+    ? 100
+    : totalCards > 0
+      ? Math.round((Math.min(maxReachedIndex, totalCards) / totalCards) * 100)
+      : 0;
 
   const currentCard = allDone ? null : mod.cards[safeIndex];
 
@@ -146,7 +173,7 @@ const ModuleViewPage = () => {
         <div className="flex-1 min-w-0">
           <h2 className="text-sm font-bold truncate">{mod.title}</h2>
           <p className="text-xs text-lab-text-muted">
-            {allDone
+            {allDone || showResults
               ? `${totalCards}/${totalCards} tarjetas`
               : `${safeIndex + 1} de ${totalCards}`}
           </p>
@@ -175,31 +202,15 @@ const ModuleViewPage = () => {
             startTime={startTimeRef.current}
             onFinished={() => navigate(`/courses/${courseId}`)}
           />
-        ) : allDone ? (
-          alreadyCompleted ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="card text-center py-12 w-full max-w-lg">
-                <p className="text-lab-secondary font-bold text-lg mb-2">
-                  Modulo completado
-                </p>
-                <p className="text-lab-text-muted text-sm mb-6">
-                  Ya completaste este modulo anteriormente
-                </p>
-                <Link to={`/courses/${courseId}`} className="btn-primary">
-                  Volver al curso
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <ModuleResults
-              mod={mod}
-              progress={progress!}
-              courseId={courseId!}
-              moduleId={moduleId!}
-              startTime={startTimeRef.current}
-              onFinished={() => navigate(`/courses/${courseId}`)}
-            />
-          )
+        ) : allDone && !alreadyCompleted ? (
+          <ModuleResults
+            mod={mod}
+            progress={progress!}
+            courseId={courseId!}
+            moduleId={moduleId!}
+            startTime={startTimeRef.current}
+            onFinished={() => navigate(`/courses/${courseId}`)}
+          />
         ) : currentCard ? (
           <>
             {/* Card content — fills available space, scrolls internally */}
@@ -219,19 +230,40 @@ const ModuleViewPage = () => {
               </div>
             </div>
 
-            {/* Navigation button — always at bottom */}
-            <div className="pt-3">
-              <button
-                onClick={isLastCard ? handleFinalize : saveAndAdvance}
-                disabled={isSaving}
-                className="btn-primary w-full py-4 text-base font-semibold max-w-lg lg:max-w-4xl mx-auto block"
-              >
-                {isSaving
-                  ? 'Guardando...'
-                  : isLastCard
-                  ? 'Finalizar'
-                  : 'Siguiente'}
-              </button>
+            {/* Navigation buttons — always at bottom */}
+            <div className="pt-3 flex gap-2 max-w-lg lg:max-w-4xl mx-auto w-full">
+              {/* Back button — only show if not on first card */}
+              {safeIndex > 0 && (
+                <button
+                  onClick={goBack}
+                  disabled={isSaving}
+                  className="btn-secondary py-4 px-4 flex-shrink-0"
+                >
+                  <ChevronLeftIcon className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Forward / Finalize / Volver button */}
+              {alreadyCompleted && isLastCard ? (
+                <Link
+                  to={`/courses/${courseId}`}
+                  className="btn-primary w-full py-4 text-base font-semibold text-center block"
+                >
+                  Volver al curso
+                </Link>
+              ) : (
+                <button
+                  onClick={isLastCard ? handleFinalize : saveAndAdvance}
+                  disabled={isSaving}
+                  className="btn-primary w-full py-4 text-base font-semibold"
+                >
+                  {isSaving
+                    ? 'Guardando...'
+                    : isLastCard
+                    ? 'Finalizar'
+                    : 'Siguiente'}
+                </button>
+              )}
             </div>
           </>
         ) : null}

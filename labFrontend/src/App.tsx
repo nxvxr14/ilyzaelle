@@ -2,8 +2,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
-// Layout
+// Layouts
 import AppLayout from './components/layout/AppLayout';
+import AdminLayout from './components/layout/AdminLayout';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -24,19 +25,20 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminBadgesPage from './pages/admin/AdminBadgesPage';
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
 
   if (isLoading) return <LoadingSpinner />;
-  if (user) return <Navigate to="/home" replace />;
+  if (user) return <Navigate to={isAdmin ? '/admin' : '/home'} replace />;
 
   return <>{children}</>;
 };
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
 
   if (isLoading) return <LoadingSpinner />;
   if (!user) return <Navigate to="/login" replace />;
+  if (isAdmin) return <Navigate to="/admin" replace />;
 
   return <>{children}</>;
 };
@@ -69,7 +71,7 @@ const App = () => {
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
-      {/* Protected - with layout */}
+      {/* Protected student routes - with AppLayout (Header + BottomNav) */}
       <Route
         element={
           <ProtectedRoute>
@@ -82,15 +84,23 @@ const App = () => {
         <Route path="/courses/:id" element={<CourseDetailPage />} />
         <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleViewPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+      </Route>
 
-        {/* Admin */}
-        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        <Route path="/admin/courses" element={<AdminRoute><AdminCoursesPage /></AdminRoute>} />
-        <Route path="/admin/courses/new" element={<AdminRoute><AdminCoursesPage /></AdminRoute>} />
-        <Route path="/admin/courses/:id" element={<AdminRoute><AdminCourseEditPage /></AdminRoute>} />
-        <Route path="/admin/courses/:courseId/modules/:moduleId" element={<AdminRoute><AdminModuleEditPage /></AdminRoute>} />
-        <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
-        <Route path="/admin/badges" element={<AdminRoute><AdminBadgesPage /></AdminRoute>} />
+      {/* Admin routes - with AdminLayout (Header only, no BottomNav) */}
+      <Route
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
+      >
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/courses" element={<AdminCoursesPage />} />
+        <Route path="/admin/courses/new" element={<AdminCoursesPage />} />
+        <Route path="/admin/courses/:id" element={<AdminCourseEditPage />} />
+        <Route path="/admin/courses/:courseId/modules/:moduleId" element={<AdminModuleEditPage />} />
+        <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/badges" element={<AdminBadgesPage />} />
       </Route>
 
       {/* Catch all */}

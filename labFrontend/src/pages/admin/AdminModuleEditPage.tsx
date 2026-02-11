@@ -36,6 +36,7 @@ const AdminModuleEditPage = () => {
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [editingBlocks, setEditingBlocks] = useState<CardBlock[]>([]);
   const [editingTitle, setEditingTitle] = useState('');
+  const [localDropChance, setLocalDropChance] = useState<number | null>(null);
 
   const { data: mod, isLoading } = useQuery({
     queryKey: ['admin-module', moduleId],
@@ -120,6 +121,10 @@ const AdminModuleEditPage = () => {
     const reordered = [...sortedCards];
     const [moved] = reordered.splice(oldIndex, 1) as [Card];
     reordered.splice(newIndex, 0, moved);
+
+    // Optimistically update the cache with new order
+    const updatedCards = reordered.map((c: Card, i: number) => ({ ...c, order: i }));
+    queryClient.setQueryData(['admin-module', moduleId], { ...mod, cards: updatedCards });
 
     const updates = reordered.map((c: Card, i: number) => ({ id: c._id, order: i }));
     reorderMutation.mutate(updates);
@@ -217,18 +222,22 @@ const AdminModuleEditPage = () => {
 
               <div>
                 <label className="block text-xs text-lab-text-muted mb-1">
-                  Probabilidad de obtener ({mod.badgeDropChance}%)
+                  Probabilidad de obtener ({localDropChance ?? mod.badgeDropChance}%)
                 </label>
                 <input
                   type="range"
                   min={1}
                   max={100}
-                  value={mod.badgeDropChance}
-                  onChange={(e) => {
-                    assignBadgeMutation.mutate({
-                      badge: (mod.badge as Badge)?._id || null,
-                      badgeDropChance: Number(e.target.value),
-                    });
+                  value={localDropChance ?? mod.badgeDropChance}
+                  onChange={(e) => setLocalDropChance(Number(e.target.value))}
+                  onPointerUp={() => {
+                    if (localDropChance !== null) {
+                      assignBadgeMutation.mutate({
+                        badge: (mod.badge as Badge)?._id || null,
+                        badgeDropChance: localDropChance,
+                      });
+                      setLocalDropChance(null);
+                    }
                   }}
                   className="w-full accent-lab-primary"
                 />
@@ -269,7 +278,10 @@ const AdminModuleEditPage = () => {
                 .sort((a: Card, b: Card) => a.order - b.order)
                 .map((card: Card, index: number) => (
                 <SortableItem key={card._id} id={card._id}>
-                  <div className="card flex items-center justify-between">
+                  <div
+                    className="card flex items-center justify-between cursor-pointer hover:border-lab-primary/30 transition-colors"
+                    onClick={() => handleEditCard(card)}
+                  >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-8 h-8 rounded-full bg-lab-bg flex items-center justify-center text-sm font-bold text-lab-text-muted flex-shrink-0">
                         {index + 1}
@@ -284,13 +296,17 @@ const AdminModuleEditPage = () => {
 
                     <div className="flex items-center gap-1 ml-2">
                       <button
-                        onClick={() => handleEditCard(card)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditCard(card);
+                        }}
                         className="p-2 text-lab-text-muted hover:text-lab-primary"
                       >
                         <PencilIcon className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (confirm('Eliminar esta tarjeta?')) {
                             deleteCardMutation.mutate(card._id);
                           }

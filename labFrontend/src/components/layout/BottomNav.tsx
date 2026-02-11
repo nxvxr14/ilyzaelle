@@ -3,18 +3,14 @@ import {
   HomeIcon,
   AcademicCapIcon,
   UserCircleIcon,
-  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import {
   HomeIcon as HomeIconSolid,
   AcademicCapIcon as AcademicCapIconSolid,
   UserCircleIcon as UserCircleIconSolid,
-  Cog6ToothIcon as Cog6ToothIconSolid,
 } from '@heroicons/react/24/solid';
-import { useAuth } from '@/context/AuthContext';
 
 const BottomNav = () => {
-  const { isAdmin } = useAuth();
   const location = useLocation();
 
   const navItems = [
@@ -36,16 +32,6 @@ const BottomNav = () => {
       icon: UserCircleIcon,
       activeIcon: UserCircleIconSolid,
     },
-    ...(isAdmin
-      ? [
-          {
-            to: '/admin',
-            label: 'Admin',
-            icon: Cog6ToothIcon,
-            activeIcon: Cog6ToothIconSolid,
-          },
-        ]
-      : []),
   ];
 
   return (

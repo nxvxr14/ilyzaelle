@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,6 +42,7 @@ import type { Module, Badge } from '@/types';
 const AdminCourseEditPage = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [showModuleModal, setShowModuleModal] = useState(false);
   const [cropperOpen, setCropperOpen] = useState(false);
@@ -140,6 +141,10 @@ const AdminCourseEditPage = () => {
     const reordered = [...sortedModules];
     const [moved] = reordered.splice(oldIndex, 1) as [Module];
     reordered.splice(newIndex, 0, moved);
+
+    // Optimistically update the cache with new order
+    const updatedModules = reordered.map((m: Module, i: number) => ({ ...m, order: i }));
+    queryClient.setQueryData(['admin-course', id], { ...course, modules: updatedModules });
 
     const updates = reordered.map((m: Module, i: number) => ({ id: m._id, order: i }));
     reorderMutation.mutate(updates);
@@ -352,11 +357,14 @@ const AdminCourseEditPage = () => {
                 .sort((a: Module, b: Module) => a.order - b.order)
                 .map((mod: Module, index: number) => (
                 <SortableItem key={mod._id} id={mod._id}>
-                  <div className="card">
+                  <div
+                    className="card cursor-pointer hover:border-lab-primary/30 transition-colors"
+                    onClick={() => navigate(`/admin/courses/${id}/modules/${mod._id}`)}
+                  >
                     <div className="flex items-center gap-3">
                       {/* Cover */}
                       <button
-                        onClick={() => handleImageSelect('module', mod._id)}
+                        onClick={(e) => { e.stopPropagation(); handleImageSelect('module', mod._id); }}
                         className="w-14 h-14 rounded-xl overflow-hidden bg-lab-bg flex-shrink-0 hover:opacity-80 transition-opacity"
                       >
                         {mod.coverImage ? (
@@ -369,19 +377,17 @@ const AdminCourseEditPage = () => {
                       </button>
 
                       <div className="flex-1 min-w-0">
-                        <Link
-                          to={`/admin/courses/${id}/modules/${mod._id}`}
-                          className="font-medium text-sm hover:text-lab-primary truncate block"
-                        >
+                        <p className="font-medium text-sm hover:text-lab-primary truncate">
                           {index + 1}. {mod.title}
-                        </Link>
+                        </p>
                         <p className="text-xs text-lab-text-muted">
                           {mod.cards?.length || 0} tarjetas &middot; {mod.points} pts
                         </p>
                       </div>
 
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (confirm('Eliminar este modulo?')) {
                             deleteModuleMutation.mutate(mod._id);
                           }

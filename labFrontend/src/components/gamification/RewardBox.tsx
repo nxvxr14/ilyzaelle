@@ -174,12 +174,9 @@ const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
         ref={chestRef}
         className="absolute flex flex-col items-center gap-4"
       >
-        <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-lab-gold/30 via-lab-primary/20 to-lab-gold/30 border-2 border-lab-gold/50 flex items-center justify-center">
+        <div className="w-40 h-40 rounded-2xl bg-gradient-to-br from-lab-gold/30 via-lab-primary/20 to-lab-gold/30 border-2 border-lab-gold/50 flex items-center justify-center">
           <span className="text-6xl">🎁</span>
         </div>
-        <p className="text-lab-gold text-sm font-semibold animate-pulse">
-          Abriendo...
-        </p>
       </div>
 
       {/* Phase 4: Casino slot spin */}
@@ -188,10 +185,9 @@ const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
         className="absolute flex flex-col items-center gap-2"
         style={{ opacity: 0 }}
       >
-        <div className="w-24 h-24 rounded-xl border-2 border-lab-primary/50 bg-lab-surface flex items-center justify-center overflow-hidden">
-          <div className="animate-spin-slow text-4xl">?</div>
+        <div className="w-32 h-32 rounded-xl border-2 border-lab-primary/50 bg-lab-surface flex items-center justify-center overflow-hidden">
+          <div className="animate-spin-slow text-6xl">?</div>
         </div>
-        <p className="text-lab-text-muted text-xs">Determinando recompensa...</p>
       </div>
 
       {/* Phase 5: Result reveal */}
@@ -206,7 +202,7 @@ const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
 
         <div className="relative z-10">
           <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-lab-gold via-lab-primary to-lab-secondary bg-clip-text text-transparent">
-            Recompensa
+            Insignia obtenida
           </h3>
 
           {/* Points */}
@@ -214,11 +210,11 @@ const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
             <div className="my-6">
               <span
                 ref={pointsRef}
-                className="text-5xl font-black text-lab-gold"
+                className="text-7xl font-black text-lab-gold"
               >
                 +0
               </span>
-              <p className="text-lab-text-muted text-sm mt-1">puntos ganados</p>
+              <p className="text-lab-text-muted text-xs mt-1">puntos ganados</p>
             </div>
           )}
 
@@ -226,7 +222,7 @@ const RewardBox = ({ result, onClose, hidePoints = false }: RewardBoxProps) => {
           {badge && (
             <div className="my-6 p-4 rounded-2xl bg-lab-bg/50 border border-lab-gold/30">
               <p className="text-xs text-lab-gold font-semibold mb-3 uppercase tracking-wider">
-                Insignia obtenida
+                {badge.name || 'Insignia'}
               </p>
               <div className="flex flex-col items-center gap-2">
                 <img

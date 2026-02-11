@@ -153,7 +153,7 @@ const CardRenderer = ({ card, quizAnswers, onQuizAnswer }: CardRendererProps) =>
         return (
           <hr
             key={blockIndex}
-            className="border-0 h-px bg-gradient-to-r from-transparent via-lab-border to-transparent my-2"
+            className="border-0 h-px bg-gradient-to-r from-transparent via-lab-text-muted/30 to-transparent my-4"
           />
         );
 

@@ -362,15 +362,18 @@ const ModuleResults = ({
         >
           <p className="text-lab-text-muted text-sm mb-2">Puntos ganados</p>
           <div className="relative inline-block">
-            {/* Breathing glow behind the number */}
+            {/* Breathing glow behind the number — multiple layers for casino effect */}
             <div
               ref={glowRef}
-              className="absolute inset-0 -inset-x-8 -inset-y-4 rounded-full bg-lab-primary/30 blur-2xl pointer-events-none"
+              className="absolute -inset-x-16 -inset-y-10 rounded-full pointer-events-none"
               style={{ opacity: 0 }}
-            />
+            >
+              <div className="absolute inset-0 rounded-full bg-lab-gold/40 blur-3xl" />
+              <div className="absolute inset-4 rounded-full bg-lab-primary/30 blur-2xl" />
+            </div>
             <span
               ref={pointsNumberRef}
-              className="text-5xl font-black text-lab-gold inline-block relative"
+              className="text-7xl font-black text-lab-gold inline-block relative"
             >
               +0
             </span>
