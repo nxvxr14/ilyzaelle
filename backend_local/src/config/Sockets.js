@@ -3,6 +3,7 @@ import { gVar } from "../controllers/UpdateCodeBoardController.js";
 import { io } from "socket.io-client";
 import { generateBoardController } from "../controllers/GenerateBoardController.js";
 import { updateCodeBoardController } from "../controllers/UpdateCodeBoardController.js";
+import { startLogWatcher } from "../utils/logWatcher.js";
 
 class Sockets {
   constructor(url, serverAPIKey) {
@@ -18,6 +19,7 @@ class Sockets {
     });
 
     this.socketsEvents();
+    this.stopLogWatcher = null;
   }
 
   socketsEvents() {
@@ -25,6 +27,11 @@ class Sockets {
       console.log(`[devMessage] backend_local connected to Socket.IO server`);
       console.log(`[devMessage] Socket ID: ${this.socket.id}`);
       console.log(`[devMessage] API key: ${this.serverAPIKey}`);
+
+      // Start watching server.log and emit new lines to backend_dash
+      this.stopLogWatcher = startLogWatcher((line) => {
+        this.socket.emit("response-server-log-b-b", line);
+      });
     });
 
     this.socket.on("connect_error", (error) => {
@@ -33,6 +40,11 @@ class Sockets {
 
     this.socket.on("disconnect", (reason) => {
       console.log(`[devMessage] backend_local disconnected: ${reason}`);
+      // Stop watching server.log on disconnect
+      if (this.stopLogWatcher) {
+        this.stopLogWatcher();
+        this.stopLogWatcher = null;
+      }
     });
 
     /** EVENTOS DE SOCKET **/

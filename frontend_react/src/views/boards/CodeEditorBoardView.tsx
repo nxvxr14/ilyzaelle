@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
 import { getBoardById } from "@/api/BoardApi";
 import CodeEditorForm from '@/components/boards/CodeEditorForm';
+import Console from '@/components/boards/Console';
 import StatusLocalModal from "@/components/projects/StatusLocalModal";
 
 const boardNames: { [key: number]: string } = {
@@ -84,6 +85,11 @@ function CodeEditorBoardView() {
 
             {/* Code Editor */}
             <CodeEditorForm boardCode={data.boardCode} />
+
+            {/* Server Log Console */}
+            <div className="mt-6">
+                <Console />
+            </div>
         </div>
     );
 
