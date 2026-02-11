@@ -2,22 +2,29 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { SocketContext } from "@/context/SocketContext";
 
 const MAX_LINES = 500;
+const SCROLL_THRESHOLD = 40; // px from bottom to consider "at bottom"
 
 export default function Console() {
     const { socket } = useContext(SocketContext);
     const [lines, setLines] = useState<string[]>([]);
-    const bottomRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const isAtBottomRef = useRef(true);
+
+    // Track whether the user is scrolled to the bottom
+    const handleScroll = () => {
+        const el = scrollRef.current;
+        if (!el) return;
+        isAtBottomRef.current =
+            el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD;
+    };
 
     // Listen for new log lines from backend_local via the relay
     useEffect(() => {
-        console.log("[Console] useEffect fired, socket:", socket?.id ?? "null");
         if (!socket) return;
 
         const handleLogLine = (line: string) => {
-            console.log("[Console] Received log line:", line);
             setLines((prev) => {
                 const updated = [...prev, line];
-                // Cap at MAX_LINES to prevent unbounded memory growth
                 return updated.length > MAX_LINES ? updated.slice(-MAX_LINES) : updated;
             });
         };
@@ -29,9 +36,12 @@ export default function Console() {
         };
     }, [socket]);
 
-    // Auto-scroll to bottom when new lines arrive
+    // Auto-scroll only if user was already at the bottom
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        const el = scrollRef.current;
+        if (el && isAtBottomRef.current) {
+            el.scrollTop = el.scrollHeight;
+        }
     }, [lines]);
 
     const handleClear = () => {
@@ -59,7 +69,11 @@ export default function Console() {
 
             {/* Log output */}
             <div className="px-4 pb-4">
-                <div className="bg-[#1a1625] rounded-lg p-4 h-[30vh] overflow-y-auto font-mono text-sm">
+                <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className="bg-[#1a1625] rounded-lg p-4 h-[30vh] overflow-y-auto font-mono text-sm"
+                >
                     {lines.length === 0 ? (
                         <p className="text-gray-500 italic">Esperando logs del servidor...</p>
                     ) : (
@@ -69,7 +83,6 @@ export default function Console() {
                             </div>
                         ))
                     )}
-                    <div ref={bottomRef} />
                 </div>
             </div>
         </div>

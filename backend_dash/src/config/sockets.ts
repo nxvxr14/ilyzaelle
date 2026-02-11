@@ -69,7 +69,6 @@ class Sockets {
 
         // Relay new server.log lines from backend_local to frontend
         socket.on("response-server-log-b-b", (line) => {
-          console.log(`[LogRelay] Relaying log to room ${serverAPIKey}: ${String(line).substring(0, 80)}`);
           this.io.to(serverAPIKey).emit("response-server-log-b-f", line);
         });
 
