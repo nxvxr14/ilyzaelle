@@ -136,8 +136,7 @@ Runs ESLint with `@typescript-eslint`, `react-hooks`, and `react-refresh` plugin
 | `/projects/:projectId/dashboard` | `ProjectDashboardView` | Real-time dashboard |
 | `/projects/:projectId/dashboard-zone` | `DashboardZoneView` | HMI & SCADA builder |
 | `/projects/:projectId/boards/:boardId/code-editor` | `CodeEditorBoardView` | Monaco code editor |
-| `/projects/:projectId/ai-dashboard` | `AIDashboardView` | AI dashboard generator |
-| `/projects/:projectId/view-ai-dashboard` | `ViewAIDashboardView` | View AI dashboard (iframe) |
+| `/projects/:projectId/ai-dashboard` | `AIDashboardView` | AI dashboard generator (Cuki chat) |
 | `/public/dashboard/:dashCode` | `PublicDashboardView` | Public standalone dashboard |
 
 ---
