@@ -65,6 +65,29 @@ const collectQuizResults = (mod: Module, progress: Progress): QuizResultItem[] =
   return results;
 };
 
+const PARTICLE_COLORS = ['#fdcb6e', '#6c5ce7', '#00cec9', '#fd79a8', '#fff'];
+
+/**
+ * Creates particle elements inside a container for burst effect.
+ */
+const createParticles = (container: HTMLDivElement, count: number): HTMLDivElement[] => {
+  const particles: HTMLDivElement[] = [];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'absolute rounded-full pointer-events-none';
+    const size = Math.random() * 6 + 3;
+    p.style.width = `${size}px`;
+    p.style.height = `${size}px`;
+    p.style.background = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)] as string;
+    p.style.left = '50%';
+    p.style.top = '50%';
+    p.style.opacity = '0';
+    container.appendChild(p);
+    particles.push(p);
+  }
+  return particles;
+};
+
 const ModuleResults = ({
   mod,
   progress,
@@ -86,6 +109,7 @@ const ModuleResults = ({
   const pointsContainerRef = useRef<HTMLDivElement>(null);
   const pointsNumberRef = useRef<HTMLSpanElement>(null);
   const pointsButtonRef = useRef<HTMLButtonElement>(null);
+  const particlesRef = useRef<HTMLDivElement>(null);
   const chestContainerRef = useRef<HTMLDivElement>(null);
   const chestEmojiRef = useRef<HTMLDivElement>(null);
 
@@ -99,16 +123,12 @@ const ModuleResults = ({
     onSuccess: (response) => {
       const { reward, updatedTotalPoints } = response.data;
       setEarnedPoints(reward.points);
-
-      // Store the reward result for when they open the chest
       setRewardResult(reward);
 
-      // Update user totalPoints in AuthContext
       if (user) {
         updateUser({ ...user, totalPoints: updatedTotalPoints });
       }
 
-      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['progress', courseId] });
       queryClient.invalidateQueries({ queryKey: ['user-activity'] });
       queryClient.invalidateQueries({ queryKey: ['user-badges'] });
@@ -118,7 +138,6 @@ const ModuleResults = ({
   const openRewardBoxMutation = useMutation({
     mutationFn: () => endpoints.openRewardBox(courseId, moduleId),
     onSuccess: (response) => {
-      // Use the populated badge from openRewardBox response
       setRewardResult(response.data);
       setShowRewardBox(true);
     },
@@ -138,18 +157,24 @@ const ModuleResults = ({
     return () => { tl.kill(); };
   }, [phase]);
 
-  // Phase: points -> animate counter, then show "Continuar" button (no auto-advance)
+  // Phase: points -> animate counter + particle burst + show button
   useEffect(() => {
     if (phase !== 'points') return;
     const container = pointsContainerRef.current;
     const numEl = pointsNumberRef.current;
     const btnEl = pointsButtonRef.current;
-    if (!container || !numEl || !btnEl) return;
+    const particleContainer = particlesRef.current;
+    if (!container || !numEl || !btnEl || !particleContainer) return;
+
+    // Create particles for the burst
+    const particles = createParticles(particleContainer, 30);
 
     const tl = gsap.timeline();
 
+    // Fade in container
     tl.fromTo(container, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4 });
 
+    // Counter animation
     const counter = { val: 0 };
     tl.to(counter, {
       val: earnedPoints,
@@ -160,71 +185,100 @@ const ModuleResults = ({
       },
     }, '+=0.2');
 
-    // After counter finishes, animate in the "Continuar" button
-    tl.call(() => setPointsReady(true), [], '+=0.3');
+    // Particle burst when counter finishes
+    tl.to(numEl, {
+      scale: 1.3,
+      duration: 0.15,
+      ease: 'power2.out',
+    });
+    tl.to(numEl, {
+      scale: 1,
+      duration: 0.3,
+      ease: 'elastic.out(1, 0.4)',
+    });
+    tl.to(particles, {
+      x: () => (Math.random() - 0.5) * 300,
+      y: () => (Math.random() - 0.5) * 300,
+      scale: () => Math.random() * 2 + 0.5,
+      opacity: 1,
+      duration: 0.6,
+      stagger: 0.01,
+      ease: 'power3.out',
+    }, '<');
+    tl.to(particles, {
+      opacity: 0,
+      duration: 0.4,
+      ease: 'power2.in',
+    }, '-=0.1');
+
+    // Show "Continuar" button
+    tl.call(() => setPointsReady(true), [], '+=0.2');
     tl.fromTo(
       btnEl,
       { opacity: 0, y: 10 },
       { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
     );
 
-    return () => { tl.kill(); };
+    return () => {
+      tl.kill();
+      particles.forEach((p) => p.remove());
+    };
   }, [phase, earnedPoints]);
 
-  // Phase: chest -> dramatic GSAP animation on standalone chest
+  // Phase: chest -> entrance animation, then start continuous loops separately
   useEffect(() => {
-    if (phase !== 'chest' || !chestContainerRef.current || !chestEmojiRef.current) return;
+    if (phase !== 'chest') return;
     const container = chestContainerRef.current;
     const chest = chestEmojiRef.current;
+    if (!container || !chest) return;
 
-    const tl = gsap.timeline();
+    // Entrance timeline (finite — will complete)
+    const entranceTl = gsap.timeline({
+      onComplete: () => {
+        // Start continuous animations AFTER entrance finishes
+        gsap.to(chest, {
+          y: -12,
+          duration: 1.2,
+          ease: 'sine.inOut',
+          yoyo: true,
+          repeat: -1,
+        });
+        gsap.to(chest, {
+          boxShadow: '0 0 40px rgba(253, 203, 110, 0.6), 0 0 80px rgba(108, 92, 231, 0.3)',
+          duration: 1.5,
+          ease: 'sine.inOut',
+          yoyo: true,
+          repeat: -1,
+        });
+      },
+    });
 
-    // Fade in container
-    tl.fromTo(
+    entranceTl.fromTo(
       container,
       { opacity: 0 },
       { opacity: 1, duration: 0.3 }
     );
 
-    // Chest enters with a dramatic scale + bounce
-    tl.fromTo(
+    entranceTl.fromTo(
       chest,
       { scale: 0, rotation: -20 },
       { scale: 1, rotation: 0, duration: 0.6, ease: 'back.out(2)' }
     );
 
-    // Continuous floating/bobbing animation
-    tl.to(chest, {
-      y: -12,
-      duration: 1.2,
-      ease: 'sine.inOut',
-      yoyo: true,
-      repeat: -1,
-    });
-
-    // Subtle glow pulse (via boxShadow)
-    gsap.to(chest, {
-      boxShadow: '0 0 40px rgba(253, 203, 110, 0.6), 0 0 80px rgba(108, 92, 231, 0.3)',
-      duration: 1.5,
-      ease: 'sine.inOut',
-      yoyo: true,
-      repeat: -1,
-      delay: 0.6,
-    });
-
-    return () => { tl.kill(); gsap.killTweensOf(chest); };
+    return () => {
+      entranceTl.kill();
+      gsap.killTweensOf(chest);
+    };
   }, [phase]);
 
   // --- Handlers ---
 
   const handleQuizContinue = () => {
-    // Call completeModule, then transition to points phase
     completeModuleMutation.mutate(undefined, {
       onSuccess: () => {
         setPhase('points');
       },
       onError: () => {
-        // If module already completed, still show points
         setEarnedPoints(mod.points);
         setPhase('points');
       },
@@ -311,20 +365,27 @@ const ModuleResults = ({
         </div>
       )}
 
-      {/* Phase 2: Points Animation + Continuar button */}
+      {/* Phase 2: Points Animation + particle burst + Continuar button */}
       {phase === 'points' && (
         <div
           ref={pointsContainerRef}
-          className="text-center"
+          className="text-center relative"
           style={{ opacity: 0 }}
         >
           <p className="text-lab-text-muted text-sm mb-2">Puntos ganados</p>
-          <span
-            ref={pointsNumberRef}
-            className="text-5xl font-black text-lab-gold"
-          >
-            +0
-          </span>
+          <div className="relative inline-block">
+            <span
+              ref={pointsNumberRef}
+              className="text-5xl font-black text-lab-gold inline-block"
+            >
+              +0
+            </span>
+            {/* Particle container — positioned over the number */}
+            <div
+              ref={particlesRef}
+              className="absolute inset-0 pointer-events-none overflow-visible"
+            />
+          </div>
           <p className="text-lab-text-muted text-xs mt-2">
             {mod.points} base{totalQuizzes > 0 ? ` + ${earnedPoints - mod.points} quiz bonus` : ''}
           </p>

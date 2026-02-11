@@ -33,6 +33,7 @@ const CourseDetailPage = () => {
     queryKey: ['progress', id],
     queryFn: () => endpoints.getCourseProgress(id!).then((r) => r.data).catch(() => null),
     enabled: !!id,
+    retry: false,
   });
 
   const enrollMutation = useMutation({

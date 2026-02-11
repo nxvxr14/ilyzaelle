@@ -203,12 +203,14 @@ const ModuleViewPage = () => {
             <div className="flex-1 flex items-stretch min-h-0 overflow-hidden w-full justify-center">
               <div className="w-full max-w-lg lg:max-w-4xl flex flex-col min-h-0">
                 <CardTransition transitionKey={currentCard._id}>
-                  <div className="card w-full flex-1 min-h-0 overflow-y-auto p-4 flex flex-col justify-center">
-                    <CardRenderer
-                      card={currentCard}
-                      quizAnswers={quizAnswers}
-                      onQuizAnswer={handleQuizAnswer}
-                    />
+                  <div className="card w-full flex-1 min-h-0 overflow-y-auto p-4">
+                    <div className="min-h-full flex flex-col justify-center">
+                      <CardRenderer
+                        card={currentCard}
+                        quizAnswers={quizAnswers}
+                        onQuizAnswer={handleQuizAnswer}
+                      />
+                    </div>
                   </div>
                 </CardTransition>
               </div>
