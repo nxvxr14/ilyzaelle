@@ -31,7 +31,7 @@ export default function ProjectForm({ register, errors }: ProjectFormProps) {
                 )}
             </div>
 
-            <div className="mb-6">
+            {/* <div className="mb-6">
                 <label 
                     htmlFor="server" 
                     className="block text-gray-700 font-bold mb-2 text-lg"
@@ -50,7 +50,7 @@ export default function ProjectForm({ register, errors }: ProjectFormProps) {
                 {errors.server && (
                     <ErrorMessage>{errors.server.message}</ErrorMessage>
                 )}
-            </div>
+            </div> */}
 
             <div className="mb-6">
                 <label 

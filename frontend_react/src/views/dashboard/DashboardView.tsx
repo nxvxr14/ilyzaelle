@@ -184,12 +184,12 @@ export default function DashboardView() {
                                         </Link>
                                         
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 mb-2">
-                                            <p className="text-sm text-indigo-600 font-medium flex items-center">
+                                            {/* <p className="text-sm text-indigo-600 font-medium flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                                                 </svg>
                                                 <span className="font-semibold">Gateway:</span> <span className="ml-1 font-mono">{project.server}</span>
-                                            </p>
+                                            </p> */}
                                             
                                             <p className="text-sm text-emerald-600 font-medium flex items-center mt-1 sm:mt-0">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -117,13 +117,13 @@ function ProjectDetailsView() {
                         </div>
                         
                         <div className="flex flex-col gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100 w-full md:w-auto">
-                            <p className="text-sm text-indigo-600 font-medium flex items-center">
+                            {/* <p className="text-sm text-indigo-600 font-medium flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                                 </svg>
                                 <span className="font-semibold">Gateway:</span> 
                                 <span className="ml-1 font-mono bg-gray-100 px-2 py-1 rounded">{data.server}</span>
-                            </p>
+                            </p> */}
                             
                             <p className="text-sm text-emerald-600 font-medium flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
