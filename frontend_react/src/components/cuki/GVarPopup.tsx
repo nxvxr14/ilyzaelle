@@ -13,6 +13,16 @@ const getVarType = (value: unknown): string => {
   return typeof value;
 };
 
+const getVarTypeSpanish = (type: string): string => {
+  switch (type) {
+    case "number": return "numerica";
+    case "boolean": return "booleana";
+    case "array": return "arreglo";
+    case "string": return "texto";
+    default: return type;
+  }
+};
+
 const getTypeColor = (type: string): string => {
   switch (type) {
     case "number":
@@ -68,12 +78,13 @@ const GVarPopup = ({ gVarData, onClose, onInsert }: GVarPopupProps) => {
         ) : (
           entries.map(([key, value]) => {
             const type = getVarType(value);
+            const typeEs = getVarTypeSpanish(type);
             return (
               <button
                 key={key}
-                onClick={() => onInsert(key)}
+                onClick={() => onInsert(`variable ${typeEs} ${key}`)}
                 className="w-full text-left px-3 py-2 hover:bg-[#2a2435] transition-colors cursor-pointer border-b border-gray-800 last:border-b-0"
-                title={`Insertar "${key}" en el prompt`}
+                title={`Insertar "variable ${typeEs} ${key}" en el prompt`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm text-white font-mono truncate">

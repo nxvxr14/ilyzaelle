@@ -2,9 +2,10 @@ import { getProjectById } from "@/api/ProjectApi";
 import { updateAIDashWithCode, getAIChatHistory, addAIChatMessages, clearAIChatHistory, AIChatMessage } from "@/api/ProjectApi";
 import { SocketContext } from "@/context/SocketContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState, useRef, useCallback } from "react";
 import { Navigate, useParams, useNavigate } from "react-router-dom";
 import GVarPopup from "@/components/cuki/GVarPopup";
+import CukiMessage from "@/components/cuki/CukiMessage";
 
 const CUKI_IA_API = import.meta.env.VITE_CUKI_IA_API;
 
@@ -24,6 +25,8 @@ const AIDashboardView = () => {
   const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([]);
   const [dashCode, setDashCode] = useState<string>("");
   const [showGVarPopup, setShowGVarPopup] = useState(false);
+  const [failedMessage, setFailedMessage] = useState<string | null>(null);
+  const retryFlagRef = useRef(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -261,12 +264,16 @@ INSTRUCCIONES IMPORTANTES:
     setIsGenerating(true);
     setError("");
     setAiResponse("");
+    setFailedMessage(null);
 
     const userMessage: AIChatMessage = { role: 'user', content: prompt };
+    const currentPrompt = prompt;
+    setPrompt("");
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setChatMessages(prev => [...prev, userMessage]);
 
     const contextMessages = getLast5Messages();
-    contextMessages.push({ role: 'user', content: prompt });
+    contextMessages.push({ role: 'user', content: currentPrompt });
 
     const totalInputTokens = calculateTotalTokens(contextMessages);
     console.group('%c[Cuki] Enviando mensaje a la API', 'color: #9333ea; font-weight: bold; font-size: 14px;');
@@ -334,17 +341,44 @@ INSTRUCCIONES IMPORTANTES:
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
+      setFailedMessage(currentPrompt);
     } finally {
       setIsGenerating(false);
-      setPrompt("");
     }
   };
 
   const handleNewChat = () => {
     if (confirm("Iniciar un nuevo chat? Se eliminara todo el historial.")) {
       clearHistoryMutation.mutate();
+      setFailedMessage(null);
     }
   };
+
+  const handleRetry = () => {
+    if (!failedMessage) return;
+    // Remove the failed user message before resending
+    setChatMessages(prev => {
+      const last = prev[prev.length - 1];
+      if (last && last.role === 'user' && last.content === failedMessage) {
+        return prev.slice(0, -1);
+      }
+      return prev;
+    });
+    const retryPrompt = failedMessage;
+    setFailedMessage(null);
+    setError("");
+    setPrompt(retryPrompt);
+    retryFlagRef.current = true;
+  };
+
+  // Auto-send on retry
+  useEffect(() => {
+    if (retryFlagRef.current && prompt.trim() && !isGenerating) {
+      retryFlagRef.current = false;
+      handleGenerateAI();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prompt]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -354,6 +388,16 @@ INSTRUCCIONES IMPORTANTES:
       }
     }
   };
+
+  // Auto-resize textarea up to 7 lines
+  const autoResizeTextarea = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const lineHeight = 20; // text-sm (~14px) * line-height (~1.43)
+    const maxHeight = lineHeight * 7 + 24; // 7 lines + vertical padding (py-3 = 12px * 2)
+    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+  }, []);
 
   // --- Render ---
 
@@ -445,23 +489,45 @@ INSTRUCCIONES IMPORTANTES:
                 <p className="text-xs font-semibold mb-1 opacity-70">
                   {msg.role === 'user' ? 'Tu' : 'Cuki'}
                 </p>
-                <p className="text-sm whitespace-pre-wrap break-words">
-                  {msg.content.length > 800
-                    ? msg.content.substring(0, 800) + '...'
-                    : msg.content}
-                </p>
+                {msg.role === 'user' ? (
+                  <p className="text-sm whitespace-pre-wrap break-words">
+                    {msg.content}
+                  </p>
+                ) : (
+                  <CukiMessage content={msg.content} />
+                )}
               </div>
             </div>
           ))}
+
+          {/* Error with retry button */}
+          {error && !isGenerating && (
+            <div className="flex justify-end">
+              <div className="max-w-[80%] space-y-2">
+                <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300 text-sm">
+                  {error}
+                </div>
+                {failedMessage && (
+                  <button
+                    onClick={handleRetry}
+                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-[#2a2435] cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Reintentar
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Streaming response */}
           {aiResponse && isGenerating && (
             <div className="flex justify-start">
               <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-[#1a1625] text-gray-200 border border-gray-800">
                 <p className="text-xs font-semibold mb-1 opacity-70">Cuki</p>
-                <pre className="text-sm whitespace-pre-wrap break-words overflow-x-auto max-h-64 overflow-y-auto">
-                  {aiResponse}
-                </pre>
+                <CukiMessage content={aiResponse} />
               </div>
             </div>
           )}
@@ -482,15 +548,6 @@ INSTRUCCIONES IMPORTANTES:
           )}
         </div>
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="mx-4 mb-2">
-          <div className="max-w-3xl mx-auto p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
-            {error}
-          </div>
-        </div>
-      )}
 
       {/* Input bar */}
       <div className="border-t border-gray-800 bg-[#1a1625] px-4 py-3">
@@ -522,13 +579,17 @@ INSTRUCCIONES IMPORTANTES:
           <textarea
             ref={textareaRef}
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => {
+              setPrompt(e.target.value);
+              autoResizeTextarea();
+            }}
             onKeyDown={handleKeyDown}
             placeholder={chatMessages.length > 0
               ? "Describe los cambios que necesitas..."
               : "Describe el dashboard que deseas generar..."
             }
-            className="flex-1 bg-[#120d18] text-white border border-gray-700 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-600 min-h-[44px] max-h-32"
+            className="flex-1 bg-[#120d18] text-white border border-gray-700 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-600 min-h-[44px] overflow-y-auto"
+            style={{ maxHeight: `${20 * 7 + 24}px` }}
             rows={1}
             disabled={isGenerating}
           />
