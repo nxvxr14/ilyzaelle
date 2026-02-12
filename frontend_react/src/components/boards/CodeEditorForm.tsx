@@ -26,7 +26,7 @@ export default function CodeEditorForm({ boardCode }: CodeEditorFormData) {
             className="bg-[#120d18] rounded-2xl overflow-hidden"
         >
             {/* Header with editor title and action buttons */}
-            <div className="flex justify-between items-center p-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4">
                 <h2
                     className="text-3xl text-[#d4d4d4] font-bold cursor-pointer pl-2"
                     onClick={() => scrollToSection(editorRef)}
@@ -35,7 +35,7 @@ export default function CodeEditorForm({ boardCode }: CodeEditorFormData) {
                 </h2>
                 
                 {/* Action buttons */}
-                <div className="flex space-x-3">
+                <div className="flex flex-wrap gap-3 w-full sm:w-auto">
                     <CodeEditorModal boardCode={code} projectId={projectId} boardId={boardId} />
                 </div>
             </div>

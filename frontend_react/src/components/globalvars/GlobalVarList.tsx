@@ -87,7 +87,7 @@ function GlobalVarList({
         gVar={gVarData[selectedKey]}
       />
       <div className="w-full flex flex-col">
-        <div className="overflow-hidden shadow-lg rounded-xl border border-gray-200">
+        <div className="overflow-x-auto shadow-lg rounded-xl border border-gray-200">
           {gVarData && (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
