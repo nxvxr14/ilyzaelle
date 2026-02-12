@@ -14,7 +14,7 @@ function InputVar({ selectedVar, gVar, serverAPIKey }: varProps) {
     // Use '!' to assert that the value will always be present in the params
     const projectId = params.projectId!;
 
-    const [inputVar, setInputVar] = useState<number>(gVar[selectedVar]); // Inicializamos con el valor actual
+    const [inputVar, setInputVar] = useState<string>(String(gVar[selectedVar] ?? ''));
     const { socket } = useContext(SocketContext);
 
     const handleUpdateClick = () => {
@@ -22,22 +22,21 @@ function InputVar({ selectedVar, gVar, serverAPIKey }: varProps) {
             console.error("Socket not connected");
             return;
         }
-        console.log("input "+gVar[selectedVar]+" new value: "+inputVar+" with serverAPIKey: "+serverAPIKey);
-        socket.emit("request-gVariable-change-f-b", selectedVar, inputVar, projectId, serverAPIKey, (response: any) => {
-            // Callback para confirmar que el servidor recibió el evento
+        const numericValue = inputVar === '' ? 0 : Number(inputVar);
+        console.log("input "+gVar[selectedVar]+" new value: "+numericValue+" with serverAPIKey: "+serverAPIKey);
+        socket.emit("request-gVariable-change-f-b", selectedVar, numericValue, projectId, serverAPIKey, (response: any) => {
             console.log("Server acknowledged the update:", response);
         });
     };
 
     return (
         <div className="space-y-5">
-            {/* {gVar[selectedVar]} */}
             <input
                 className="w-full p-3 border-gray-300 border rounded-2xl"
                 type="number"
                 placeholder="variable"
-                value={inputVar} // Usar value en lugar de defaultValue para control completo
-                onChange={(e) => setInputVar(Number(e.target.value))}
+                value={inputVar}
+                onChange={(e) => setInputVar(e.target.value)}
             />
             <button
                 className="bg-black text-white hover:bg-[#FFFF44] hover:text-black font-bold px-10 py-3 text-xl cursor-pointer transition-colors rounded-2xl"

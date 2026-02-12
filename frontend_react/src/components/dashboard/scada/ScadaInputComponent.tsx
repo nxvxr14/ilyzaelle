@@ -17,16 +17,16 @@ const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({
   const projectId = params.projectId!;
   const { socket } = useContext(SocketContext);
   
-  const [inputValue, setInputValue] = useState<number>(gVar[selectedVar] || 0);
+  const [inputValue, setInputValue] = useState<string>(String(gVar[selectedVar] ?? ''));
   
   const handleUpdate = () => {
     if (socket) {
-      // Incluir serverAPIKey en la emisión del socket
-      socket.emit("request-gVariable-change-f-b", selectedVar, inputValue, projectId, serverAPIKey, (response: any) => {
+      const numericValue = inputValue === '' ? 0 : Number(inputValue);
+      socket.emit("request-gVariable-change-f-b", selectedVar, numericValue, projectId, serverAPIKey, (response: any) => {
         console.log("Server acknowledged scada input update:", response);
       });
       
-      console.log(`SCADA Input: Updating ${selectedVar} to ${inputValue} with serverAPIKey: ${serverAPIKey}`);
+      console.log(`SCADA Input: Updating ${selectedVar} to ${numericValue} with serverAPIKey: ${serverAPIKey}`);
     }
   };
   
@@ -35,7 +35,7 @@ const ScadaInputComponent: React.FC<ScadaInputComponentProps> = ({
       <input
         type="number"
         value={inputValue}
-        onChange={(e) => setInputValue(Number(e.target.value))}
+        onChange={(e) => setInputValue(e.target.value)}
         className="w-16 h-6 text-sm text-center rounded border border-gray-600 bg-gray-800 text-white"
       />
       <button

@@ -10,9 +10,10 @@ type DataVarChartModalProps = {
   dataName: string;
   dataId: string;
   timeId: string;
+  timeVar: number[];
 }
 
-function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }: DataVarChartModalProps) {
+function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId, timeVar }: DataVarChartModalProps) {
   const [viewMode, setViewMode] = useState<'standard' | 'scrollable'>('scrollable');
   const [showIds, setShowIds] = useState(false);
   const [showApiUrls, setShowApiUrls] = useState(false);
@@ -32,28 +33,17 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
   // Create a data object structure similar to what Chart component expects
   const chartData: any = {
     [dataName]: dataVar,
-    [`${dataName}_time`]: [] // Will be populated if we find the time vector
+    [`${dataName}_time`]: [] // Will be populated from timeVar prop or generated
   };
 
-  // Try to find the corresponding time vector in localStorage
-  const storageKey = `${dataName}_time_vector`;
-  const timeVectorJSON = localStorage.getItem(storageKey);
-  
-  if (timeVectorJSON) {
-    try {
-      chartData[`${dataName}_time`] = JSON.parse(timeVectorJSON);
-    } catch (e) {
-      console.error("Error parsing time vector from localStorage:", e);
-    }
+  // Use time vector from props; fall back to sequential timestamps if empty
+  if (timeVar.length > 0) {
+    chartData[`${dataName}_time`] = timeVar;
   } else {
-    // If no specific time vector, generate simple sequential timestamps
     const now = Date.now();
     for (let i = 0; i < dataVar.length; i++) {
       chartData[`${dataName}_time`].push(now - (dataVar.length - i - 1) * 1000);
     }
-    
-    // Store for future use
-    localStorage.setItem(storageKey, JSON.stringify(chartData[`${dataName}_time`]));
   }
 
   // Alinear ambos vectores a la misma longitud (la menor) para evitar desfase
