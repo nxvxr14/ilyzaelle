@@ -160,7 +160,7 @@ function ProjectDetailsView() {
             </div>
 
             {/* Controllers Section */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-10">
+            <div className="bg-white rounded-xl shadow-md p-6 mb-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
                     <h2 className="text-3xl font-black text-gray-800 mb-3 md:mb-0 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

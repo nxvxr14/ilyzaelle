@@ -155,7 +155,7 @@ function DataVarList({ dataVars }: { dataVars: any[] }) {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-gray-700">
-                                            {new Date(item.createdAt).toLocaleString()}
+                                            {new Date(item.createdAt).toLocaleDateString('es-CL', { day: 'numeric', month: 'numeric', year: '2-digit' })}, {new Date(item.createdAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">

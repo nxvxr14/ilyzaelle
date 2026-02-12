@@ -65,18 +65,12 @@ function Chart({ selectedVar, gVar }: varProps) {
     const timeKey = `${selectedVar}_time`;
     
     useEffect(() => {
-        console.log('Chart rendering for variable:', selectedVar);
-        console.log('Available keys in gVar:', Object.keys(gVar));
-        console.log('Using time vector:', timeKey in gVar ? timeKey : 'global time');
-    }, [selectedVar, gVar, timeKey]);
-    
-    const timeVector = gVar[timeKey] || [];
-    
-    useEffect(() => {
         if (!gVar[timeKey] && Array.isArray(gVar[selectedVar])) {
             console.warn(`Missing time vector for array "${selectedVar}". This should be fixed in the backend.`);
         }
     }, [timeKey, selectedVar, gVar]);
+    
+    const timeVector = gVar[timeKey] || [];
     
     const earliestTime = timeVector.length > 0 ? Math.min(...timeVector) : 0;
     

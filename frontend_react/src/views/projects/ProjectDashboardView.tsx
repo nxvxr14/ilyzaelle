@@ -37,13 +37,11 @@ const ProjectDashboardView = () => {
                 // Solo actualizar si la respuesta es del servidor que nos interesa
                 if (responseServerAPIKey === serverAPIKey) {
                     setGVarData(gVarData);
-                    console.log(`Received gVar update for project ${projectId} from server ${responseServerAPIKey}`);
                 }
             };
 
             // Escuchar el evento para cuando no hay servidor disponible
             const handleNoServer = (data: any) => {
-                console.log(`No server available for project ${data.projectId} with API key ${data.serverAPIKey}`);
                 // Puedes mostrar un mensaje al usuario o establecer un estado
             };
 
@@ -58,7 +56,6 @@ const ProjectDashboardView = () => {
 
             // Cleanup function
             return () => {
-                console.log('Unmounting ProjectDashboardView and cleaning up listeners');
                 clearInterval(intervalId);
                 socket.off('response-gVar-update-b-f', handleUpdateGVar);
                 socket.off('no-server-available', handleNoServer);

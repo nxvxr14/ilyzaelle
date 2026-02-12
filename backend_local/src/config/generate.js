@@ -94,31 +94,31 @@ export const connectBoard = ({ data }) => {
     // Original code for all other boardTypes
     // Función auxiliar para manejar el cierre de la placa
     const handleBoardClose = () => {
-      console.log(`Closed! ${boardType}`);
+      console.log(`[GenerateBoardController] Closed! ${boardType}`);
       clearTimersById(_id);
       if (boardConnect === 1) {
         boards[_id].transport.close();
-        console.log("cerrado USB");
+        console.log("[GenerateBoardController] cerrado USB");
       }
       // Si es una conexión WiFi, también necesitamos cerrar el puente virtual
       if (boardConnect === 2 && boardType == 2) {
-        console.log("cerrado USB virtual");
+        console.log("[GenerateBoardController] cerrado USB virtual");
         virtualBridges[_id].close();
       }
       if (boardConnect === 2 && boardType == 3) {
-        console.log("cerrado esp wifi");
-        console.log(`Closing active socket for ${_id}`);
+        console.log("[GenerateBoardController] cerrado esp wifi");
+        console.log(`[GenerateBoardController] Closing active socket for ${_id}`);
         activeSockets[_id].end(); // Gracefully end the connection
         activeSockets[_id].destroy();
         delete activeSockets[_id];
         tcpIpClient[_id].close(() => {
-          console.log(`TCP server on port ${boardInfo.port} closed`);
+          console.log(`[GenerateBoardController] TCP server on port ${boardInfo.port} closed`);
         });
         delete tcpIpClient[_id];
         //tcpIpClient[_id].close();
       }
       boards[_id].isReady = false;
-      console.log("isReady?" + boards[_id].isReady);
+      console.log("[GenerateBoardController] isReady?" + boards[_id].isReady);
       resolve();
     };
 
@@ -213,7 +213,7 @@ export const connectBoard = ({ data }) => {
         }
 
         boards[_id].on("close", () => {
-          console.log("onclose");
+          console.log("[GenerateBoardController] onclose");
           if (!boardConnect === 2 && !boardType == 3)
             boards[_id].transport.close();
           boards[_id].isReady = false;

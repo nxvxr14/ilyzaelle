@@ -61,7 +61,6 @@ class Sockets {
         this.socket.emit("response-gVar-update-b-b", gVar[projectId], projectId);
         //console.log(`Sent gVar update for project ${projectId} with API key ${this.serverAPIKey}`);
       } else {
-        console.log(`No data available for project ${projectId}`);
         // Enviar un objeto vacío para evitar errores en el frontend
         this.socket.emit("response-gVar-update-b-b", {}, projectId);
       }
@@ -69,7 +68,6 @@ class Sockets {
 
     this.socket.on("request-gVariable-delete-b-b", (projectId, key) => {
       if (!gVar[projectId]) {
-        console.log(`No data available for project ${projectId}`);
         return;
       }
       
@@ -161,11 +159,8 @@ class Sockets {
 
     // New event: Handle polling boards request from backend_dash
     this.socket.on("request-polling-boards-b-b", async (pollingData, requestId) => {
-      console.log(`[POLLING BOARDS] Received request: ${requestId}`);
-      console.log(`[POLLING BOARDS] Data:`, JSON.stringify(pollingData, null, 2));
       try {
         await generateBoardController(pollingData);
-        console.log(`[POLLING BOARDS] Success for request: ${requestId}`);
         this.socket.emit("response-polling-boards-b-b", { 
           success: true, 
           message: "Boards data polled successfully." 
@@ -225,7 +220,6 @@ class Sockets {
         
         // Create time vector if it doesn't exist
         if (!gVar[projectId][timeKey]) {
-          console.log(`Creating missing time vector for ${key}`);
           const timeVector = [];
           const now = Date.now();
           

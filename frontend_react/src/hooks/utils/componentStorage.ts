@@ -37,7 +37,6 @@ export const saveComponents = (
   try {
     const storageKey = `dashboard-${componentType}-${projectId}`;
     localStorage.setItem(storageKey, JSON.stringify(components));
-    console.log(`Saved ${componentType} for project ${projectId}:`, components);
   } catch (error) {
     console.error(`Error saving ${componentType} to localStorage:`, error);
   }
@@ -50,7 +49,6 @@ export const clearComponents = (projectId: string, componentType: string): void 
   try {
     const storageKey = `dashboard-${componentType}-${projectId}`;
     localStorage.removeItem(storageKey);
-    console.log(`Cleared ${componentType} for project ${projectId}`);
   } catch (error) {
     console.error(`Error clearing ${componentType} from localStorage:`, error);
   }
@@ -64,7 +62,6 @@ export const clearAllComponents = (projectId: string): void => {
     clearComponents(projectId, 'charts');
     clearComponents(projectId, 'inputs');
     clearComponents(projectId, 'labels');
-    console.log(`Cleared all components for project ${projectId}`);
   } catch (error) {
     console.error('Error clearing components from localStorage:', error);
   }

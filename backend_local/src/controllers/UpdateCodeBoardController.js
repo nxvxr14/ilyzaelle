@@ -68,7 +68,7 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
           //   boards[_id].reportDigitalPin(i, 0); // 0 para detener el reporte
           // }
         }
-        console.log(`Listeners digitales removidos para board ${_id}.`);
+        console.log(`[GenerateBoardController] Listeners digitales removidos para board ${_id}.`);
 
         for (let i = 0; i < boards[_id].analogPins.length; i++) {
           // El nombre del evento análogo usa el índice del canal (0, 1, 2...)
@@ -79,7 +79,6 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
           // Opcional: Para detener el reporte desde el Arduino (más eficiente)
           // boards[_id].reportAnalogPin(i, 0); // 0 para detener el reporte, usa el índice del canal análogo
         }
-        console.log(`Listeners análogos removidos para board ${_id}.`);
       }
 
       if (clients[_id]) {

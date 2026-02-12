@@ -49,8 +49,6 @@ export function useComponentManager(projectId: string, gVarData: any) {
 
     const loadAndValidateComponents = () => {
       try {
-        console.log(`Loading dashboard data for project: ${projectId}`);
-        
         // Load data from storage
         const storedCharts = loadComponents(projectId, 'charts');
         const storedInputs = loadComponents(projectId, 'inputs');
@@ -407,11 +405,10 @@ export function useComponentManager(projectId: string, gVarData: any) {
     if (!projectId || !gVarData) return;
     
     try {
-      console.log('Loading SCADA components from localStorage');
-      const storedComponentsJson = localStorage.getItem(`${projectId}_scada_components`);
+      const storedComponents = localStorage.getItem(`${projectId}_scada_components`);
       
-      if (storedComponentsJson) {
-        const parsedComponents = JSON.parse(storedComponentsJson);
+      if (storedComponents) {
+        const parsedComponents = JSON.parse(storedComponents);
         
         // Validar componentes y sus posiciones
         const validComponents = parsedComponents.filter((comp: ScadaComponent) => {
@@ -424,14 +421,8 @@ export function useComponentManager(projectId: string, gVarData: any) {
                          typeof comp.position.y === 'number' &&
                          gVarData[comp.selectedVar] !== undefined;
           
-          if (!isValid) {
-            console.warn(`Skipping invalid SCADA component:`, comp);
-          }
-          
           return isValid;
         });
-        
-        console.log(`Loaded ${validComponents.length} valid SCADA components`);
         
         // Solo actualizar si hay componentes válidos
         if (validComponents.length > 0) {
@@ -450,7 +441,6 @@ export function useComponentManager(projectId: string, gVarData: any) {
     try {
       const storageKey = `${projectId}_scada_components`;
       localStorage.setItem(storageKey, JSON.stringify(components));
-      console.log(`Successfully saved ${components.length} SCADA components to localStorage`);
       
       // Verificar que se guardó correctamente
       const savedData = localStorage.getItem(storageKey);

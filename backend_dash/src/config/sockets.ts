@@ -46,7 +46,6 @@ class Sockets {
           if (!projectId) return;
           // Enviando solo a la sala específica basada en el serverAPIKey
           this.io.to(serverAPIKey).emit("response-gVar-update-b-f", data, serverAPIKey);
-          console.log(`Backend local ${serverAPIKey} responded with data for project ${projectId}`);
         });
 
         // Response from backend_local for polling boards
@@ -96,7 +95,6 @@ class Sockets {
           // Modificado: Enviar solo al servidor específico que coincide con clientServerAPIKey
           if (clientServerAPIKey && this.connectedServers.has(clientServerAPIKey)) {
             this.io.to(clientServerAPIKey).emit("request-gVar-update-b-b", projectId);
-            console.log(`Frontend requesting data for project ${projectId} from server ${clientServerAPIKey}`);
           } else {
             console.log(`No server available for API key: ${clientServerAPIKey}`);
             // Notificar al cliente que no hay servidor disponible
