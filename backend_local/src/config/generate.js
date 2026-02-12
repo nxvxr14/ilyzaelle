@@ -4,8 +4,6 @@ import {
   updateCodeBoardController,
 } from "../controllers/UpdateCodeBoardController.js";
 import { clearTimersById } from "../controllers/ClearTimers.js";
-// Import the new Xelorium library
-import { xelInterval, xelTimeout } from "../utils/xelTIME.js";
 // Import the ESP32 functions including the new disconnect function
 import {
   setConnection,

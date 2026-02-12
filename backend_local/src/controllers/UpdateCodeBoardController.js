@@ -2,7 +2,6 @@
 import { boards } from "../config/generate.js";
 import { SerialPort, firmata } from "../config/index.js";
 import { clearTimersById } from "./ClearTimers.js";
-import { xelInterval, xelTimeout } from "../utils/xelTIME.js";
 import {
   setConnection,
   getAvailableVariables,
@@ -84,6 +83,13 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
       if (clients[_id]) {
         clearMQTTListeners(_id);
       }
+
+      // Crear versiones locales de setTimeout/setInterval que inyectan _id automáticamente.
+      // eval() ejecuta en el scope léxico local, así que el boardCode verá estas versiones
+      // en lugar de las globales. ClearTimers.js extraerá el _id para trackear los timers.
+      const setTimeout = (fn, delay, ...args) => global.setTimeout(fn, delay, ...args, _id);
+      const setInterval = (fn, delay, ...args) => global.setInterval(fn, delay, ...args, _id);
+
       eval(boardCode);
       resolve();
     } catch (error) {
