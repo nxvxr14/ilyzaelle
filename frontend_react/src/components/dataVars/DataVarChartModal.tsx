@@ -56,8 +56,15 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
     localStorage.setItem(storageKey, JSON.stringify(chartData[`${dataName}_time`]));
   }
 
+  // Alinear ambos vectores a la misma longitud (la menor) para evitar desfase
+  const dataValues: any[] = chartData[dataName] || [];
+  const timeValues: any[] = chartData[`${dataName}_time`] || [];
+  const alignedLength = Math.min(dataValues.length, timeValues.length);
+  chartData[dataName] = dataValues.slice(0, alignedLength);
+  chartData[`${dataName}_time`] = timeValues.slice(0, alignedLength);
+
   // Timestamp base del dataset completo (primer dato) para mantener coherencia en el eje X
-  const fullTimeVector = chartData[`${dataName}_time`] || [];
+  const fullTimeVector = chartData[`${dataName}_time`];
   const globalEarliestTime = fullTimeVector.length > 0 ? Math.min(...fullTimeVector) : 0;
 
   // Build last-30 data slice for "Últimos 30" view
