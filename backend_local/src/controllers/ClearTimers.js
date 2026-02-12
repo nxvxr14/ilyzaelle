@@ -26,22 +26,40 @@ const originalSetInterval = global.setInterval;
 
 // Sobrescribir setTimeout
 global.setTimeout = (...args) => {
-  const _id = args[args.length - 1]._id; // Asumir que el último argumento tiene el _id
-  if (!timerIds.has(_id)) {
-    timerIds.set(_id, { timeouts: new Set(), intervals: new Set() });
+  const _id = args.length > 2 ? args[args.length - 1] : null;
+  const cleanArgs = _id ? args.slice(0, -1) : args;
+
+  if (_id) {
+    if (!timerIds.has(_id)) {
+      timerIds.set(_id, { timeouts: new Set(), intervals: new Set() });
+    }
   }
-  const timer = originalSetTimeout(...args);
-  timerIds.get(_id).timeouts.add(timer);
+
+  const timer = originalSetTimeout(...cleanArgs);
+
+  if (_id) {
+    timerIds.get(_id).timeouts.add(timer);
+  }
+
   return timer;
 };
 
 // Sobrescribir setInterval
 global.setInterval = (...args) => {
-  const _id = args[args.length - 1]._id; // Asumir que el último argumento tiene el _id
-  if (!timerIds.has(_id)) {
-    timerIds.set(_id, { timeouts: new Set(), intervals: new Set() });
+  const _id = args.length > 2 ? args[args.length - 1] : null;
+  const cleanArgs = _id ? args.slice(0, -1) : args;
+
+  if (_id) {
+    if (!timerIds.has(_id)) {
+      timerIds.set(_id, { timeouts: new Set(), intervals: new Set() });
+    }
   }
-  const timer = originalSetInterval(...args);
-  timerIds.get(_id).intervals.add(timer);
+
+  const timer = originalSetInterval(...cleanArgs);
+
+  if (_id) {
+    timerIds.get(_id).intervals.add(timer);
+  }
+
   return timer;
 };

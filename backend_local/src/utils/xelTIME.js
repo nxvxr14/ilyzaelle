@@ -21,7 +21,7 @@ export function xelInterval(code, tiempo, _id) {
     } catch (error) { 
       console.error('Error in xelInterval:', error); 
     }
-  }, tiempo, { _id });
+  }, tiempo, _id);
 }
 
 /**
@@ -43,5 +43,5 @@ export function xelTimeout(code, tiempo, _id) {
     } catch (error) { 
       console.error('Error in xelTimeout:', error); 
     }
-  }, tiempo, { _id });
+  }, tiempo, _id);
 }
