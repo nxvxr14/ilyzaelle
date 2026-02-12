@@ -29,9 +29,11 @@ type ScrollableChartProps = {
     selectedVar: string;
     gVar: any;
     title?: string;
+    /** Timestamp base para calcular el eje X. Si no se pasa, usa el mínimo del vector tiempo recibido. */
+    baseEarliestTime?: number;
 };
 
-function ScrollableChart({ selectedVar, gVar, title }: ScrollableChartProps) {
+function ScrollableChart({ selectedVar, gVar, title, baseEarliestTime }: ScrollableChartProps) {
     const chartRef = useRef(null);
     const timeKey = `${selectedVar}_time`;
     
@@ -43,8 +45,8 @@ function ScrollableChart({ selectedVar, gVar, title }: ScrollableChartProps) {
     
     const timeVector = gVar[timeKey] || [];
     
-    // Format timestamps as milliseconds elapsed since the first data point
-    const earliestTime = timeVector.length > 0 ? Math.min(...timeVector) : 0;
+    // Usar el base proporcionado (dataset completo) o calcular del vector actual
+    const earliestTime = baseEarliestTime ?? (timeVector.length > 0 ? Math.min(...timeVector) : 0);
     
     const formattedLabels = timeVector.map((timestamp: number) => {
         const elapsedMs = timestamp - earliestTime;

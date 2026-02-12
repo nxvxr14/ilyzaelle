@@ -56,15 +56,18 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
     localStorage.setItem(storageKey, JSON.stringify(chartData[`${dataName}_time`]));
   }
 
+  // Timestamp base del dataset completo (primer dato) para mantener coherencia en el eje X
+  const fullTimeVector = chartData[`${dataName}_time`] || [];
+  const globalEarliestTime = fullTimeVector.length > 0 ? Math.min(...fullTimeVector) : 0;
+
   // Build last-30 data slice for "Últimos 30" view
   const last30Data = useMemo(() => {
     const fullValues = chartData[dataName] || [];
-    const fullTime = chartData[`${dataName}_time`] || [];
     return {
       [dataName]: fullValues.slice(-30),
-      [`${dataName}_time`]: fullTime.slice(-30),
+      [`${dataName}_time`]: fullTimeVector.slice(-30),
     };
-  }, [chartData, dataName]);
+  }, [chartData, dataName, fullTimeVector]);
 
   return (
     <Transition appear show={show} as={Fragment}>
@@ -238,6 +241,7 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
                       selectedVar={dataName}
                       gVar={last30Data}
                       title={`Últimos 30: ${dataName}`}
+                      baseEarliestTime={globalEarliestTime}
                     />
                   ) : (
                     <ScrollableChart selectedVar={dataName} gVar={chartData} />
