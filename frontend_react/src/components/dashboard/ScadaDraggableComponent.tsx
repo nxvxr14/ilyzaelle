@@ -91,47 +91,87 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
     }
   };
 
-  // Manejo de movimiento - versión simple y fluida
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging && componentRef.current) {
-      const parentRect = componentRef.current.parentElement?.getBoundingClientRect();
-      if (!parentRect) return;
-      
-      const newX = e.clientX - parentRect.left - dragOffset.x;
-      const newY = e.clientY - parentRect.top - dragOffset.y;
-      
-      // Asegurar que el componente permanece dentro de los límites del padre
-      const compWidth = componentRef.current.offsetWidth;
-      const compHeight = componentRef.current.offsetHeight;
-      
-      const boundedX = Math.max(0, Math.min(newX, parentRect.width - compWidth));
-      const boundedY = Math.max(0, Math.min(newY, parentRect.height - compHeight));
-      
-      setPosition({
-        x: boundedX,
-        y: boundedY
+  // Inicio de arrastre táctil (móvil)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLButtonElement ||
+      target instanceof HTMLTextAreaElement ||
+      target.closest('input') ||
+      target.closest('button') ||
+      target.closest('textarea')
+    ) {
+      return;
+    }
+
+    if (componentRef.current && e.touches.length === 1) {
+      const touch = e.touches[0];
+      const rect = componentRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
       });
+      setIsDragging(true);
     }
   };
 
-  // Finalización de arrastre
-  const handleMouseUp = () => {
+  // Cálculo compartido de nueva posición durante arrastre
+  const computeBoundedPosition = (clientX: number, clientY: number): Position | null => {
+    if (!componentRef.current) return null;
+    const parentRect = componentRef.current.parentElement?.getBoundingClientRect();
+    if (!parentRect) return null;
+
+    const newX = clientX - parentRect.left - dragOffset.x;
+    const newY = clientY - parentRect.top - dragOffset.y;
+
+    const compWidth = componentRef.current.offsetWidth;
+    const compHeight = componentRef.current.offsetHeight;
+
+    return {
+      x: Math.max(0, Math.min(newX, parentRect.width - compWidth)),
+      y: Math.max(0, Math.min(newY, parentRect.height - compHeight)),
+    };
+  };
+
+  // Manejo de movimiento mouse
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    const pos = computeBoundedPosition(e.clientX, e.clientY);
+    if (pos) setPosition(pos);
+  };
+
+  // Manejo de movimiento táctil
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    e.preventDefault(); // Evitar scroll de la página mientras se arrastra
+    const touch = e.touches[0];
+    const pos = computeBoundedPosition(touch.clientX, touch.clientY);
+    if (pos) setPosition(pos);
+  };
+
+  // Finalización de arrastre (mouse y touch)
+  const handleDragEnd = () => {
     if (isDragging) {
       setIsDragging(false);
       onPositionChange(id, position);
     }
   };
 
-  // Event listeners simplificados
+  // Event listeners para mouse y touch
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mouseup', handleDragEnd);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleDragEnd);
     }
     
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseup', handleDragEnd);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleDragEnd);
     };
   }, [isDragging, position]);
 
@@ -163,11 +203,13 @@ const ScadaDraggableComponent: React.FC<ScadaDraggableComponentProps> = ({
         border: isHovered || isDragging ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
         borderRadius: '6px',
         transition: isDragging ? 'none' : 'background-color 0.2s, border 0.2s',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        touchAction: 'none', // Evitar scroll del navegador al arrastrar en móvil
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       {/* Contenido del componente */}
       <div className="p-2 flex flex-col items-center justify-center">

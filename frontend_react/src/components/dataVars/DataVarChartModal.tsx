@@ -1,6 +1,5 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import Chart from '@/components/dashboard/Chart';
 import ScrollableChart from './ScrollableChart';
 import { useParams } from "react-router-dom";
 
@@ -56,6 +55,16 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
     // Store for future use
     localStorage.setItem(storageKey, JSON.stringify(chartData[`${dataName}_time`]));
   }
+
+  // Build last-30 data slice for "Últimos 30" view
+  const last30Data = useMemo(() => {
+    const fullValues = chartData[dataName] || [];
+    const fullTime = chartData[`${dataName}_time`] || [];
+    return {
+      [dataName]: fullValues.slice(-30),
+      [`${dataName}_time`]: fullTime.slice(-30),
+    };
+  }, [chartData, dataName]);
 
   return (
     <Transition appear show={show} as={Fragment}>
@@ -225,7 +234,11 @@ function DataVarChartModal({ show, onClose, dataVar, dataName, dataId, timeId }:
                 {/* Chart container with styled border */}
                 <div className="mt-4 bg-[#1a1625] border border-gray-800 rounded-lg p-1" style={{ height: '500px' }}>
                   {viewMode === 'standard' ? (
-                    <Chart selectedVar={dataName} gVar={chartData} />
+                    <ScrollableChart
+                      selectedVar={dataName}
+                      gVar={last30Data}
+                      title={`Últimos 30: ${dataName}`}
+                    />
                   ) : (
                     <ScrollableChart selectedVar={dataName} gVar={chartData} />
                   )}

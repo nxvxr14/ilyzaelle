@@ -28,9 +28,10 @@ ChartJS.register(
 type ScrollableChartProps = {
     selectedVar: string;
     gVar: any;
+    title?: string;
 };
 
-function ScrollableChart({ selectedVar, gVar }: ScrollableChartProps) {
+function ScrollableChart({ selectedVar, gVar, title }: ScrollableChartProps) {
     const chartRef = useRef(null);
     const timeKey = `${selectedVar}_time`;
     
@@ -92,7 +93,7 @@ function ScrollableChart({ selectedVar, gVar }: ScrollableChartProps) {
             },
             title: {
                 display: true,
-                text: `Histórico completo: ${selectedVar}`,
+                text: title || `Histórico completo: ${selectedVar}`,
                 color: 'white',
             },
             zoom: {
