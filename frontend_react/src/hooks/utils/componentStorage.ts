@@ -62,6 +62,7 @@ export const clearAllComponents = (projectId: string): void => {
     clearComponents(projectId, 'charts');
     clearComponents(projectId, 'inputs');
     clearComponents(projectId, 'labels');
+    clearComponents(projectId, 'toggles');
   } catch (error) {
     console.error('Error clearing components from localStorage:', error);
   }

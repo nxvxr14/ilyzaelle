@@ -153,16 +153,22 @@ export function useComponentManager(projectId: string, gVarData: any) {
 
   // Cargar componentes de SCADA del localStorage
   useEffect(() => {
-    if (!projectId || !isInitialized) return;
+    if (!projectId || !isInitialized || !gVarData) return;
     
     try {
       const storedComponents = localStorage.getItem(`${projectId}_scada_components`);
       if (storedComponents) {
         const parsedComponents = JSON.parse(storedComponents);
-        // Validar componentes (asegurarse de que las variables existen)
-        const validComponents = parsedComponents.filter((comp: ScadaComponent) => 
-          comp.selectedVar && gVarData && gVarData[comp.selectedVar] !== undefined
-        );
+        // Validar componentes: campos requeridos, posición válida, y variable existente en gVarData
+        const validComponents = parsedComponents.filter((comp: ScadaComponent) => {
+          return comp && 
+                 comp.id && 
+                 comp.selectedVar && 
+                 comp.position && 
+                 typeof comp.position.x === 'number' &&
+                 typeof comp.position.y === 'number' &&
+                 gVarData[comp.selectedVar] !== undefined;
+        });
         setScadaComponents(validComponents);
       }
     } catch (error) {
@@ -400,39 +406,6 @@ export function useComponentManager(projectId: string, gVarData: any) {
     localStorage.removeItem(`${projectId}_scada_background`);
     localStorage.removeItem(`${projectId}_scada_components`);
   };
-
-  useEffect(() => {
-    if (!projectId || !gVarData) return;
-    
-    try {
-      const storedComponents = localStorage.getItem(`${projectId}_scada_components`);
-      
-      if (storedComponents) {
-        const parsedComponents = JSON.parse(storedComponents);
-        
-        // Validar componentes y sus posiciones
-        const validComponents = parsedComponents.filter((comp: ScadaComponent) => {
-          // Verificar que el componente tenga todos los campos necesarios
-          const isValid = comp && 
-                         comp.selectedVar && 
-                         comp.id && 
-                         comp.position && 
-                         typeof comp.position.x === 'number' &&
-                         typeof comp.position.y === 'number' &&
-                         gVarData[comp.selectedVar] !== undefined;
-          
-          return isValid;
-        });
-        
-        // Solo actualizar si hay componentes válidos
-        if (validComponents.length > 0) {
-          setScadaComponents(validComponents);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading SCADA components from localStorage:', error);
-    }
-  }, [projectId, gVarData, isInitialized]);
 
   // Función robusta para guardar componentes en localStorage
   const saveScadaComponentsToStorage = (components: ScadaComponent[]) => {

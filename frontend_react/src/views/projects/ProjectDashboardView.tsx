@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useContext, useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import DashboardZoneView from "../dashboard/DashboardZoneView";
-import StatusBoardLocalModal from "@/components/boards/StatusBoardLocalModal";
 
 const ProjectDashboardView = () => {
     const params = useParams();
@@ -40,14 +39,8 @@ const ProjectDashboardView = () => {
                 }
             };
 
-            // Escuchar el evento para cuando no hay servidor disponible
-            const handleNoServer = (data: any) => {
-                // Puedes mostrar un mensaje al usuario o establecer un estado
-            };
-
             // Registrar listeners
             socket.on('response-gVar-update-b-f', handleUpdateGVar);
-            socket.on('no-server-available', handleNoServer);
 
             // Iniciar el intervalo para solicitar actualizaciones
             intervalId = setInterval(() => {
@@ -58,7 +51,6 @@ const ProjectDashboardView = () => {
             return () => {
                 clearInterval(intervalId);
                 socket.off('response-gVar-update-b-f', handleUpdateGVar);
-                socket.off('no-server-available', handleNoServer);
             };
         }
         
