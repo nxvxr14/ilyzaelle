@@ -44,8 +44,9 @@ class Sockets {
         // Modificar para enviar solo a la sala específica
         socket.on("response-gVar-update-b-b", (data, projectId) => {
           if (!projectId) return;
-          // Enviando solo a la sala específica basada en el serverAPIKey
-          this.io.to(serverAPIKey).emit("response-gVar-update-b-f", data, serverAPIKey);
+          // Enviando a la sala del serverAPIKey, incluyendo projectId para que
+          // cada tab del frontend filtre y solo acepte datos de su proyecto
+          this.io.to(serverAPIKey).emit("response-gVar-update-b-f", data, serverAPIKey, projectId);
         });
 
         // Response from backend_local for polling boards

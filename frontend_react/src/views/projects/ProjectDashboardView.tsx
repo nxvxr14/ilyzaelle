@@ -32,9 +32,9 @@ const ProjectDashboardView = () => {
             let intervalId: NodeJS.Timeout;
             
             // Manejar respuestas del servidor
-            const handleUpdateGVar = (gVarData: object, responseServerAPIKey: string) => {
-                // Solo actualizar si la respuesta es del servidor que nos interesa
-                if (responseServerAPIKey === serverAPIKey) {
+            const handleUpdateGVar = (gVarData: object, responseServerAPIKey: string, responseProjectId: string) => {
+                // Solo actualizar si la respuesta es del servidor Y del proyecto que nos interesa
+                if (responseServerAPIKey === serverAPIKey && responseProjectId === projectId) {
                     setGVarData(gVarData);
                 }
             };

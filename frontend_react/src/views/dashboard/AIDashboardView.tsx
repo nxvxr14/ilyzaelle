@@ -92,8 +92,8 @@ const AIDashboardView = () => {
 
   useEffect(() => {
     if (socket && serverAPIKey) {
-      const handleUpdateGVar = (gVarData: Record<string, unknown>, responseServerAPIKey: string) => {
-        if (responseServerAPIKey === serverAPIKey) {
+      const handleUpdateGVar = (gVarData: Record<string, unknown>, responseServerAPIKey: string, responseProjectId: string) => {
+        if (responseServerAPIKey === serverAPIKey && responseProjectId === projectId) {
           setGVarData(gVarData);
         }
       };
@@ -157,7 +157,7 @@ function initSocket() {
     socket=io(CONFIG.socketUrl,{transports:['websocket','polling']});
     socket.on('connect',()=>{isConnected=true;socket.emit('join-server',CONFIG.serverAPIKey);startDataPolling();});
     socket.on('disconnect',()=>{isConnected=false;stopDataPolling();});
-    socket.on('response-gVar-update-b-f',(data,key)=>{if(key===CONFIG.serverAPIKey){gVarData=data;onDataReceived(gVarData);}});
+    socket.on('response-gVar-update-b-f',(data,key,pid)=>{if(key===CONFIG.serverAPIKey&&pid===CONFIG.projectId){gVarData=data;onDataReceived(gVarData);}});
 }
 function startDataPolling(){requestGVarUpdate();setInterval(()=>isConnected&&requestGVarUpdate(),CONFIG.updateInterval);}
 function stopDataPolling(){clearInterval(updateIntervalId);}
