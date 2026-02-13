@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useContext, useState } from 'react';
+import { Fragment, useContext, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,7 +17,7 @@ type SaveGlobalModalProps = {
 export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalModalProps) {
     // para quitar el parametro de la url 
     const navigate = useNavigate()
-    const { socket } = useContext(SocketContext);
+    const { socket, serverAPI } = useContext(SocketContext);
     const [saveError, setSaveError] = useState<string | null>(null);
 
     // con todo este codigo puedo leer los datos que se envian por medio de la url
@@ -92,12 +92,13 @@ export default function SaveGlobalVarModal({ nameGlobalVar, gVar }: SaveGlobalMo
             // Get the corresponding time vector name
             const timeVectorName = `${nameGlobalVar}_time`;
             
-            // Request the full gVar data to access the time vector
+            // El polling de ProjectDashboardView ya solicita gVar cada 500ms,
+            // así que solo escuchamos la próxima respuesta para obtener el _time vector
             if (socket) {
-                socket.emit('request-gVar-update-f-b', projectId);
-                
-                // Listen for the response
-                const handleGVarData = (gVarData: any) => {
+                const handleGVarData = (gVarData: any, responseServerAPIKey: string, responseProjectId: string) => {
+                    // Filtrar para aceptar solo datos de nuestro proyecto
+                    if (responseServerAPIKey !== serverAPI || responseProjectId !== projectId) return;
+
                     // Check if the time vector exists
                     if (gVarData && gVarData[timeVectorName]) {
                         // Create a new data variable for the time vector
