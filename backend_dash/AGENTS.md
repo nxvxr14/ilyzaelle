@@ -25,6 +25,7 @@ Entry point: `src/index.ts` → instantiates `ServerApp` and calls `execute()`.
 - **Nested Resource Routing**: Boards and DataVars are nested under Projects (`/api/projects/:projectId/boards`, `/api/projects/:projectId/datavars`).
 - **Relay/Broker Pattern**: The Socket.IO server relays events between frontend (`f-b` suffix) and backend_local (`b-b` suffix) using room-based routing.
 - **`connectedServers` Set**: Tracks which `backend_local` instances are currently online.
+- **Per-project gVar routing**: The `response-gVar-update-b-f` event includes both `serverAPIKey` and `projectId` so frontend tabs can filter responses per-project (not just per-gateway). This prevents data cross-contamination when multiple projects sharing the same gateway are open simultaneously.
 
 ---
 
@@ -100,6 +101,21 @@ There are **no linting or formatting tools** configured (no ESLint, Prettier, et
 
 ---
 
+## Socket.IO Event Signatures
+
+Key relay events handled in `src/config/sockets.ts`:
+
+| Direction | Event | Signature |
+|---|---|---|
+| frontend → backend_dash | `request-gVar-update-f-b` | `(projectId, clientServerAPIKey)` |
+| backend_dash → backend_local | `request-gVar-update-b-b` | `(projectId)` |
+| backend_local → backend_dash | `response-gVar-update-b-b` | `(data, projectId)` |
+| backend_dash → frontend | `response-gVar-update-b-f` | `(data, serverAPIKey, projectId)` |
+
+**Important**: The `response-gVar-update-b-f` event includes `projectId` as the third argument. All frontend listeners must filter by both `serverAPIKey` AND `projectId` to prevent cross-project data leaks when multiple projects share the same gateway.
+
+---
+
 ## API Endpoints
 
 ### Projects (`/api/projects`)
@@ -169,3 +185,10 @@ There are **no linting or formatting tools** configured (no ESLint, Prettier, et
 - **Do not break the `serverAPIKey`-based room routing** in `src/config/sockets.ts` — it is the core mechanism for isolating communication between different project instances.
 - **Mongoose schemas have no migration system** — schema changes take effect on next document write. Be careful with destructive schema changes (removing fields, renaming collections).
 - **No authentication layer exists** — there is no user auth, JWT, or session management. The `serverAPIKey` is the only access control mechanism.
+
+---
+
+## Recent Changes
+
+- **`src/config/sockets.ts`**: `response-gVar-update-b-f` now forwards `projectId` (third argument) to the frontend. Previously only sent `serverAPIKey`, causing data cross-contamination when two projects from the same gateway were open simultaneously.
+- **`src/config/sockets.ts`**: Removed debug `console.log` statements from socket event handlers.

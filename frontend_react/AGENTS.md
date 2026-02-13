@@ -31,7 +31,7 @@ Entry point: `src/main.tsx` → React root with `QueryClientProvider` and `Brows
 - **Server state**: TanStack Query (React Query v5) with `useQuery`/`useMutation` and query key invalidation.
 - **Local persistent state**: `localStorage` for dashboard component layouts, unlocked API keys, and debug mode.
 - **Modal pattern**: URL query parameter-based modals (e.g., `?newBoard=true`, `?newGlobalVar=true`).
-- **Socket.IO rooms**: Keyed by `serverAPIKey`. Event naming: `f-b` = frontend-to-backend, `b-f` = backend-to-frontend.
+- **Socket.IO rooms**: Keyed by `serverAPIKey`. Event naming: `f-b` = frontend-to-backend, `b-f` = backend-to-frontend. The `response-gVar-update-b-f` event carries `(data, serverAPIKey, projectId)` — listeners must filter by both `serverAPIKey` AND `projectId`.
 - **Path aliases**: `@` maps to `./src` (configured in `vite.config.ts` and `tsconfig.json`).
 
 ---
@@ -151,3 +151,32 @@ Runs ESLint with `@typescript-eslint`, `react-hooks`, and `react-refresh` plugin
 - **The `@` path alias must be maintained** in both `vite.config.ts` and `tsconfig.json` — changing one without the other will break either runtime or type checking.
 - **The lint script has `--max-warnings 0`** — any ESLint warning will cause the command to fail. Do not downgrade errors to warnings to bypass this.
 - **Dashboard component state is persisted to localStorage** — changes to the component data structures in `useComponentManager` / `componentStorage.ts` may break existing saved dashboards for users.
+
+---
+
+## Recent Changes
+
+### Socket & Data Flow Fixes
+- **`ProjectDashboardView.tsx`**: `response-gVar-update-b-f` handler now filters by both `serverAPIKey` AND `projectId` (previously only `serverAPIKey`). Fixes bug where two projects from the same gateway would see each other's data. Removed unused `StatusBoardLocalModal` import and dead `handleNoServer` function.
+- **`AIDashboardView.tsx`**: Same `response-gVar-update-b-f` filter fix (both `useEffect` handler and AI system prompt template code).
+- **`SaveGlobalVarModal.tsx`**: Removed dead `socket.emit('request-gVar-update-f-b', projectId)` that was missing `serverAPIKey` and never produced a response. The handler relied on the existing 500ms polling from `ProjectDashboardView`. Added `serverAPIKey` + `projectId` filter to the handler. Removed unused `useEffect` import.
+
+### UI/UX & Mobile Responsiveness
+- **`DashboardZoneView.tsx`**: Mobile responsive action buttons.
+- **`GlobalVarList.tsx`**: Horizontal scroll fix for variable tables.
+- **`DataVarList.tsx`**: Horizontal scroll fix + date format change + refactored from `localStorage` to props for passing time vector data to `DataVarChartModal`.
+- **`CodeEditorForm.tsx`**: Mobile responsive header layout.
+- **`ProjectDashboardView.tsx`**: Gateway API key display added to project header.
+- **`ProjectDetailsView.tsx`**: `overflow-hidden` fix.
+- **`ScadaDraggableComponent.tsx`**: Touch event support for mobile SCADA interaction.
+
+### Chart & Data Visualization
+- **`DataVarChartModal.tsx`**: Introduced `ScrollableChart` component. Removed `localStorage` usage (now receives time data via props). Added `Math.min` alignment fix for Y data vs time vector length mismatch.
+- **`ScrollableChart.tsx`**: New component with `title` and `baseEarliestTime` props.
+
+### Refactoring & Cleanup
+- **`useComponentManager.ts`**: Consolidated two duplicate SCADA loading `useEffect` hooks into one with complete validation (checks `id`, `position`, numeric types). Removed `console.log`.
+- **`componentStorage.ts`**: Added `clearComponents(projectId, 'toggles')` to `clearAllComponents()` — was previously missing, leaving orphaned localStorage keys. Removed `console.log`.
+- **`Input.tsx` / `ScadaInputComponent.tsx`**: Fixed leading-zero bug — changed `useState<number>` to `useState<string>`, converting to number only on submit. Typing `120` no longer shows `0120`.
+- **`ScadaBackground.tsx`**: Removed debug `console.log`.
+- **`Chart.tsx`**: Removed debug `console.log`.
