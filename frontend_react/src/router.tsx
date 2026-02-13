@@ -31,9 +31,10 @@ const router = () => {
             <Route path="/public/dashboard/:dashCode" element={<PublicDashboardView />} />
             <Route path="/fdn" element={<FdnView/>} />
 
-            {/* Cuki (AI Dashboard) — fullscreen, sin header, con SocketProvider */}
+            {/* Fullscreen views — sin header, con SocketProvider */}
             <Route element={<SocketProviderWrapper />}>
                 <Route path="/projects/:projectId/ai-dashboard" element={<AIDashboardView />} />
+                <Route path="/projects/:projectId/boards/:boardId/editor" element={<CodeEditorBoardView />} />
             </Route>
 
                 <Route element={<AppLayout />}>
@@ -45,7 +46,6 @@ const router = () => {
                     <Route element={<SocketProviderWrapper />}>
                         <Route path="/projects/:projectId" element={<ProjectDetailsView />} />
                         <Route path="/projects/:projectId/dashboard" element={<ProjectDashboardView />} />
-                        <Route path="/projects/:projectId/boards/:boardId/editor" element={<CodeEditorBoardView />} />
                     </Route>
                 </Route>
             </Routes>

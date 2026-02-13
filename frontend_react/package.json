@@ -14,7 +14,6 @@
     "@heroicons/react": "^2.0.18",
     "@monaco-editor/react": "^4.6.0",
     "@tanstack/react-query": "^5.13.4",
-    "@tanstack/react-query-devtools": "^5.13.5",
     "axios": "^1.6.2",
     "chart.js": "^4.3.2",
     "chartjs-plugin-zoom": "^2.2.0",

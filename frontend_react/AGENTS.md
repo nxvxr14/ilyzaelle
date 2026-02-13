@@ -180,3 +180,9 @@ Runs ESLint with `@typescript-eslint`, `react-hooks`, and `react-refresh` plugin
 - **`Input.tsx` / `ScadaInputComponent.tsx`**: Fixed leading-zero bug — changed `useState<number>` to `useState<string>`, converting to number only on submit. Typing `120` no longer shows `0120`.
 - **`ScadaBackground.tsx`**: Removed debug `console.log`.
 - **`Chart.tsx`**: Removed debug `console.log`.
+
+### Fullscreen View Fixes & Code Editor Improvements
+- **`main.tsx`**: Removed `ReactQueryDevtools` import and `<ReactQueryDevtools />` component. Uninstalled `@tanstack/react-query-devtools` package. ReactQueryDevtools rendered as a sibling inside `#root`, adding DOM content that caused unwanted scroll on fullscreen views.
+- **`AIDashboardView.tsx`**: Changed root container from `h-dvh` to `fixed inset-0` (viewport-fixed, ignores siblings/document flow). Added `useLayoutEffect` + `rootRef` + `window.visualViewport.resize` listener to keep the input bar above the mobile virtual keyboard.
+- **`CodeEditorBoardView.tsx`**: Changed root container from `h-dvh` to `fixed inset-0`. Added `useQuery` to fetch project data by `projectId` and `useEffect` to call `setServerAPI(projectData.serverAPIKey)` — this was missing, so the socket never connected and `pollingCodesViaSocket` always failed. Added a dog icon button (placeholder, no function yet) to the top bar, left of the console toggle.
+- **`CodeEditorModal.tsx`**: Renamed "Ejecutar" button text to "BURN". Changed "Guardar" button to icon-only (removed text, changed padding from `px-5 py-2` to `p-2`, added `title="Guardar"`). Removed 3 debug `console.log`/`console.error` statements.

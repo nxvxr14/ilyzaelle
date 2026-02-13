@@ -113,7 +113,6 @@ export type PollingBoardFormData = Pick<
   | "boardCode"
 >;
 export type PollingCodesFormData = Pick<Board, "project" | "_id" | "boardCode">;
-export type CodeEditorFormData = Pick<Board, "boardCode">;
 export type SnippetFormData = Pick<
   Snippet,
   "snippetName" | "description" | "version"

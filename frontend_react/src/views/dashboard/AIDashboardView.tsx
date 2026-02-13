@@ -2,7 +2,7 @@ import { getProjectById } from "@/api/ProjectApi";
 import { updateAIDashWithCode, getAIChatHistory, addAIChatMessages, clearAIChatHistory, AIChatMessage } from "@/api/ProjectApi";
 import { SocketContext } from "@/context/SocketContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useContext, useEffect, useState, useRef, useCallback } from "react";
+import { useContext, useEffect, useState, useRef, useCallback, useLayoutEffect } from "react";
 import { Navigate, useParams, useNavigate } from "react-router-dom";
 import GVarPopup from "@/components/cuki/GVarPopup";
 import CukiMessage from "@/components/cuki/CukiMessage";
@@ -29,6 +29,33 @@ const AIDashboardView = () => {
   const retryFlagRef = useRef(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // --- Virtual keyboard handling (mobile) ---
+  // On mobile, the soft keyboard doesn't shrink dvh/vh — it covers the bottom.
+  // We use the visualViewport API to detect the actual visible height and resize
+  // the container so the input bar stays above the keyboard.
+  useLayoutEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const handleResize = () => {
+      if (rootRef.current) {
+        rootRef.current.style.height = `${vv.height}px`;
+      }
+      // Scroll chat to bottom so latest messages stay visible above keyboard
+      if (chatContainerRef.current) {
+        requestAnimationFrame(() => {
+          chatContainerRef.current!.scrollTop = chatContainerRef.current!.scrollHeight;
+        });
+      }
+    };
+
+    handleResize();
+
+    vv.addEventListener('resize', handleResize);
+    return () => vv.removeEventListener('resize', handleResize);
+  }, []);
 
   // --- Data fetching (unchanged logic) ---
 
@@ -357,7 +384,7 @@ Normas:
   // --- Render ---
 
   if (isLoading) return (
-    <div className="flex items-center justify-center h-screen bg-[#120d18]">
+    <div className="fixed inset-0 flex items-center justify-center bg-[#120d18]">
       <div className="animate-pulse text-2xl font-bold text-gray-400">Cargando...</div>
     </div>
   );
@@ -365,9 +392,9 @@ Normas:
   if (isError) return <Navigate to='/404' />;
 
   if (data) return (
-    <div className="flex flex-col h-screen bg-[#120d18]">
+    <div ref={rootRef} className="fixed inset-0 flex flex-col bg-[#120d18] overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#1a1625] border-b border-gray-800">
+      <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-[#1a1625] border-b border-gray-800">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(`/projects/${projectId}/dashboard`)}
@@ -416,12 +443,12 @@ Normas:
       {/* Chat messages area */}
       <div
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-6"
+        className="flex-1 overflow-y-auto px-4 py-6 min-h-0"
       >
         <div className="max-w-3xl mx-auto space-y-6">
           {/* Empty state */}
           {chatMessages.length === 0 && !isGenerating && (
-            <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
+            <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="text-5xl font-black text-purple-500 mb-4">Cuki</div>
               <p className="text-gray-400 text-lg mb-2">Generador de dashboards con IA</p>
               <p className="text-gray-600 text-sm max-w-md">
@@ -505,7 +532,7 @@ Normas:
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-gray-800 bg-[#1a1625] px-4 py-3">
+      <div className="shrink-0 border-t border-gray-800 bg-[#1a1625] px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-end gap-2">
           {/* gVar popup button */}
           <div className="relative">

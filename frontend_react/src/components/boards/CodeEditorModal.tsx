@@ -43,13 +43,10 @@ function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps
             boardCode: boardCode
         };
 
-        console.log("[CodeEditorModal] Sending polling codes request via socket...");
         const response = await pollingCodesViaSocket(pollingDataCodes);
-        console.log("[CodeEditorModal] Response:", response);
         
         if (!response.success) {
             const errorMsg = response.error || "Error de conexión con el servidor local";
-            console.error("[CodeEditorModal] Error:", errorMsg);
             return toast.error(errorMsg);
         }
 
@@ -76,17 +73,17 @@ function CodeEditorModal({ boardCode, projectId, boardId }: CodeEditorModalProps
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Ejecutar
+                BURN
             </button>
             
             <button
-                className="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-medium px-5 py-2 rounded-lg transition-colors shadow-sm"
+                className="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-medium p-2 rounded-lg transition-colors shadow-sm"
                 onClick={handleCodeEditorBoardOFF}
+                title="Guardar"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                 </svg>
-                Guardar
             </button>
         </>
     );
