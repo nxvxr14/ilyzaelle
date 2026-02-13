@@ -43,9 +43,6 @@ const ScadaBackground = ({
     setBackgroundUrl(inputUrl);
   };
 
-  // Agregar un log para depuración
-  console.log('ScadaBackground rendering with components:', scadaComponents);
-
   // Asegurar que la posición se pase correctamente sin modificaciones intermedias
   const handlePositionChange = (id: string, newPosition: { x: number; y: number }) => {
     // Llamada directa sin timeouts ni modificaciones

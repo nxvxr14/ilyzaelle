@@ -26,29 +26,30 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
       // Limpiar solo los temporizadores asociados a este _id antes de ejecutar nuevo código
       clearTimersById(_id);
 
-      // Check for array initializations and ensure time vectors are also reset
-      const arrayInitRegex = /gVar\[project\]\.(\w+)\s*=\s*\[\]/g;
+      // Inicializar gVar[project] si no existe
+      if (!gVar[project]) {
+        gVar[project] = {};
+      }
+
+      // Detectar inicializaciones de arrays para resetear sus time vectors.
+      // Soporta ambos patrones: varG.variable = [] (nuevo) y gVar[project].variable = [] (legacy)
+      const arrayInitRegex = /(?:varG|gVar\[project\])\.(\w+)\s*=\s*\[\]/g;
       let match;
       let arrayInits = [];
 
-      // Find all array initializations in the code
       while ((match = arrayInitRegex.exec(boardCode)) !== null) {
         const varName = match[1];
         if (!varName.endsWith("_time")) {
-          // Only process data arrays, not time vectors
           arrayInits.push(varName);
         }
       }
 
-      // For each array initialization, check and reset its time vector if it exists
       arrayInits.forEach((varName) => {
         const timeVectorName = `${varName}_time`;
-        // Check if the time vector exists
-        if (gVar[project] && gVar[project].hasOwnProperty(timeVectorName)) {
+        if (gVar[project].hasOwnProperty(timeVectorName)) {
           console.log(
             `Resetting time vector for ${varName}: ${timeVectorName}`
           );
-          // Reset the time vector to an empty array
           gVar[project][timeVectorName] = [];
         }
       });
@@ -84,9 +85,15 @@ export const updateCodeBoardController = ({ project, _id, boardCode }) => {
         clearMQTTListeners(_id);
       }
 
+      // Crear aliases locales para que el boardCode use sintaxis simplificada.
+      // varG es una referencia directa a gVar[project] (no una copia).
+      // board es una referencia directa a boards[_id].
+      // eval() ejecuta en el scope léxico local, así que el boardCode verá estas variables.
+      const varG = gVar[project];
+      const board = boards[_id];
+
       // Crear versiones locales de setTimeout/setInterval que inyectan _id automáticamente.
-      // eval() ejecuta en el scope léxico local, así que el boardCode verá estas versiones
-      // en lugar de las globales. ClearTimers.js extraerá el _id para trackear los timers.
+      // ClearTimers.js extraerá el _id para trackear los timers.
       const setTimeout = (fn, delay, ...args) => global.setTimeout(fn, delay, ...args, _id);
       const setInterval = (fn, delay, ...args) => global.setInterval(fn, delay, ...args, _id);
 
