@@ -5,8 +5,12 @@ import { getProjectById } from "@/api/ProjectApi";
 import Console from '@/components/boards/Console';
 import CodeEditorModal from '@/components/boards/CodeEditorModal';
 import { Editor } from "@monaco-editor/react";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SocketContext } from "@/context/SocketContext";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+const MAX_LINES = 500;
 
 const boardNames: { [key: number]: string } = {
     1: 'Arduino',
@@ -23,11 +27,56 @@ function CodeEditorBoardView() {
     const boardId = params.boardId!;
     const navigate = useNavigate();
 
-    const { setServerAPI } = useContext(SocketContext);
+    const { socket, setServerAPI } = useContext(SocketContext);
 
     const [showConsole, setShowConsole] = useState(false);
     const [code, setCode] = useState<string>("");
     const [editorReady, setEditorReady] = useState(false);
+    const [consoleLines, setConsoleLines] = useState<string[]>([]);
+
+    const rootRef = useRef<HTMLDivElement>(null);
+    const showConsoleRef = useRef(showConsole);
+    showConsoleRef.current = showConsole;
+
+    // Accumulate console logs regardless of console visibility
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleLogLine = (line: string) => {
+            setConsoleLines((prev) => {
+                const updated = [...prev, line];
+                return updated.length > MAX_LINES ? updated.slice(-MAX_LINES) : updated;
+            });
+        };
+
+        socket.on("response-server-log-b-f", handleLogLine);
+        return () => { socket.off("response-server-log-b-f", handleLogLine); };
+    }, [socket]);
+
+    const handleClearConsole = useCallback(() => {
+        setConsoleLines([]);
+    }, []);
+
+    // Mobile keyboard: adapt container height + auto-close console
+    useLayoutEffect(() => {
+        const vv = window.visualViewport;
+        if (!vv) return;
+
+        const onResize = () => {
+            const el = rootRef.current;
+            if (!el) return;
+            el.style.height = `${vv.height}px`;
+
+            // If keyboard opened (viewport shrank significantly), close console
+            const keyboardOpen = vv.height < window.innerHeight * 0.85;
+            if (keyboardOpen && showConsoleRef.current) {
+                setShowConsole(false);
+            }
+        };
+
+        vv.addEventListener("resize", onResize);
+        return () => vv.removeEventListener("resize", onResize);
+    }, []);
 
     // Fetch project to get serverAPIKey for socket connection
     const { data: projectData } = useQuery({
@@ -63,7 +112,7 @@ function CodeEditorBoardView() {
     if (isError) return <Navigate to={'/404'} />;
 
     if (data) return (
-        <div className="fixed inset-0 flex flex-col bg-[#120d18] overflow-hidden">
+        <div ref={rootRef} className="fixed inset-0 flex flex-col bg-[#120d18] overflow-hidden">
             {/* Top bar */}
             <div className="shrink-0 flex items-center justify-between px-3 py-2 bg-[#1a1625] border-b border-gray-800">
                 {/* Left: back button + board info */}
@@ -157,10 +206,12 @@ function CodeEditorBoardView() {
                 {/* Toggleable Console panel */}
                 {showConsole && (
                     <div className="shrink-0 h-[30vh] border-t border-gray-800">
-                        <Console />
+                        <Console lines={consoleLines} onClear={handleClearConsole} />
                     </div>
                 )}
             </div>
+
+            <ToastContainer />
         </div>
     );
 

@@ -1,12 +1,13 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { SocketContext } from "@/context/SocketContext";
+import { useEffect, useRef } from "react";
 
-const MAX_LINES = 500;
 const SCROLL_THRESHOLD = 40; // px from bottom to consider "at bottom"
 
-export default function Console() {
-    const { socket } = useContext(SocketContext);
-    const [lines, setLines] = useState<string[]>([]);
+type ConsoleProps = {
+    lines: string[];
+    onClear: () => void;
+};
+
+export default function Console({ lines, onClear }: ConsoleProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const isAtBottomRef = useRef(true);
 
@@ -18,24 +19,6 @@ export default function Console() {
             el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD;
     };
 
-    // Listen for new log lines from backend_local via the relay
-    useEffect(() => {
-        if (!socket) return;
-
-        const handleLogLine = (line: string) => {
-            setLines((prev) => {
-                const updated = [...prev, line];
-                return updated.length > MAX_LINES ? updated.slice(-MAX_LINES) : updated;
-            });
-        };
-
-        socket.on("response-server-log-b-f", handleLogLine);
-
-        return () => {
-            socket.off("response-server-log-b-f", handleLogLine);
-        };
-    }, [socket]);
-
     // Auto-scroll only if user was already at the bottom
     useEffect(() => {
         const el = scrollRef.current;
@@ -44,10 +27,6 @@ export default function Console() {
         }
     }, [lines]);
 
-    const handleClear = () => {
-        setLines([]);
-    };
-
     return (
         <div className="flex flex-col h-full bg-[#120d18]">
             {/* Header */}
@@ -55,7 +34,7 @@ export default function Console() {
                 <h2 className="text-sm font-bold text-[#d4d4d4]">Consola</h2>
                 <button
                     className="text-xs text-gray-400 hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-[#2a2435]"
-                    onClick={handleClear}
+                    onClick={onClear}
                 >
                     Limpiar
                 </button>
