@@ -31,6 +31,25 @@ const AIDashboardView = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // Prevent page-level scroll on mobile (overscroll into white space).
+  // Blocks touchmove on the document except inside scrollable children
+  // (chat container and textarea handle their own scroll internally).
+  useEffect(() => {
+    const preventDocumentScroll = (e: TouchEvent) => {
+      let target = e.target as HTMLElement | null;
+      while (target && target !== document.documentElement) {
+        if (target.scrollHeight > target.clientHeight) {
+          return; // Allow natural scroll inside scrollable children
+        }
+        target = target.parentElement;
+      }
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventDocumentScroll, { passive: false });
+    return () => document.removeEventListener('touchmove', preventDocumentScroll);
+  }, []);
+
   // --- Virtual keyboard handling (mobile) ---
   // On mobile, the soft keyboard doesn't shrink dvh/vh — it covers the bottom.
   // We use the visualViewport API to detect the actual visible height and resize
@@ -458,7 +477,7 @@ INSTRUCCIONES IMPORTANTES:
   if (isError) return <Navigate to='/404' />;
 
   if (data) return (
-    <div ref={rootRef} className="fixed inset-0 flex flex-col bg-[#120d18] overflow-hidden">
+    <div ref={rootRef} className="fixed inset-0 flex flex-col bg-[#120d18] overflow-hidden overscroll-none touch-manipulation">
       {/* Top bar */}
       <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-[#1a1625] border-b border-gray-800">
         <div className="flex items-center gap-3">

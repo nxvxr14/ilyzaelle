@@ -57,6 +57,30 @@ function CodeEditorBoardView() {
         setConsoleLines([]);
     }, []);
 
+    // Prevent page-level scroll on mobile (overscroll into white space).
+    // Blocks touchmove on the document except inside scrollable children
+    // (Monaco editor and console panel handle their own scroll internally).
+    useEffect(() => {
+        const preventDocumentScroll = (e: TouchEvent) => {
+            // Allow scroll inside elements that are internally scrollable
+            // (Monaco's .monaco-scrollable-element, console's overflow-y-auto div)
+            let target = e.target as HTMLElement | null;
+            while (target && target !== document.documentElement) {
+                if (
+                    target.classList.contains('monaco-scrollable-element') ||
+                    target.scrollHeight > target.clientHeight
+                ) {
+                    return; // Allow natural scroll inside these elements
+                }
+                target = target.parentElement;
+            }
+            e.preventDefault();
+        };
+
+        document.addEventListener('touchmove', preventDocumentScroll, { passive: false });
+        return () => document.removeEventListener('touchmove', preventDocumentScroll);
+    }, []);
+
     // Mobile keyboard: adapt container height + auto-close console
     useLayoutEffect(() => {
         const vv = window.visualViewport;
@@ -112,7 +136,7 @@ function CodeEditorBoardView() {
     if (isError) return <Navigate to={'/404'} />;
 
     if (data) return (
-        <div ref={rootRef} className="fixed inset-0 flex flex-col bg-[#120d18] overflow-hidden">
+        <div ref={rootRef} className="fixed inset-0 flex flex-col bg-[#120d18] overflow-hidden overscroll-none touch-manipulation">
             {/* Top bar */}
             <div className="shrink-0 flex items-center justify-between px-3 py-2 bg-[#1a1625] border-b border-gray-800">
                 {/* Left: back button + board info */}
