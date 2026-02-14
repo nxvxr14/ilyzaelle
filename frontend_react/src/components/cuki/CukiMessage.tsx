@@ -6,42 +6,56 @@ type CukiMessageProps = {
 };
 
 type Segment = {
-  type: "markdown" | "html-raw";
+  type: "markdown" | "code-raw";
+  label: string;
   text: string;
 };
 
-const START_MARKER = "---INICIOHTML---";
-const END_MARKER = "---FINHTML---";
+/** Marker pairs that CukiMessage recognizes. Order matters — first match wins. */
+const MARKERS = [
+  { start: "---INICIOHTML---", end: "---FINHTML---", label: "HTML generado:" },
+  { start: "---INICIOCODE---", end: "---FINCODE---", label: "Codigo generado:" },
+] as const;
 
-/** Split content into markdown segments and raw HTML code blocks */
+/** Split content into markdown segments and raw code blocks (HTML or JS). */
 const splitContent = (content: string): Segment[] => {
   const segments: Segment[] = [];
   let remaining = content;
 
   while (remaining.length > 0) {
-    const startIdx = remaining.indexOf(START_MARKER);
+    // Find the earliest marker in the remaining text
+    let earliestIdx = -1;
+    let matchedMarker: (typeof MARKERS)[number] | null = null;
 
-    if (startIdx === -1) {
-      segments.push({ type: "markdown", text: remaining });
+    for (const marker of MARKERS) {
+      const idx = remaining.indexOf(marker.start);
+      if (idx !== -1 && (earliestIdx === -1 || idx < earliestIdx)) {
+        earliestIdx = idx;
+        matchedMarker = marker;
+      }
+    }
+
+    if (earliestIdx === -1 || !matchedMarker) {
+      segments.push({ type: "markdown", label: "", text: remaining });
       break;
     }
 
     // Text before the marker is markdown
-    if (startIdx > 0) {
-      segments.push({ type: "markdown", text: remaining.substring(0, startIdx) });
+    if (earliestIdx > 0) {
+      segments.push({ type: "markdown", label: "", text: remaining.substring(0, earliestIdx) });
     }
 
-    const afterStart = remaining.substring(startIdx + START_MARKER.length);
-    const endIdx = afterStart.indexOf(END_MARKER);
+    const afterStart = remaining.substring(earliestIdx + matchedMarker.start.length);
+    const endIdx = afterStart.indexOf(matchedMarker.end);
 
     if (endIdx === -1) {
-      // No closing marker yet — show everything after start marker as raw
-      segments.push({ type: "html-raw", text: afterStart });
+      // No closing marker yet (streaming) — show everything after as raw
+      segments.push({ type: "code-raw", label: matchedMarker.label, text: afterStart });
       break;
     }
 
-    segments.push({ type: "html-raw", text: afterStart.substring(0, endIdx) });
-    remaining = afterStart.substring(endIdx + END_MARKER.length);
+    segments.push({ type: "code-raw", label: matchedMarker.label, text: afterStart.substring(0, endIdx) });
+    remaining = afterStart.substring(endIdx + matchedMarker.end.length);
   }
 
   return segments;
@@ -53,11 +67,11 @@ const CukiMessage = ({ content }: CukiMessageProps) => {
   return (
     <div className="cuki-message text-sm">
       {segments.map((seg, i) => {
-        if (seg.type === "html-raw") {
+        if (seg.type === "code-raw") {
           return (
             <div key={i} className="my-2">
               <div className="text-xs text-purple-400 font-semibold mb-1">
-                HTML generado:
+                {seg.label}
               </div>
               <pre className="bg-[#0d0a12] border border-gray-700 rounded-lg p-3 text-xs text-gray-300 overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap break-words">
                 {seg.text.trim()}

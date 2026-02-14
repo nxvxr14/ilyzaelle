@@ -28,7 +28,7 @@ const router = () => {
         <BrowserRouter>
             <Routes>
             {/* Rutas standalone — sin AppLayout */}
-            <Route path="/public/dashboard/:dashCode" element={<PublicDashboardView />} />
+            <Route path="/shared/dashboard/:dashCode" element={<PublicDashboardView />} />
             <Route path="/fdn" element={<FdnView/>} />
 
             {/* Fullscreen views — sin header, con SocketProvider */}

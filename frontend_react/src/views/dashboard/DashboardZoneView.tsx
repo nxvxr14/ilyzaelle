@@ -107,7 +107,7 @@ function DashboardZoneView({ gVarData, projectId, serverAPIKey }: DashboardZoneV
                             }`}
                             onClick={() => {
                                 if (aiDashCode) {
-                                    window.open(`/public/dashboard/${aiDashCode}`, '_blank');
+                                    window.open(`/shared/dashboard/${aiDashCode}`, '_blank');
                                 }
                             }}
                             disabled={!aiDashCode}

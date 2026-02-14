@@ -497,7 +497,7 @@ INSTRUCCIONES IMPORTANTES:
         <div className="flex items-center gap-2">
           {dashCode && (
             <a
-              href={`/public/dashboard/${dashCode}`}
+              href={`/shared/dashboard/${dashCode}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-[#2a2435] flex items-center gap-1.5"

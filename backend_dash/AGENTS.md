@@ -147,6 +147,9 @@ Key relay events handled in `src/config/sockets.ts`:
 | POST | `/:boardId/active` | Update active status |
 | POST | `/:boardId/code` | Update board code |
 | DELETE | `/:boardId` | Delete board |
+| GET | `/:boardId/ai-chat-history` | Get board AI chat history |
+| POST | `/:boardId/ai-chat-history` | Replace board AI chat history (bulk) |
+| DELETE | `/:boardId/ai-chat-history` | Clear board AI chat history |
 
 ### DataVars (`/api/projects/:projectId/datavars`)
 
@@ -192,3 +195,12 @@ Key relay events handled in `src/config/sockets.ts`:
 
 - **`src/config/sockets.ts`**: `response-gVar-update-b-f` now forwards `projectId` (third argument) to the frontend. Previously only sent `serverAPIKey`, causing data cross-contamination when two projects from the same gateway were open simultaneously.
 - **`src/config/sockets.ts`**: Removed debug `console.log` statements from socket event handlers.
+
+### Board-level AI Chat History
+- **`src/models/Board.ts`**: Added `IAIChatMessage` interface and `AIChatHistory` embedded subdocument array field to the Board schema. Each message stores `role` (user/assistant), `content`, and `timestamp`.
+- **`src/controllers/BoardController.ts`**: Added three static methods: `getAIChatHistory` (returns `req.board.AIChatHistory`), `addAIChatMessages` (replaces entire chat history — receives full messages array, clears existing and writes new), `clearAIChatHistory` (sets `AIChatHistory` to empty array). Both `addAIChatMessages` and `clearAIChatHistory` use `Board.findByIdAndUpdate()` with `$set` to bypass Mongoose optimistic concurrency — `req.board` from middleware becomes stale after concurrent writes (e.g. BURN + chat save), causing `VersionError` on `.save()`. Retained `console.log` error logging in `addAIChatMessages` for debugging.
+- **`src/routes/projectRoutes.ts`**: Added 3 routes under `/:projectId/boards/:boardId/ai-chat-history` — GET (retrieve), POST (bulk replace), DELETE (clear). Uses existing `boardExist` and `boardBelongsToProject` middleware via `router.param`.
+
+### Board controller — eliminate req.board.save() pattern
+- **`src/controllers/BoardController.ts`** — `updateCode`, `updateActive`, `updateBoard`: Changed from `req.board.save()` to `Board.findByIdAndUpdate()` with `$set`. The old pattern ran full-document Mongoose validation on `.save()`, which failed with `AIChatHistory.N.content: Path 'content' is required` if any chat message had empty content (empty strings fail `required: true`). Since `addAIChatMessages` uses `findByIdAndUpdate` (which skips validators by default), empty-content messages could slip into the DB undetected, then break all subsequent `.save()` calls on that board. `findByIdAndUpdate` with `$set` updates only the targeted field without validating unrelated fields.
+- **`src/controllers/BoardController.ts`** — `updateCode`, `updateActive`: Added `res.status(500).json(...)` in catch blocks. Previously only had `console.log(error)` with no response, causing HTTP connections to hang until nginx returned 504 Gateway Timeout.

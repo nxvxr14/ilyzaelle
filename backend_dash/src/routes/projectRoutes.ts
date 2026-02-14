@@ -206,6 +206,29 @@ router.delete(
   BoardController.deleteBoard
 );
 
+/* AI CHAT HISTORY per Board */
+router.get(
+  "/:projectId/boards/:boardId/ai-chat-history",
+  param("boardId").isMongoId().withMessage("ID no valido"),
+  handleInputErrors,
+  BoardController.getAIChatHistory
+);
+
+router.post(
+  "/:projectId/boards/:boardId/ai-chat-history/bulk",
+  param("boardId").isMongoId().withMessage("ID no valido"),
+  body("messages").isArray().withMessage("Los mensajes deben ser un array."),
+  handleInputErrors,
+  BoardController.addAIChatMessages
+);
+
+router.delete(
+  "/:projectId/boards/:boardId/ai-chat-history",
+  param("boardId").isMongoId().withMessage("ID no valido"),
+  handleInputErrors,
+  BoardController.clearAIChatHistory
+);
+
 /** DATAVARS **/
 
 router.param("dataVarId", dataVarExist);

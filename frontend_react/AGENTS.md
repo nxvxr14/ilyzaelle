@@ -9,7 +9,7 @@ Frontend application for the **Ilyzaelle** IoT SCADA/HMI platform (UNAB thesis p
 - **Build SCADA views** — drag components over a background image for visual process monitoring.
 - **Edit board code** in-browser using Monaco Editor (VS Code's editor engine).
 - **Generate AI-powered dashboards** — a chat interface sends prompts to the `cuki_api_ia` service, which returns standalone HTML dashboards with embedded Socket.IO client code.
-- **Share public dashboards** — AI-generated dashboards are accessible via unique codes at `/public/dashboard/:dashCode`.
+- **Share public dashboards** — AI-generated dashboards are accessible via unique codes at `/shared/dashboard/:dashCode`.
 - **Manage global variables (`gVar`)** — real-time variables polled every 500ms via Socket.IO.
 
 The UI is in **Spanish**.
@@ -137,7 +137,7 @@ Runs ESLint with `@typescript-eslint`, `react-hooks`, and `react-refresh` plugin
 | `/projects/:projectId/dashboard-zone` | `DashboardZoneView` | HMI & SCADA builder |
 | `/projects/:projectId/boards/:boardId/code-editor` | `CodeEditorBoardView` | Monaco code editor |
 | `/projects/:projectId/ai-dashboard` | `AIDashboardView` | AI dashboard generator (Cuki chat) |
-| `/public/dashboard/:dashCode` | `PublicDashboardView` | Public standalone dashboard |
+| `/shared/dashboard/:dashCode` | `PublicDashboardView` | Public standalone dashboard |
 
 ---
 
@@ -195,3 +195,43 @@ Runs ESLint with `@typescript-eslint`, `react-hooks`, and `react-refresh` plugin
 ### Mobile Scroll Lock for Fullscreen Views
 - **`CodeEditorBoardView.tsx`**: Added `touchmove` event listener on `document` that calls `preventDefault()` for touch gestures outside scrollable children (Monaco editor, console). Walk up the DOM from `event.target` — if any ancestor has `scrollHeight > clientHeight` or is a `.monaco-scrollable-element`, allow natural scroll; otherwise block it. Also added `overscroll-none touch-manipulation` Tailwind classes to the root container. Replaces a previous `body overflow:hidden / position:fixed` approach that did not work on mobile browsers.
 - **`AIDashboardView.tsx`**: Same `touchmove` prevention pattern applied — blocks page-level scroll escape while allowing scroll inside the chat container and textarea.
+
+### Cuki Code Assistant (Code Editor AI Chat)
+- **`CukiChat.tsx`** (NEW): Reusable ephemeral chat component in `src/components/cuki/`. Accepts props: `getSystemPrompt()` (called on every send), `onAIResponse(fullText)` (callback after streaming), `placeholder`, `emptyTitle`, `emptyDescription`, `inputBarExtra`, `chatContainerRef`. Manages its own message state, streaming, errors, retry. Uses `CukiMessage` for rendering assistant responses. Calls `VITE_CUKI_IA_API` with streaming. No backend persistence (ephemeral).
+- **`CukiMessage.tsx`** (UPDATED): Now supports multiple marker pairs: `---INICIOHTML---`/`---FINHTML---` (label "HTML generado:") and `---INICIOCODE---`/`---FINCODE---` (label "Codigo generado:"). Uses a generic `MARKERS` array with earliest-match scanning. Segment type renamed from `"html-raw"` to `"code-raw"` with dynamic label.
+- **`CodeEditorBoardView.tsx`** (MAJOR UPDATE): 
+  - Dog icon button now toggles `CukiChat` panel (was placeholder).
+  - Chat panel layout: desktop shows as 1/3 width side panel to the right (`md:w-1/3 md:min-w-[280px] md:max-w-[400px]`); mobile shows as fullscreen overlay (`fixed inset-0 z-50`) with close button. Panel uses `hidden`/`flex` toggle (not mount/unmount) to preserve chat state.
+  - System prompt for Firmata.js/Arduino context: includes current code, board type, explains `board`/`varG`/`gVar` are pre-defined, instructs AI to return full code between `---INICIOCODE---`/`---FINCODE---` markers.
+  - `onAIResponse` callback extracts code from markers and sets `proposedCode` state.
+  - When `proposedCode` is set, the regular Monaco `Editor` swaps to `DiffEditor` (inline mode, read-only) showing original vs proposed code with green/red diff highlights.
+  - Purple banner appears above editor with "Aceptar" (applies proposed code) and "Rechazar" (discards) buttons.
+  - BURN and Save buttons use `proposedCode ?? code` so executing during diff review uses the proposed code.
+  - Editor changed from `defaultValue` to controlled `value={code}` prop to reflect accepted changes immediately.
+
+### Cuki Code Assistant Bug Fixes (Bugs 1-7)
+- **`CodeEditorBoardView.tsx`** — System prompt rewrite: removed all johnny-five references, added explicit "API FIRMATA DISPONIBLE" section listing valid `board.*` methods, added "FUNCIONES Y METODOS PROHIBIDOS" section forbidding `board.loop()`, `board.wait()`, `new five.*`. Added "INICIALIZACION DE VARIABLES GLOBALES" section showing correct `varG.x = 0` pattern and forbidding `typeof` guard checks. Changed empty state description to "Describe lo que necesitas y te ayudo a programar tu controlador."
+- **`CodeEditorBoardView.tsx`** — `extractCodeFromResponse()` now strips markdown fenced code block wrapping (```` ``` ````) after extracting from `---INICIOCODE---`/`---FINCODE---` markers.
+- **`CodeEditorBoardView.tsx`** — Chat blocked during diff review: passes `disabled={proposedCode !== null}` and `disabledMessage` to CukiChat. On rejection, sets `rejectionNote` state which is passed as `contextNote` prop — prepended as `[NOTA DEL SISTEMA: ...]` to the next user message.
+- **`CodeEditorBoardView.tsx`** — Board-level chat persistence: added `useQuery` for `getBoardAIChatHistory`, `handleMessagesChange` callback (calls `addBoardAIChatMessages` with full array), `handleClearChatHistory` callback. All three props now wired to `<CukiChat>` JSX: `initialMessages`, `onMessagesChange`, `onClearHistory`.
+- **`CukiChat.tsx`** — Changed `buildContext()` from sliding window (`messages.slice(-contextWindowSize)`) to exact 3-message pattern: previous user message → last assistant message → current user message. Removed `contextWindowSize` prop.
+- **`CukiChat.tsx`** — Added `disabled`, `disabledMessage` props to block input during diff review. Added `contextNote` and `onContextNoteConsumed` props for rejection context injection.
+- **`CukiChat.tsx`** — Added `initialMessages`, `onMessagesChange`, `onClearHistory` props for optional persistence. Uses `initializedRef` to load history once. Calls `onMessagesChange` inside the `setMessages` updater after assistant message is added. Calls `onClearHistory` in `handleNewChat`.
+- **`BoardApi.ts`** — Added `BoardAIChatMessage` type, `getBoardAIChatHistory`, `addBoardAIChatMessages`, `clearBoardAIChatHistory` API functions for board-level chat persistence.
+
+### Cuki Code Assistant Bug Fixes (Bugs 1-5, Session 2)
+- **`CukiChat.tsx`** — **Bug 1 (textarea not visible on first load)**: Removed the `useLayoutEffect` + `rootRef` + `visualViewport.resize` handler that was incorrectly setting `rootRef.style.height` to the full viewport height. CukiChat is a nested component, not a root view — setting full viewport height caused overflow and pushed the textarea out of view. CukiChat now relies purely on CSS `h-full` from its parent. Removed `useLayoutEffect` from imports.
+- **`CukiChat.tsx`** — **Bug 5 (debug token logging)**: Added `estimateTokens(text)` utility (averages `length/4` char-based and `words*1.3` word-based) and `calculateTotalTokens(messages)` (sums per-message + 4 token overhead each). Added `console.group` debug logging before API call (per-message token breakdown, total input tokens) and after streaming completes (output tokens, total input+output). Matches AIDashboardView pattern.
+- **`CodeEditorBoardView.tsx`** — **Bug 3 (chat not saving / 500 errors)**: Fixed `initialMessages` data shape — changed `chatHistory?.AIChatHistory?.map(...)` to `chatHistory?.map(...)` because `getBoardAIChatHistory()` in `BoardApi.ts` already unwraps the response (returns the array directly, not `{ AIChatHistory: [...] }`). The double-unwrap always resolved to `undefined`, so chat history never loaded on refresh.
+- **`CodeEditorBoardView.tsx`** — **Bug 4 (mobile chat keyboard)**: Added `chatOverlayRef` on the mobile chat overlay container (`fixed inset-0 z-50`). The existing `useLayoutEffect` viewport resize handler now updates BOTH `rootRef` AND `chatOverlayRef` heights on `visualViewport.resize`. Added `chatContainerRef` passed to CukiChat for auto-scroll on keyboard open, using `requestAnimationFrame` for reliable scroll timing (matching AIDashboardView pattern).
+
+### Cuki Code Assistant Bug Fixes (Session 3)
+- **`CodeEditorBoardView.tsx`** — **Chat panel disappears on second navigation (desktop)**: Added `md:min-h-0 md:overflow-hidden` to the chat overlay div so it respects flex constraints on desktop. The `useLayoutEffect` viewport resize handler now only sets inline `style.height` on the chat overlay when it's in `fixed` position (mobile); on desktop (`md:static`), it clears the inline height to let flexbox handle it. Moved code initialization from inline state-during-render to `useEffect` to avoid re-render timing issues with cached TanStack Query data.
+- **`BoardController.ts`** — **500 VersionError on second chat save**: Changed `addAIChatMessages` and `clearAIChatHistory` from `req.board.set()` + `req.board.save()` to `Board.findByIdAndUpdate()` with `$set`. The `boardExist` middleware loads `req.board` with a version number; rapid saves (BURN + chat) increment the DB version, making the stale `req.board` cause `VersionError` on `.save()`. Atomic `findByIdAndUpdate` bypasses Mongoose optimistic concurrency entirely.
+- **`router.tsx`** — **Vite public dir collision**: Renamed frontend route from `/public/dashboard/:dashCode` to `/shared/dashboard/:dashCode`. Updated all frontend links in `AIDashboardView.tsx` and `DashboardZoneView.tsx`. Backend API endpoint `/api/public/dashboard/:dashCode` unchanged (not affected — it's an API call via axios, not a frontend route).
+- **`CukiChat.tsx`** — **Debug logging improvement**: System prompt log now shows embedded code length (`codigo embebido: N chars`) to confirm the editor code is included in the AI context.
+
+### Cuki Code Assistant Bug Fixes (Session 4)
+- **`CodeEditorBoardView.tsx`** — **Chat history not loading on re-entry**: Added `useQueryClient` import and `queryClient.setQueryData(['boardChatHistory', boardId], ...)` calls in both `handleMessagesChange` (syncs full message array to cache after each exchange) and `handleClearChatHistory` (sets cache to `[]`). Root cause: `onMessagesChange` saved messages to backend but did NOT update the TanStack Query cache. On re-entry, TanStack Query served stale cached data (empty/partial) immediately, CukiChat's `initializedRef` loaded it, then background refetch returned fresh data but `initializedRef` was already `true` — blocking the update. With cache kept in sync, re-entry gets correct data from cache on mount. No changes needed in CukiChat — `initializedRef` pattern is correct once cache stays current.
+- **`CodeEditorBoardView.tsx`** — **Empty-content messages defense**: `handleMessagesChange` now filters out messages with `content.trim() === ''` before persisting to backend and cache. Prevents empty chat messages from entering the DB (which would cause Mongoose `required: true` validation failures on any subsequent `req.board.save()` call).
+- **`CukiChat.tsx`** — **Empty AI response guard**: After streaming completes, checks `fullText.trim()`. If empty, throws an error (`'La IA devolvio una respuesta vacia'`) instead of saving an empty assistant message. This prevents the root cause of the `AIChatHistory.N.content: Path 'content' is required` validation error chain.

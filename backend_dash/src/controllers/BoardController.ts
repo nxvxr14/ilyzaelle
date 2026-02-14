@@ -47,21 +47,14 @@ export class BoardController {
 
     static updateBoard = async (req: Request, res: Response) => {
         try {
-            //    console.log(board.project);
-            //    console.log(req.project.id);
-
-            // tener cuidado con los id de mongo, aveces lo evalua como objid, puede que sea elmismo id pero es bueno verificar
             if (req.board.project.toString() !== req.project.id.toString()) {
                 const error = new Error('Board not found.')
                 return res.status(404).json({ error: 'There was an error.' })
             }
-            // board.boardType = req.body.boardType
-            // board.boardName = req.body.boardName
-            // board.boardConnect = req.body.boardConnect
-            // board.boardInfo = req.body.boardInfo
-            // board.modeLocal = req.body.modeLocal
-            req.board.set({ ...req.body });
-            await req.board.save()
+            const { boardType, boardName, boardConnect, boardInfo } = req.body
+            await Board.findByIdAndUpdate(req.board._id, {
+                $set: { boardType, boardName, boardConnect, boardInfo }
+            })
             res.send('[devMessage] Project created successfully.')
         } catch (error) {
             res.status(500).json({ error: 'There was an error.' })
@@ -75,11 +68,13 @@ export class BoardController {
                 return res.status(404).json({ error: 'There was an error.' })
             }
             const { active } = req.body
-            req.board.active = active 
-            await req.board.save()
+            await Board.findByIdAndUpdate(req.board._id, {
+                $set: { active }
+            })
             res.send('[devMessage] Project created successfully.')
         } catch (error) {
             console.log(error);
+            res.status(500).json({ error: 'There was an error.' })
         }
     }
 
@@ -90,11 +85,16 @@ export class BoardController {
                 return res.status(404).json({ error: 'There was an error.' })
             }
             const { boardCode } = req.body
-            req.board.boardCode = boardCode
-            await req.board.save()
+            // Use findByIdAndUpdate to update ONLY boardCode without triggering
+            // full-document validation (which would fail if AIChatHistory has
+            // entries with empty content — Mongoose required:true rejects '').
+            await Board.findByIdAndUpdate(req.board._id, {
+                $set: { boardCode }
+            })
             res.send('[devMessage] Project created successfully.')
         } catch (error) {
             console.log(error);
+            res.status(500).json({ error: 'There was an error.' })
         }
     }
 
@@ -126,6 +126,49 @@ export class BoardController {
             req.project.boards = req.project.boards.filter(board => board.toString() !== req.board.id.toString())
             Promise.allSettled([req.board.deleteOne(), req.project.save()])
             res.send("Board deleted.")
+        } catch (error) {
+            res.status(500).json({ error: 'There was an error.' })
+        }
+    }
+
+    /* AI Chat History per Board */
+
+    static getAIChatHistory = async (req: Request, res: Response) => {
+        try {
+            res.json({ AIChatHistory: req.board.AIChatHistory })
+        } catch (error) {
+            res.status(500).json({ error: 'There was an error.' })
+        }
+    }
+
+    static addAIChatMessages = async (req: Request, res: Response) => {
+        try {
+            const { messages } = req.body
+            // Use findByIdAndUpdate with $set to bypass Mongoose optimistic concurrency (versionKey).
+            // req.board can become stale between rapid saves (e.g. BURN + chat save),
+            // causing VersionError on req.board.save(). Atomic update avoids this entirely.
+            await Board.findByIdAndUpdate(req.board._id, {
+                $set: {
+                    AIChatHistory: messages.map((msg: { role: string; content: string }) => ({
+                        role: msg.role,
+                        content: msg.content,
+                        timestamp: new Date()
+                    }))
+                }
+            })
+            res.json({ message: 'Historial de chat actualizado' })
+        } catch (error) {
+            console.log('[BoardController.addAIChatMessages] Error:', error)
+            res.status(500).json({ error: 'There was an error.' })
+        }
+    }
+
+    static clearAIChatHistory = async (req: Request, res: Response) => {
+        try {
+            await Board.findByIdAndUpdate(req.board._id, {
+                $set: { AIChatHistory: [] }
+            })
+            res.json({ message: 'Historial de chat eliminado' })
         } catch (error) {
             res.status(500).json({ error: 'There was an error.' })
         }

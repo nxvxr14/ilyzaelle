@@ -169,3 +169,54 @@ export async function getBoardsStatus(id: Board["_id"]) {
   }
 }
 */
+
+/* AI Chat History per Board */
+
+export interface BoardAIChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: Date;
+}
+
+export async function getBoardAIChatHistory({
+  projectId,
+  boardId,
+}: Pick<BoardAPIType, "projectId" | "boardId">) {
+  try {
+    const { data } = await api.get(`/projects/${projectId}/boards/${boardId}/ai-chat-history`);
+    return data.AIChatHistory as BoardAIChatMessage[];
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
+}
+
+export async function addBoardAIChatMessages({
+  projectId,
+  boardId,
+  messages,
+}: Pick<BoardAPIType, "projectId" | "boardId"> & { messages: BoardAIChatMessage[] }) {
+  try {
+    const { data } = await api.post(`/projects/${projectId}/boards/${boardId}/ai-chat-history/bulk`, { messages });
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
+}
+
+export async function clearBoardAIChatHistory({
+  projectId,
+  boardId,
+}: Pick<BoardAPIType, "projectId" | "boardId">) {
+  try {
+    const { data } = await api.delete(`/projects/${projectId}/boards/${boardId}/ai-chat-history`);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+  }
+}
