@@ -68,14 +68,14 @@ labBackend/
 Course > Module > Card (with blocks)
 
 ### Card Block Types
-`TextBlock | ImageBlock | ButtonBlock | QuizBlock | CodeBlock | DownloadBlock | SeparatorBlock`
+`TextBlock | ImageBlock | ButtonBlock | QuizBlock | CodeBlock | DownloadBlock | SeparatorBlock | UploadBlock`
 
 ### Image Processing Dimensions
 - Course covers: original resolution (no resize, WebP quality 92). Frontend crops to 16:9 aspect ratio
-- Module covers: 400x711 (9:16) WebP
-- Profile images: 200x200 WebP
+- Module covers: original resolution (no resize, WebP quality 90). Frontend crops to 9:16 aspect ratio
+- Profile images: original resolution (no resize, WebP quality 90). Frontend crops to 1:1 aspect ratio
 - Badge images: 40x40 WebP
-- Card images: 800w WebP
+- Card images: original resolution (no resize, WebP quality 90)
 
 ## Auth
 - Login by email only (no password)
@@ -109,7 +109,8 @@ Course > Module > Card (with blocks)
     cardsProgress: [{
       card, completed, completedAt,
       quizAnswers: Record<string, number>,
-      quizCorrect: Record<string, boolean>
+      quizCorrect: Record<string, boolean>,
+      uploadResponses: Record<string, string>
     }],
     pointsEarned, badgeEarned, rewardBoxOpened
   }],

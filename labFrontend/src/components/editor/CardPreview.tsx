@@ -9,11 +9,19 @@ interface CardPreviewProps {
 
 const CardPreview = ({ title, blocks }: CardPreviewProps) => {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
+  const [uploadResponses, setUploadResponses] = useState<Record<string, string>>({});
 
   const handleQuizAnswer = (blockIndex: number, optionIndex: number) => {
     setQuizAnswers((prev) => ({
       ...prev,
       [blockIndex.toString()]: optionIndex,
+    }));
+  };
+
+  const handleUploadImage = (blockIndex: number, imageUrl: string) => {
+    setUploadResponses((prev) => ({
+      ...prev,
+      [blockIndex.toString()]: imageUrl,
     }));
   };
 
@@ -40,6 +48,8 @@ const CardPreview = ({ title, blocks }: CardPreviewProps) => {
             card={dummyCard}
             quizAnswers={quizAnswers}
             onQuizAnswer={handleQuizAnswer}
+            uploadResponses={uploadResponses}
+            onUploadImage={handleUploadImage}
           />
         )}
       </div>

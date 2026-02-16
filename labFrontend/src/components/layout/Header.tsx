@@ -1,16 +1,19 @@
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 
 const Header = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 bg-lab-surface/95 backdrop-blur-lg border-b border-lab-border">
       <div className="flex items-center justify-between h-14 px-4 max-w-7xl mx-auto">
-        <h1 className="text-xl font-bold tracking-tight">
-          <span className="text-lab-primary">Lab</span>
-          <span className="text-lab-text">oratorio</span>
-        </h1>
+        <Link to={isAdmin ? '/admin' : '/home'}>
+          <h1 className="text-xl font-bold tracking-tight">
+            <span className="text-lab-primary">Lab</span>
+            <span className="text-lab-text">oratorio</span>
+          </h1>
+        </Link>
 
         <div className="flex items-center gap-3">
           {user && (

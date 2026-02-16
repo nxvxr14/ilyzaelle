@@ -5,6 +5,7 @@ export interface ICardProgress {
   completed: boolean;
   quizAnswers: Record<string, number>; // blockIndex -> selectedOption
   quizCorrect: Record<string, boolean>; // blockIndex -> isCorrect
+  uploadResponses: Record<string, string>; // blockIndex -> uploaded image URL
   completedAt: Date | null;
 }
 
@@ -25,6 +26,7 @@ export interface IProgress extends Document {
   totalPoints: number;
   completed: boolean;
   completionBadgeEarned: boolean;
+  completionBadge: mongoose.Types.ObjectId | null;
   completedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +48,10 @@ const cardProgressSchema = new Schema<ICardProgress>(
       default: {},
     },
     quizCorrect: {
+      type: Schema.Types.Mixed,
+      default: {},
+    },
+    uploadResponses: {
       type: Schema.Types.Mixed,
       default: {},
     },
@@ -114,6 +120,11 @@ const progressSchema = new Schema<IProgress>(
     completionBadgeEarned: {
       type: Boolean,
       default: false,
+    },
+    completionBadge: {
+      type: Schema.Types.ObjectId,
+      ref: 'Badge',
+      default: null,
     },
     completedAt: {
       type: Date,

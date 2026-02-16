@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +21,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
 import ImageCropper from '@/components/ui/ImageCropper';
 import SortableItem from '@/components/admin/SortableItem';
-import { getImageUrl, getRarityColor } from '@/utils/helpers';
+import { getImageUrl } from '@/utils/helpers';
 import { toast } from 'react-toastify';
 import {
   createModuleSchema,
@@ -35,14 +35,12 @@ import {
   PencilIcon,
   TrashIcon,
   PhotoIcon,
-  TrophyIcon,
 } from '@heroicons/react/24/outline';
-import type { Module, Badge } from '@/types';
+import type { Module } from '@/types';
 
 const AdminCourseEditPage = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const [showModuleModal, setShowModuleModal] = useState(false);
   const [cropperOpen, setCropperOpen] = useState(false);
@@ -56,34 +54,19 @@ const AdminCourseEditPage = () => {
   // Module create form
   const moduleForm = useForm<CreateModuleFormData>({
     resolver: zodResolver(createModuleSchema),
-    defaultValues: { title: '', description: '', points: 100 },
+    defaultValues: { title: '', description: '', points: 20 },
   });
 
   // Course edit form
   const courseForm = useForm<EditCourseFormData>({
     resolver: zodResolver(editCourseSchema),
-    defaultValues: { title: '', description: '' },
+    defaultValues: { title: '', description: '', points: 10 },
   });
 
   const { data: course, isLoading } = useQuery({
     queryKey: ['admin-course', id],
     queryFn: () => endpoints.getCourseById(id!).then((r) => r.data),
     enabled: !!id,
-  });
-
-  const { data: allBadges } = useQuery({
-    queryKey: ['admin-badges'],
-    queryFn: () => endpoints.getAllBadges().then((r) => r.data),
-  });
-
-  const completionBadgeMutation = useMutation({
-    mutationFn: (badgeId: string | null) =>
-      endpoints.updateCourse(id!, { completionBadge: badgeId } as any),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-course', id] });
-      toast.success('Insignia de completado actualizada');
-    },
-    onError: () => toast.error('Error al actualizar insignia'),
   });
 
   const createModuleMutation = useMutation({
@@ -195,7 +178,7 @@ const AdminCourseEditPage = () => {
 
   const handleStartEditCourse = () => {
     if (!course) return;
-    courseForm.reset({ title: course.title, description: course.description });
+    courseForm.reset({ title: course.title, description: course.description, points: course.points ?? 10 });
     setEditingCourse(true);
   };
 
@@ -258,6 +241,18 @@ const AdminCourseEditPage = () => {
                 <p className="text-red-400 text-xs mt-1">{courseForm.formState.errors.description.message}</p>
               )}
             </div>
+            <div>
+              <label className="block text-sm text-lab-text-muted mb-1">Puntos por completar</label>
+              <input
+                type="number"
+                {...courseForm.register('points', { valueAsNumber: true })}
+                className="input-field"
+                min={0}
+              />
+              {courseForm.formState.errors.points && (
+                <p className="text-red-400 text-xs mt-1">{courseForm.formState.errors.points.message}</p>
+              )}
+            </div>
             <div className="flex gap-2">
               <button type="submit" className="btn-primary text-sm py-2">
                 Guardar
@@ -277,6 +272,7 @@ const AdminCourseEditPage = () => {
                   {course.isPublished ? 'Publicado' : 'Borrador'}
                 </span>
                 <span>{course.enrolledCount} inscritos</span>
+                <span>{course.points ?? 10} pts completar</span>
               </div>
             </div>
             <button
@@ -285,48 +281,6 @@ const AdminCourseEditPage = () => {
             >
               <PencilIcon className="w-4 h-4" />
             </button>
-          </div>
-        )}
-      </div>
-
-      {/* Completion badge */}
-      <div className="card">
-        <div className="flex items-center gap-2 mb-3">
-          <TrophyIcon className="w-5 h-5 text-lab-gold" />
-          <h3 className="font-semibold text-sm">Insignia de completado</h3>
-        </div>
-        <p className="text-xs text-lab-text-muted mb-3">
-          Se otorga al completar todos los modulos del curso.
-        </p>
-
-        <select
-          value={(course.completionBadge as Badge | null)?._id || ''}
-          onChange={(e) => completionBadgeMutation.mutate(e.target.value || null)}
-          className="input-field text-sm"
-        >
-          <option value="">Sin insignia</option>
-          {allBadges?.map((b) => (
-            <option key={b._id} value={b._id}>
-              {b.name} ({b.rarity})
-            </option>
-          ))}
-        </select>
-
-        {(course.completionBadge as Badge | null) && (
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-lab-bg mt-3">
-            <img
-              src={getImageUrl((course.completionBadge as Badge).image)}
-              alt={(course.completionBadge as Badge).name}
-              className="w-10 h-10"
-            />
-            <div>
-              <p className={`font-semibold text-sm ${getRarityColor((course.completionBadge as Badge).rarity)}`}>
-                {(course.completionBadge as Badge).name}
-              </p>
-              <p className="text-xs text-lab-text-muted capitalize">
-                {(course.completionBadge as Badge).rarity}
-              </p>
-            </div>
           </div>
         )}
       </div>
@@ -358,8 +312,7 @@ const AdminCourseEditPage = () => {
                 .map((mod: Module, index: number) => (
                 <SortableItem key={mod._id} id={mod._id}>
                   <div
-                    className="card cursor-pointer hover:border-lab-primary/30 transition-colors"
-                    onClick={() => navigate(`/admin/courses/${id}/modules/${mod._id}`)}
+                    className="card hover:border-lab-primary/30 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       {/* Cover */}
@@ -377,9 +330,12 @@ const AdminCourseEditPage = () => {
                       </button>
 
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm hover:text-lab-primary truncate">
+                        <Link
+                          to={`/admin/courses/${id}/modules/${mod._id}`}
+                          className="font-medium text-sm hover:text-lab-primary truncate block"
+                        >
                           {index + 1}. {mod.title}
-                        </p>
+                        </Link>
                         <p className="text-xs text-lab-text-muted">
                           {`${mod.cards?.length || 0} tarjetas`} &middot; {mod.points} pts
                         </p>

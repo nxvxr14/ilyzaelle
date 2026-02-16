@@ -33,6 +33,9 @@ export const updateProfile = (data: FormData) =>
 export const getAllUsers = () =>
   api.get<User[]>('/auth/users');
 
+export const getUserDetail = (id: string) =>
+  api.get(`/auth/users/${id}`);
+
 export const deleteUser = (id: string) =>
   api.delete(`/auth/users/${id}`);
 
@@ -104,6 +107,11 @@ export const uploadCardImage = (file: FormData) =>
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
+export const uploadStudentImage = (file: FormData) =>
+  api.post<{ url: string }>('/cards/upload-student-image', file, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+
 export const reorderCards = (cards: { id: string; order: number }[]) =>
   api.put('/cards/reorder/batch', { cards });
 
@@ -131,8 +139,8 @@ export const deleteBadge = (id: string) =>
 export const getCourseProgress = (courseId: string) =>
   api.get<Progress>(`/progress/course/${courseId}`);
 
-export const completeCard = (courseId: string, moduleId: string, cardId: string, quizAnswers?: Record<string, number>) =>
-  api.post<Progress>(`/progress/course/${courseId}/module/${moduleId}/card/${cardId}/complete`, { quizAnswers });
+export const completeCard = (courseId: string, moduleId: string, cardId: string, quizAnswers?: Record<string, number>, uploadResponses?: Record<string, string>) =>
+  api.post<Progress>(`/progress/course/${courseId}/module/${moduleId}/card/${cardId}/complete`, { quizAnswers, uploadResponses });
 
 export const completeModuleProgress = (courseId: string, moduleId: string) =>
   api.post<{ progress: Progress; reward: RewardResult; updatedTotalPoints: number }>(`/progress/course/${courseId}/module/${moduleId}/complete`);

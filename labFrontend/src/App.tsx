@@ -22,6 +22,7 @@ import AdminCoursesPage from './pages/admin/AdminCoursesPage';
 import AdminCourseEditPage from './pages/admin/AdminCourseEditPage';
 import AdminModuleEditPage from './pages/admin/AdminModuleEditPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminUserDetailPage from './pages/admin/AdminUserDetailPage';
 import AdminBadgesPage from './pages/admin/AdminBadgesPage';
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
@@ -100,6 +101,7 @@ const App = () => {
         <Route path="/admin/courses/:id" element={<AdminCourseEditPage />} />
         <Route path="/admin/courses/:courseId/modules/:moduleId" element={<AdminModuleEditPage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/users/:userId" element={<AdminUserDetailPage />} />
         <Route path="/admin/badges" element={<AdminBadgesPage />} />
       </Route>
 

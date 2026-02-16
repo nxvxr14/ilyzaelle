@@ -7,7 +7,6 @@ export interface IModule extends Document {
   course: mongoose.Types.ObjectId;
   order: number;
   cards: mongoose.Types.ObjectId[];
-  badge: mongoose.Types.ObjectId | null;
   badgeDropChance: number;
   points: number;
   createdAt: Date;
@@ -44,11 +43,6 @@ const moduleSchema = new Schema<IModule>(
         ref: 'Card',
       },
     ],
-    badge: {
-      type: Schema.Types.ObjectId,
-      ref: 'Badge',
-      default: null,
-    },
     badgeDropChance: {
       type: Number,
       default: 20,
@@ -57,7 +51,7 @@ const moduleSchema = new Schema<IModule>(
     },
     points: {
       type: Number,
-      default: 100,
+      default: 20,
     },
   },
   {

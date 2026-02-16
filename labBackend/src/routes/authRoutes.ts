@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { checkEmail, register, getProfile, updateProfile, getAllUsers, deleteUser } from '../controllers/authController';
+import { checkEmail, register, getProfile, updateProfile, getAllUsers, getUserDetail, deleteUser } from '../controllers/authController';
 import { authenticate, requireAdmin } from '../middleware/auth';
 import { upload } from '../config/multer';
 
@@ -15,6 +15,7 @@ router.put('/profile', authenticate, upload.single('profileImage'), updateProfil
 
 // Admin only
 router.get('/users', authenticate, requireAdmin, getAllUsers);
+router.get('/users/:id', authenticate, requireAdmin, getUserDetail);
 router.delete('/users/:id', authenticate, requireAdmin, deleteUser);
 
 export default router;

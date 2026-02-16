@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   DndContext,
   closestCenter,
@@ -19,15 +21,17 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CardEditor from '@/components/editor/CardEditor';
 import SortableItem from '@/components/admin/SortableItem';
 import { toast } from 'react-toastify';
-import { getImageUrl, getRarityColor } from '@/utils/helpers';
+import {
+  editModuleSchema,
+  type EditModuleFormData,
+} from '@/utils/schemas';
 import {
   ArrowLeftIcon,
   PlusIcon,
   PencilIcon,
   TrashIcon,
-  TrophyIcon,
 } from '@heroicons/react/24/outline';
-import type { CardBlock, Badge, Card } from '@/types';
+import type { CardBlock, Card } from '@/types';
 
 const AdminModuleEditPage = () => {
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
@@ -37,6 +41,12 @@ const AdminModuleEditPage = () => {
   const [editingBlocks, setEditingBlocks] = useState<CardBlock[]>([]);
   const [editingTitle, setEditingTitle] = useState('');
   const [localDropChance, setLocalDropChance] = useState<number | null>(null);
+  const [editingModule, setEditingModule] = useState(false);
+
+  const moduleForm = useForm<EditModuleFormData>({
+    resolver: zodResolver(editModuleSchema),
+    defaultValues: { title: '', description: '', points: 20 },
+  });
 
   const { data: mod, isLoading } = useQuery({
     queryKey: ['admin-module', moduleId],
@@ -75,23 +85,33 @@ const AdminModuleEditPage = () => {
     },
   });
 
-  const { data: allBadges } = useQuery({
-    queryKey: ['admin-badges'],
-    queryFn: () => endpoints.getAllBadges().then((r) => r.data),
-  });
-
-  const assignBadgeMutation = useMutation({
-    mutationFn: (data: { badge: string | null; badgeDropChance: number }) => {
+  const dropChanceMutation = useMutation({
+    mutationFn: (badgeDropChance: number) => {
       const formData = new FormData();
-      formData.append('badge', data.badge || '');
-      formData.append('badgeDropChance', data.badgeDropChance.toString());
+      formData.append('badgeDropChance', badgeDropChance.toString());
       return endpoints.updateModule(moduleId!, formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-module', moduleId] });
-      toast.success('Insignia actualizada');
+      toast.success('Probabilidad actualizada');
     },
-    onError: () => toast.error('Error al asignar insignia'),
+    onError: () => toast.error('Error al actualizar probabilidad'),
+  });
+
+  const updateModuleMutation = useMutation({
+    mutationFn: (data: EditModuleFormData) => {
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('description', data.description || '');
+      formData.append('points', data.points.toString());
+      return endpoints.updateModule(moduleId!, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-module', moduleId] });
+      toast.success('Modulo actualizado');
+      setEditingModule(false);
+    },
+    onError: () => toast.error('Error al actualizar modulo'),
   });
 
   const reorderMutation = useMutation({
@@ -152,6 +172,12 @@ const AdminModuleEditPage = () => {
     }
   };
 
+  const handleStartEditModule = () => {
+    if (!mod) return;
+    moduleForm.reset({ title: mod.title, description: mod.description || '', points: mod.points ?? 20 });
+    setEditingModule(true);
+  };
+
   if (isLoading) return <LoadingSpinner />;
   if (!mod) return <p className="p-6">Modulo no encontrado</p>;
 
@@ -165,90 +191,100 @@ const AdminModuleEditPage = () => {
       </Link>
 
       <div className="card">
-        <h2 className="text-xl font-bold">{mod.title}</h2>
-        <p className="text-sm text-lab-text-muted mt-1">{mod.description}</p>
-        <p className="text-xs text-lab-text-muted mt-2">
-          {`${mod.cards.length} tarjetas`} &middot; {mod.points} puntos
-        </p>
+        {editingModule ? (
+          <form
+            onSubmit={moduleForm.handleSubmit((data) => updateModuleMutation.mutate(data))}
+            className="space-y-3"
+          >
+            <div>
+              <input
+                {...moduleForm.register('title')}
+                className="input-field"
+                placeholder="Titulo del modulo"
+              />
+              {moduleForm.formState.errors.title && (
+                <p className="text-red-400 text-xs mt-1">{moduleForm.formState.errors.title.message}</p>
+              )}
+            </div>
+            <div>
+              <textarea
+                {...moduleForm.register('description')}
+                className="input-field min-h-[80px] resize-none"
+                placeholder="Descripcion"
+              />
+              {moduleForm.formState.errors.description && (
+                <p className="text-red-400 text-xs mt-1">{moduleForm.formState.errors.description.message}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm text-lab-text-muted mb-1">Puntos por completar</label>
+              <input
+                type="number"
+                {...moduleForm.register('points', { valueAsNumber: true })}
+                className="input-field"
+                min={0}
+              />
+              {moduleForm.formState.errors.points && (
+                <p className="text-red-400 text-xs mt-1">{moduleForm.formState.errors.points.message}</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="btn-primary text-sm py-2">
+                Guardar
+              </button>
+              <button type="button" onClick={() => setEditingModule(false)} className="btn-secondary text-sm py-2">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-bold">{mod.title}</h2>
+              <p className="text-sm text-lab-text-muted mt-1">{mod.description}</p>
+              <p className="text-xs text-lab-text-muted mt-2">
+                {`${mod.cards.length} tarjetas`} &middot; {mod.points} puntos
+              </p>
+            </div>
+            <button
+              onClick={handleStartEditModule}
+              className="p-2 text-lab-text-muted hover:text-lab-primary"
+            >
+              <PencilIcon className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Badge assignment */}
+      {/* Badge drop chance */}
       <div className="card">
-        <div className="flex items-center gap-2 mb-3">
-          <TrophyIcon className="w-5 h-5 text-lab-gold" />
-          <h3 className="font-semibold text-sm">Insignia del modulo</h3>
-        </div>
+        <h3 className="font-semibold text-sm mb-2">Probabilidad de insignia</h3>
         <p className="text-xs text-lab-text-muted mb-3">
-          Al completar este modulo, el usuario tiene una probabilidad de ganar esta insignia.
+          Al completar este modulo, el usuario tiene esta probabilidad de ganar una insignia epica o legendaria al azar.
         </p>
-
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-lab-text-muted mb-1">Insignia</label>
-            <select
-              value={(mod.badge as Badge | null)?._id || ''}
-              onChange={(e) => {
-                assignBadgeMutation.mutate({
-                  badge: e.target.value || null,
-                  badgeDropChance: mod.badgeDropChance,
-                });
-              }}
-              className="input-field text-sm"
-            >
-              <option value="">Sin insignia</option>
-              {allBadges?.map((b) => (
-                <option key={b._id} value={b._id}>
-                  {b.name} ({b.rarity})
-                </option>
-              ))}
-            </select>
+        <div>
+          <label className="block text-xs text-lab-text-muted mb-1">
+            Probabilidad ({localDropChance ?? mod.badgeDropChance}%)
+          </label>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={localDropChance ?? mod.badgeDropChance}
+            onChange={(e) => setLocalDropChance(Number(e.target.value))}
+            onPointerUp={() => {
+              if (localDropChance !== null) {
+                dropChanceMutation.mutate(localDropChance);
+                setLocalDropChance(null);
+              }
+            }}
+            className="w-full accent-lab-primary"
+          />
+          <div className="flex justify-between text-[10px] text-lab-text-muted">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
           </div>
-
-          {(mod.badge as Badge | null) && (
-            <>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-lab-bg">
-                <img
-                  src={getImageUrl((mod.badge as Badge).image)}
-                  alt={(mod.badge as Badge).name}
-                  className="w-10 h-10"
-                />
-                <div>
-                  <p className={`font-semibold text-sm ${getRarityColor((mod.badge as Badge).rarity)}`}>
-                    {(mod.badge as Badge).name}
-                  </p>
-                  <p className="text-xs text-lab-text-muted capitalize">{(mod.badge as Badge).rarity}</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs text-lab-text-muted mb-1">
-                  Probabilidad de obtener ({localDropChance ?? mod.badgeDropChance}%)
-                </label>
-                <input
-                  type="range"
-                  min={1}
-                  max={100}
-                  value={localDropChance ?? mod.badgeDropChance}
-                  onChange={(e) => setLocalDropChance(Number(e.target.value))}
-                  onPointerUp={() => {
-                    if (localDropChance !== null) {
-                      assignBadgeMutation.mutate({
-                        badge: (mod.badge as Badge)?._id || null,
-                        badgeDropChance: localDropChance,
-                      });
-                      setLocalDropChance(null);
-                    }
-                  }}
-                  className="w-full accent-lab-primary"
-                />
-                <div className="flex justify-between text-[10px] text-lab-text-muted">
-                  <span>1%</span>
-                  <span>50%</span>
-                  <span>100%</span>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </div>
 

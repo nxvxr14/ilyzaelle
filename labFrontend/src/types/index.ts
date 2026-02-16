@@ -34,7 +34,7 @@ export interface Course {
   coverImage: string;
   isPublished: boolean;
   modules: Module[];
-  completionBadge: Badge | null;
+  points: number;
   enrolledCount: number;
   createdAt: string;
   updatedAt: string;
@@ -49,7 +49,6 @@ export interface Module {
   course: string;
   order: number;
   cards: Card[];
-  badge: Badge | null;
   badgeDropChance: number;
   points: number;
   createdAt: string;
@@ -61,8 +60,6 @@ export interface TextBlock {
   type: 'text';
   content: string;
   fontSize: number;
-  bold: boolean;
-  italic: boolean;
   align: 'left' | 'center' | 'right';
 }
 
@@ -106,7 +103,12 @@ export interface SeparatorBlock {
   type: 'separator';
 }
 
-export type CardBlock = TextBlock | ImageBlock | ButtonBlock | QuizBlock | CodeBlock | DownloadBlock | SeparatorBlock;
+export interface UploadBlock {
+  type: 'upload';
+  prompt: string;
+}
+
+export type CardBlock = TextBlock | ImageBlock | ButtonBlock | QuizBlock | CodeBlock | DownloadBlock | SeparatorBlock | UploadBlock;
 
 export interface Card {
   _id: string;
@@ -135,6 +137,7 @@ export interface CardProgress {
   completed: boolean;
   quizAnswers: Record<string, number>;
   quizCorrect: Record<string, boolean>;
+  uploadResponses: Record<string, string>;
   completedAt: string | null;
 }
 

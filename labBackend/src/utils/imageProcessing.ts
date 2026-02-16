@@ -48,20 +48,17 @@ export const processImage = async (
 };
 
 export const processProfileImage = async (buffer: Buffer, filename: string): Promise<string> => {
+  // Keep original resolution — frontend crops to 1:1 via ImageCropper
   return processImage(buffer, filename, {
-    width: 200,
-    height: 200,
-    quality: 85,
+    quality: 90,
     subdir: 'profiles',
   });
 };
 
 export const processModuleImage = async (buffer: Buffer, filename: string): Promise<string> => {
-  // 9:16 ratio, width 400px -> height ~711px
+  // Keep original resolution — frontend crops to 9:16 via ImageCropper
   return processImage(buffer, filename, {
-    width: 400,
-    height: 711,
-    quality: 80,
+    quality: 90,
     subdir: 'modules',
   });
 };
@@ -76,9 +73,9 @@ export const processBadgeImage = async (buffer: Buffer, filename: string): Promi
 };
 
 export const processCardImage = async (buffer: Buffer, filename: string): Promise<string> => {
+  // Keep original resolution for zoom capability
   return processImage(buffer, filename, {
-    width: 800,
-    quality: 80,
+    quality: 90,
     subdir: 'cards',
   });
 };

@@ -94,7 +94,7 @@ const AdminCoursesPage = () => {
                   {course.title}
                 </Link>
                 <p className="text-xs text-lab-text-muted mt-0.5">
-                  {(course.modules as any[])?.length || 0} modulos &middot; {course.enrolledCount} inscritos
+                  {`${(course.modules as any[])?.length || 0} modulos`} &middot; {course.enrolledCount} inscritos
                 </p>
               </div>
 

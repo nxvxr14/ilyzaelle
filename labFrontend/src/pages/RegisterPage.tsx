@@ -200,8 +200,6 @@ const RegisterPage = () => {
         onCropComplete={handleCropComplete}
         aspect={1}
         title="Foto de perfil"
-        outputWidth={200}
-        outputHeight={200}
       />
     </div>
   );

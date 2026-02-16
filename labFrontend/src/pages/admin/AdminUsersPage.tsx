@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import * as endpoints from '@/api/endpoints';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { getImageUrl, formatDate } from '@/utils/helpers';
@@ -17,6 +18,7 @@ const AdminUsersPage = () => {
     mutationFn: (id: string) => endpoints.deleteUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       toast.success('Usuario eliminado');
     },
     onError: () => toast.error('Error al eliminar'),
@@ -32,47 +34,43 @@ const AdminUsersPage = () => {
         {users?.map((user) => (
           <div key={user._id} className="card flex items-center gap-3">
             {/* Avatar */}
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-lab-bg flex-shrink-0">
-              {user.profileImage ? (
-                <img
-                  src={getImageUrl(user.profileImage)}
-                  alt={user.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-lab-primary">
-                  {user.name?.[0]?.toUpperCase()}
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-medium text-sm truncate">{user.name}</p>
-                {user.isAdmin && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-lab-primary/20 text-lab-primary font-semibold">
-                    ADMIN
-                  </span>
+            <Link
+              to={`/admin/users/${user._id}`}
+              className="flex items-center gap-3 flex-1 min-w-0"
+            >
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-lab-bg flex-shrink-0">
+                {user.profileImage ? (
+                  <img
+                    src={getImageUrl(user.profileImage)}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-sm font-bold text-lab-primary">
+                    {user.name?.[0]?.toUpperCase()}
+                  </div>
                 )}
               </div>
-              <p className="text-xs text-lab-text-muted">{user.email}</p>
-              <p className="text-xs text-lab-text-muted">
-                {user.totalPoints} pts &middot; {formatDate(user.createdAt)}
-              </p>
-            </div>
 
-            {!user.isAdmin && (
-              <button
-                onClick={() => {
-                  if (confirm(`Eliminar a ${user.name}?`)) {
-                    deleteMutation.mutate(user._id);
-                  }
-                }}
-                className="p-2 text-lab-text-muted hover:text-red-400"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
-            )}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{user.name}</p>
+                <p className="text-xs text-lab-text-muted">{user.email}</p>
+                <p className="text-xs text-lab-text-muted">
+                  {user.totalPoints} pts &middot; {formatDate(user.createdAt)}
+                </p>
+              </div>
+            </Link>
+
+            <button
+              onClick={() => {
+                if (confirm(`Eliminar a ${user.name}?`)) {
+                  deleteMutation.mutate(user._id);
+                }
+              }}
+              className="p-2 text-lab-text-muted hover:text-red-400"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
           </div>
         ))}
       </div>

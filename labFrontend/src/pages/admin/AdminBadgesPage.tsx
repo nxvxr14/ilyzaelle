@@ -8,20 +8,23 @@ import Modal from '@/components/ui/Modal';
 import { getImageUrl, getRarityColor, getRarityBg } from '@/utils/helpers';
 import { toast } from 'react-toastify';
 import { createBadgeSchema, type CreateBadgeFormData } from '@/utils/schemas';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
+import type { Badge } from '@/types';
 
 const AdminBadgesPage = () => {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [editingBadge, setEditingBadge] = useState<Badge | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CreateBadgeFormData>({
+  const createForm = useForm<CreateBadgeFormData>({
+    resolver: zodResolver(createBadgeSchema),
+    defaultValues: { name: '', description: '', rarity: 'common' },
+  });
+
+  const editForm = useForm<CreateBadgeFormData>({
     resolver: zodResolver(createBadgeSchema),
     defaultValues: { name: '', description: '', rarity: 'common' },
   });
@@ -43,6 +46,19 @@ const AdminBadgesPage = () => {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: FormData }) =>
+      endpoints.updateBadge(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-badges'] });
+      toast.success('Insignia actualizada');
+      handleCloseEdit();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Error al actualizar insignia');
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => endpoints.deleteBadge(id),
     onSuccess: () => {
@@ -54,10 +70,26 @@ const AdminBadgesPage = () => {
   const handleCloseCreate = () => {
     setShowCreate(false);
     setImageFile(null);
-    reset();
+    createForm.reset();
   };
 
-  const onSubmit = (data: CreateBadgeFormData) => {
+  const handleOpenEdit = (badge: Badge) => {
+    setEditingBadge(badge);
+    setEditImageFile(null);
+    editForm.reset({
+      name: badge.name,
+      description: badge.description,
+      rarity: badge.rarity,
+    });
+  };
+
+  const handleCloseEdit = () => {
+    setEditingBadge(null);
+    setEditImageFile(null);
+    editForm.reset();
+  };
+
+  const onCreateSubmit = (data: CreateBadgeFormData) => {
     if (!imageFile) {
       toast.error('Selecciona una imagen de 40x40px');
       return;
@@ -68,6 +100,16 @@ const AdminBadgesPage = () => {
     formData.append('rarity', data.rarity);
     formData.append('image', imageFile);
     createMutation.mutate(formData);
+  };
+
+  const onEditSubmit = (data: CreateBadgeFormData) => {
+    if (!editingBadge) return;
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('description', data.description || '');
+    formData.append('rarity', data.rarity);
+    if (editImageFile) formData.append('image', editImageFile);
+    updateMutation.mutate({ id: editingBadge._id, data: formData });
   };
 
   if (isLoading) return <LoadingSpinner />;
@@ -92,48 +134,53 @@ const AdminBadgesPage = () => {
             <p className={`font-semibold text-sm ${getRarityColor(badge.rarity)}`}>{badge.name}</p>
             <p className="text-xs text-lab-text-muted text-center mt-1">{badge.description}</p>
             <p className="text-[10px] text-lab-text-muted mt-1 capitalize">{badge.rarity}</p>
-            <button
-              onClick={() => {
-                if (confirm('Eliminar esta insignia?')) {
-                  deleteMutation.mutate(badge._id);
-                }
-              }}
-              className="mt-2 p-1.5 text-lab-text-muted hover:text-red-400"
-            >
-              <TrashIcon className="w-4 h-4" />
-            </button>
+            <div className="flex gap-1 mt-2">
+              <button
+                onClick={() => handleOpenEdit(badge)}
+                className="p-1.5 text-lab-text-muted hover:text-lab-primary"
+              >
+                <PencilIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm('Eliminar esta insignia?')) {
+                    deleteMutation.mutate(badge._id);
+                  }
+                }}
+                className="p-1.5 text-lab-text-muted hover:text-red-400"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Create modal */}
       <Modal isOpen={showCreate} onClose={handleCloseCreate} title="Nueva Insignia">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm text-lab-text-muted mb-1">Nombre</label>
-            <input {...register('name')} className="input-field" placeholder="Nombre" />
-            {errors.name && (
-              <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>
+            <input {...createForm.register('name')} className="input-field" placeholder="Nombre" />
+            {createForm.formState.errors.name && (
+              <p className="text-red-400 text-xs mt-1">{createForm.formState.errors.name.message}</p>
             )}
           </div>
           <div>
             <label className="block text-sm text-lab-text-muted mb-1">Descripcion</label>
-            <input {...register('description')} className="input-field" placeholder="Descripcion" />
-            {errors.description && (
-              <p className="text-red-400 text-xs mt-1">{errors.description.message}</p>
+            <input {...createForm.register('description')} className="input-field" placeholder="Descripcion" />
+            {createForm.formState.errors.description && (
+              <p className="text-red-400 text-xs mt-1">{createForm.formState.errors.description.message}</p>
             )}
           </div>
           <div>
             <label className="block text-sm text-lab-text-muted mb-1">Rareza</label>
-            <select {...register('rarity')} className="input-field">
+            <select {...createForm.register('rarity')} className="input-field">
               <option value="common">Comun</option>
               <option value="rare">Rara</option>
               <option value="epic">Epica</option>
               <option value="legendary">Legendaria</option>
             </select>
-            {errors.rarity && (
-              <p className="text-red-400 text-xs mt-1">{errors.rarity.message}</p>
-            )}
           </div>
           <div>
             <label className="block text-sm text-lab-text-muted mb-1">Imagen (40x40px exactos)</label>
@@ -152,6 +199,61 @@ const AdminBadgesPage = () => {
             className="btn-primary w-full"
           >
             {createMutation.isPending ? 'Creando...' : 'Crear Insignia'}
+          </button>
+        </form>
+      </Modal>
+
+      {/* Edit modal */}
+      <Modal isOpen={!!editingBadge} onClose={handleCloseEdit} title="Editar Insignia">
+        <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+          {editingBadge && (
+            <div className="flex justify-center mb-2">
+              <img
+                src={getImageUrl(editingBadge.image)}
+                alt={editingBadge.name}
+                className="w-10 h-10"
+              />
+            </div>
+          )}
+          <div>
+            <label className="block text-sm text-lab-text-muted mb-1">Nombre</label>
+            <input {...editForm.register('name')} className="input-field" placeholder="Nombre" />
+            {editForm.formState.errors.name && (
+              <p className="text-red-400 text-xs mt-1">{editForm.formState.errors.name.message}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm text-lab-text-muted mb-1">Descripcion</label>
+            <input {...editForm.register('description')} className="input-field" placeholder="Descripcion" />
+            {editForm.formState.errors.description && (
+              <p className="text-red-400 text-xs mt-1">{editForm.formState.errors.description.message}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm text-lab-text-muted mb-1">Rareza</label>
+            <select {...editForm.register('rarity')} className="input-field">
+              <option value="common">Comun</option>
+              <option value="rare">Rara</option>
+              <option value="epic">Epica</option>
+              <option value="legendary">Legendaria</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-lab-text-muted mb-1">Cambiar imagen (opcional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setEditImageFile(e.target.files?.[0] || null)}
+              className="input-field text-sm"
+            />
+            <p className="text-xs text-lab-text-muted mt-1">40x40px exactos. Dejar vacio para mantener la actual</p>
+          </div>
+          <button
+            type="submit"
+            disabled={updateMutation.isPending}
+            className="btn-primary w-full"
+          >
+            {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </form>
       </Modal>

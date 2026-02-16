@@ -30,7 +30,7 @@ export const getCourseProgress = async (req: AuthRequest, res: Response): Promis
 export const completeCard = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { courseId, moduleId, cardId } = req.params;
-    const { quizAnswers } = req.body; // { blockIndex: selectedOption }
+    const { quizAnswers, uploadResponses } = req.body; // quizAnswers: { blockIndex: selectedOption }, uploadResponses: { blockIndex: imageUrl }
 
     const progress = await Progress.findOne({
       user: req.user?._id,
@@ -77,6 +77,7 @@ export const completeCard = async (req: AuthRequest, res: Response): Promise<voi
         completed: true,
         quizAnswers: quizAnswers || {},
         quizCorrect,
+        uploadResponses: uploadResponses || {},
         completedAt: new Date(),
       };
       modProgress.cardsProgress.push(cardProgress);
@@ -87,6 +88,9 @@ export const completeCard = async (req: AuthRequest, res: Response): Promise<voi
         cardProgress.quizAnswers = quizAnswers;
       }
       cardProgress.quizCorrect = quizCorrect;
+      if (uploadResponses) {
+        cardProgress.uploadResponses = uploadResponses;
+      }
     }
 
     await progress.save();
@@ -125,7 +129,7 @@ export const completeModule = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const mod = await Module.findById(moduleId).populate('badge');
+    const mod = await Module.findById(moduleId);
     if (!mod) {
       res.status(404).json({ error: 'Module not found' });
       return;
@@ -153,13 +157,17 @@ export const completeModule = async (req: AuthRequest, res: Response): Promise<v
     modProgress.completedAt = new Date();
     modProgress.pointsEarned = mod.points + quizBonus;
 
-    // Reward box logic: roll for badge
+    // Badge drop: roll against badgeDropChance, then pick random epic (80%) or legendary (20%)
     let badgeEarned = null;
-    if (mod.badge) {
-      const roll = Math.random() * 100;
-      if (roll < mod.badgeDropChance) {
-        modProgress.badgeEarned = mod.badge;
-        badgeEarned = mod.badge; // Already populated from .populate('badge')
+    const roll = Math.random() * 100;
+    if (roll < mod.badgeDropChance) {
+      const rarityRoll = Math.random();
+      const rarity = rarityRoll < 0.8 ? 'epic' : 'legendary';
+      const candidates = await Badge.find({ rarity });
+      if (candidates.length > 0) {
+        const picked = candidates[Math.floor(Math.random() * candidates.length)]!;
+        modProgress.badgeEarned = picked._id as any;
+        badgeEarned = picked;
       }
     }
 
@@ -273,19 +281,40 @@ export const claimCourseReward = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    const course = await Course.findById(courseId).populate('completionBadge');
+    const course = await Course.findById(courseId);
     if (!course) {
       res.status(404).json({ error: 'Course not found' });
       return;
+    }
+
+    // Award course points
+    progress.totalPoints += course.points;
+    await progress.save();
+
+    // Update user total points
+    const allProgress = await Progress.find({ user: req.user?._id });
+    const userTotalPoints = allProgress.reduce((sum, p) => sum + p.totalPoints, 0);
+    await User.findByIdAndUpdate(req.user?._id, { totalPoints: userTotalPoints });
+
+    // 100% chance to earn a badge: 80% common, 20% rare
+    let badgeEarned = null;
+    const rarityRoll = Math.random();
+    const rarity = rarityRoll < 0.8 ? 'common' : 'rare';
+    const candidates = await Badge.find({ rarity });
+    if (candidates.length > 0) {
+      const picked = candidates[Math.floor(Math.random() * candidates.length)]!;
+      badgeEarned = picked;
+      progress.completionBadge = picked._id as any;
     }
 
     progress.completionBadgeEarned = true;
     await progress.save();
 
     res.json({
-      points: progress.totalPoints,
-      badgeEarned: course.completionBadge || null,
+      points: course.points,
+      badgeEarned,
       courseCompleted: true,
+      updatedTotalPoints: userTotalPoints,
     });
   } catch (error) {
     console.error('Claim course reward error:', error);
@@ -297,6 +326,7 @@ export const getUserBadges = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const allProgress = await Progress.find({ user: req.user?._id })
       .populate('modulesProgress.badgeEarned')
+      .populate('completionBadge')
       .populate('course');
 
     const badges: unknown[] = [];
@@ -313,16 +343,13 @@ export const getUserBadges = async (req: AuthRequest, res: Response): Promise<vo
       }
 
       // Course completion badge
-      if (progress.completionBadgeEarned) {
-        const course = await Course.findById(progress.course).populate('completionBadge');
-        if (course?.completionBadge) {
-          badges.push({
-            badge: course.completionBadge,
-            earnedFrom: course,
-            earnedAt: progress.completedAt,
-            isCompletionBadge: true,
-          });
-        }
+      if (progress.completionBadgeEarned && progress.completionBadge) {
+        badges.push({
+          badge: progress.completionBadge,
+          earnedFrom: progress.course,
+          earnedAt: progress.completedAt,
+          isCompletionBadge: true,
+        });
       }
     }
 
@@ -335,7 +362,7 @@ export const getUserBadges = async (req: AuthRequest, res: Response): Promise<vo
 
 export const getAdminStats = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const totalUsers = await User.countDocuments();
+    const totalUsers = await User.countDocuments({ isAdmin: false });
     const totalCourses = await Course.countDocuments();
     const publishedCourses = await Course.countDocuments({ isPublished: true });
     const totalModules = await Module.countDocuments();

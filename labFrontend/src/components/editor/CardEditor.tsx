@@ -1,13 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CardBlock } from '@/types';
-import { useAuth } from '@/context/AuthContext';
 import CardBlockEditor from './CardBlockEditor';
 import CardPreview from './CardPreview';
 import {
   PlusIcon,
   EyeIcon,
   PencilSquareIcon,
-  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
 interface CardEditorProps {
@@ -24,8 +22,6 @@ const BLOCK_TEMPLATES: Record<string, () => CardBlock> = {
     type: 'text',
     content: '',
     fontSize: 16,
-    bold: false,
-    italic: false,
     align: 'left',
   }),
   image: () => ({
@@ -46,7 +42,7 @@ const BLOCK_TEMPLATES: Record<string, () => CardBlock> = {
     options: ['', '', '', ''],
     correctIndex: 0,
     explanation: '',
-    points: 10,
+    points: 70,
   }),
   code: () => ({
     type: 'code',
@@ -62,13 +58,23 @@ const BLOCK_TEMPLATES: Record<string, () => CardBlock> = {
   separator: () => ({
     type: 'separator',
   }),
+  upload: () => ({
+    type: 'upload',
+    prompt: '',
+  }),
 };
 
 const CardEditor = ({ isOpen, onClose, initialTitle, initialBlocks, onSave, isSaving }: CardEditorProps) => {
-  const { user, logout } = useAuth();
   const [title, setTitle] = useState(initialTitle);
   const [blocks, setBlocks] = useState<CardBlock[]>(initialBlocks);
   const [showPreview, setShowPreview] = useState(false);
+
+  // Lock body scroll so the underlying sticky Header cannot peek through
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
 
   const addBlock = (type: string) => {
     const template = BLOCK_TEMPLATES[type];
@@ -103,35 +109,9 @@ const CardEditor = ({ isOpen, onClose, initialTitle, initialBlocks, onSave, isSa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-lab-bg overflow-y-auto">
-      {/* Header */}
-      <div className="bg-lab-surface/95 backdrop-blur-lg border-b border-lab-border">
-        <div className="flex items-center justify-between h-14 px-4 max-w-7xl mx-auto">
-          <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-lab-primary">Lab</span>
-            <span className="text-lab-text">oratorio</span>
-          </h1>
-          <div className="flex items-center gap-3">
-            {user && (
-              <>
-                <span className="text-xs text-lab-text-muted hidden sm:block">
-                  {user.email}
-                </span>
-                <button
-                  onClick={logout}
-                  className="p-2 text-lab-text-muted hover:text-lab-accent transition-colors"
-                  title="Cerrar sesion"
-                >
-                  <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="sticky top-0 z-10 bg-lab-surface border-b border-lab-border px-4 py-3">
+    <div className="fixed inset-0 z-[70] bg-lab-bg flex flex-col isolate">
+      {/* Toolbar — stays above the sticky admin Header (z-40) */}
+      <div className="relative z-[71] flex-shrink-0 bg-lab-surface border-b border-lab-border px-4 py-3">
         <div className="flex items-center justify-between max-w-3xl mx-auto">
           <button onClick={onClose} className="text-sm text-lab-text-muted hover:text-lab-text">
             Cancelar
@@ -158,57 +138,61 @@ const CardEditor = ({ isOpen, onClose, initialTitle, initialBlocks, onSave, isSa
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        {showPreview ? (
-          <CardPreview title={title} blocks={blocks} />
-        ) : (
-          <div className="space-y-4">
-            {/* Title */}
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="input-field text-lg font-semibold"
-              placeholder="Titulo de la tarjeta"
-            />
-
-            {/* Blocks */}
-            {blocks.map((block, index) => (
-              <CardBlockEditor
-                key={index}
-                block={block}
-                index={index}
-                totalBlocks={blocks.length}
-                onUpdate={(updated) => updateBlock(index, updated)}
-                onRemove={() => removeBlock(index)}
-                onMove={(dir) => moveBlock(index, dir)}
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          {showPreview ? (
+            <CardPreview title={title} blocks={blocks} />
+          ) : (
+            <div className="space-y-4">
+              {/* Title */}
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="input-field text-lg font-semibold"
+                placeholder="Titulo de la tarjeta"
               />
-            ))}
 
-            {/* Add block buttons */}
-            <div className="card bg-lab-bg border-dashed">
-              <p className="text-sm text-lab-text-muted mb-3 text-center">Agregar bloque</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {[
-                  { type: 'text', label: 'Texto' },
-                  { type: 'image', label: 'Imagen' },
-                  { type: 'button', label: 'Boton' },
-                  { type: 'quiz', label: 'Quiz' },
-                  { type: 'code', label: 'Codigo' },
-                  { type: 'download', label: 'Descarga' },
-                  { type: 'separator', label: 'Separador' },
-                ].map((item) => (
-                  <button
-                    key={item.type}
-                    onClick={() => addBlock(item.type)}
-                    className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1"
-                  >
-                    <PlusIcon className="w-3 h-3" /> {item.label}
-                  </button>
-                ))}
+              {/* Blocks */}
+              {blocks.map((block, index) => (
+                <CardBlockEditor
+                  key={index}
+                  block={block}
+                  index={index}
+                  totalBlocks={blocks.length}
+                  onUpdate={(updated) => updateBlock(index, updated)}
+                  onRemove={() => removeBlock(index)}
+                  onMove={(dir) => moveBlock(index, dir)}
+                />
+              ))}
+
+              {/* Add block buttons */}
+              <div className="card bg-lab-bg border-dashed">
+                <p className="text-sm text-lab-text-muted mb-3 text-center">Agregar bloque</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {[
+                    { type: 'text', label: 'Texto' },
+                    { type: 'image', label: 'Imagen' },
+                    { type: 'button', label: 'Boton' },
+                    { type: 'quiz', label: 'Quiz' },
+                    { type: 'code', label: 'Codigo' },
+                    { type: 'download', label: 'Descarga' },
+                    { type: 'separator', label: 'Separador' },
+                    { type: 'upload', label: 'Subida de foto' },
+                  ].map((item) => (
+                    <button
+                      key={item.type}
+                      onClick={() => addBlock(item.type)}
+                      className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1"
+                    >
+                      <PlusIcon className="w-3 h-3" /> {item.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

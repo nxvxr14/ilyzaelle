@@ -21,7 +21,7 @@ export const createModule = async (req: Request, res: Response): Promise<void> =
       description,
       course: courseId,
       order,
-      points: points || 100,
+      points: points || 20,
       badgeDropChance: badgeDropChance ?? 20,
     };
 
@@ -47,8 +47,7 @@ export const getModuleById = async (req: Request, res: Response): Promise<void> 
       .populate({
         path: 'cards',
         options: { sort: { order: 1 } },
-      })
-      .populate('badge');
+      });
 
     if (!mod) {
       res.status(404).json({ error: 'Module not found' });
@@ -64,14 +63,13 @@ export const getModuleById = async (req: Request, res: Response): Promise<void> 
 
 export const updateModule = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, description, order, points, badge, badgeDropChance } = req.body;
+    const { title, description, order, points, badgeDropChance } = req.body;
     const updates: Record<string, unknown> = {};
 
     if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
     if (order !== undefined) updates.order = order;
     if (points !== undefined) updates.points = points;
-    if (badge !== undefined) updates.badge = badge || null;
     if (badgeDropChance !== undefined) updates.badgeDropChance = badgeDropChance;
 
     if (req.file) {
@@ -82,8 +80,7 @@ export const updateModule = async (req: Request, res: Response): Promise<void> =
       updates.coverImage = await processModuleImage(req.file.buffer, req.file.originalname);
     }
 
-    const mod = await Module.findByIdAndUpdate(req.params.id, updates, { new: true })
-      .populate('badge');
+    const mod = await Module.findByIdAndUpdate(req.params.id, updates, { new: true });
 
     if (!mod) {
       res.status(404).json({ error: 'Module not found' });

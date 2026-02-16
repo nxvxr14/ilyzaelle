@@ -5,6 +5,7 @@ import {
   updateCard,
   deleteCard,
   uploadCardImage,
+  uploadStudentImage,
   reorderCards,
 } from '../controllers/cardController';
 import { authenticate, requireAdmin } from '../middleware/auth';
@@ -14,6 +15,7 @@ const router = Router();
 
 // Authenticated
 router.get('/:id', authenticate, getCardById);
+router.post('/upload-student-image', authenticate, upload.single('image'), uploadStudentImage);
 
 // Admin only
 router.post('/', authenticate, requireAdmin, createCard);

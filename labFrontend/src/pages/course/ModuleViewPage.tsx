@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import * as endpoints from '@/api/endpoints';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import CardRenderer from '@/components/course/CardRenderer';
@@ -18,9 +18,75 @@ const ModuleViewPage = () => {
   const [maxReachedIndex, setMaxReachedIndex] = useState<number>(0);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [savedAnswers, setSavedAnswers] = useState<Record<number, Record<string, number>>>({});
+  const [uploadResponses, setUploadResponses] = useState<Record<string, string>>({});
+  const [savedUploads, setSavedUploads] = useState<Record<number, Record<string, string>>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [hasReachedBottom, setHasReachedBottom] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const startTimeRef = useRef(Date.now());
+
+  // Lock body scroll to prevent background scroll bleed on mobile
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  // Check if user scrolled to bottom (or content doesn't need scrolling)
+  const checkScrollBottom = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 8;
+    const noScroll = el.scrollHeight <= el.clientHeight + 2;
+    if (atBottom || noScroll) setHasReachedBottom(true);
+  }, []);
+
+  // Reset hasReachedBottom when the card changes, then re-check.
+  // Skip reset for already-visited cards (index < maxReachedIndex) — they were
+  // already scrolled through so the button shouldn't flash disabled.
+  useEffect(() => {
+    // Scroll container back to top for every card change
+    const el = scrollContainerRef.current;
+    if (el) el.scrollTop = 0;
+
+    if (currentIndex !== null && currentIndex < maxReachedIndex) {
+      setHasReachedBottom(true);
+      return;
+    }
+    setHasReachedBottom(false);
+    if (!el) return;
+    // Re-check after layout settles (GSAP transition takes ~1.5s)
+    // Check multiple times to cover GSAP animation settling
+    const timers = [100, 400, 900, 1800].map((ms) =>
+      setTimeout(() => checkScrollBottom(el), ms),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [currentIndex, maxReachedIndex, checkScrollBottom]);
+
+  // Callback ref for the scrollable card container
+  const handleScrollRef = useRef<(() => void) | null>(null);
+  const scrollCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    // Clean up old listener
+    const prev = scrollContainerRef.current;
+    if (prev && handleScrollRef.current) {
+      prev.removeEventListener('scroll', handleScrollRef.current);
+    }
+
+    scrollContainerRef.current = node;
+    handleScrollRef.current = null;
+    if (!node) return;
+
+    const handleScroll = () => checkScrollBottom(node);
+    handleScrollRef.current = handleScroll;
+    node.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Also check immediately — content might not need scrolling
+    // Use rAF to wait for layout to settle after GSAP transition
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        checkScrollBottom(node);
+      });
+    });
+  }, [checkScrollBottom]);
 
   const { data: mod, isLoading: loadingModule } = useQuery({
     queryKey: ['module', moduleId],
@@ -68,15 +134,19 @@ const ModuleViewPage = () => {
     setCurrentIndex(resumeIndex);
     setMaxReachedIndex(resumeIndex);
 
-    // Restore saved quiz answers from backend progress
+    // Restore saved quiz answers and upload responses from backend progress
     if (moduleProgress) {
       const restored: Record<number, Record<string, number>> = {};
+      const restoredUploads: Record<number, Record<string, string>> = {};
       mod.cards.forEach((card, cardIndex) => {
         const cp = moduleProgress.cardsProgress.find(
           (c) => c.card === card._id || c.card.toString() === card._id
         );
         if (cp?.quizAnswers && Object.keys(cp.quizAnswers).length > 0) {
           restored[cardIndex] = cp.quizAnswers;
+        }
+        if (cp?.uploadResponses && Object.keys(cp.uploadResponses).length > 0) {
+          restoredUploads[cardIndex] = cp.uploadResponses;
         }
       });
       if (Object.keys(restored).length > 0) {
@@ -86,12 +156,19 @@ const ModuleViewPage = () => {
           setQuizAnswers(restored[resumeIndex]);
         }
       }
+      if (Object.keys(restoredUploads).length > 0) {
+        setSavedUploads(restoredUploads);
+        // Pre-load upload responses for the card we're resuming at
+        if (restoredUploads[resumeIndex]) {
+          setUploadResponses(restoredUploads[resumeIndex]);
+        }
+      }
     }
   }
 
   const completeCardMutation = useMutation({
-    mutationFn: ({ cardId, answers }: { cardId: string; answers?: Record<string, number> }) =>
-      endpoints.completeCard(courseId!, moduleId!, cardId, answers),
+    mutationFn: ({ cardId, answers, uploads }: { cardId: string; answers?: Record<string, number>; uploads?: Record<string, string> }) =>
+      endpoints.completeCard(courseId!, moduleId!, cardId, answers, uploads),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['progress', courseId] });
     },
@@ -104,16 +181,27 @@ const ModuleViewPage = () => {
     }));
   };
 
+  const handleUploadImage = (blockIndex: number, imageUrl: string) => {
+    setUploadResponses((prev) => ({
+      ...prev,
+      [blockIndex.toString()]: imageUrl,
+    }));
+  };
+
   const goBack = () => {
     if (currentIndex === null || currentIndex <= 0) return;
-    // Save current quiz answers for this card index before navigating away
+    // Save current quiz answers and upload responses for this card index before navigating away
     if (Object.keys(quizAnswers).length > 0) {
       setSavedAnswers((prev) => ({ ...prev, [currentIndex]: quizAnswers }));
     }
+    if (Object.keys(uploadResponses).length > 0) {
+      setSavedUploads((prev) => ({ ...prev, [currentIndex]: uploadResponses }));
+    }
     const prevIndex = currentIndex - 1;
     setCurrentIndex(prevIndex);
-    // Restore previously saved answers for the card we're going back to
+    // Restore previously saved answers and uploads for the card we're going back to
     setQuizAnswers(savedAnswers[prevIndex] || {});
+    setUploadResponses(savedUploads[prevIndex] || {});
   };
 
   const saveAndAdvance = async () => {
@@ -125,14 +213,19 @@ const ModuleViewPage = () => {
     setIsSaving(true);
     try {
       const answers = Object.keys(quizAnswers).length > 0 ? quizAnswers : undefined;
-      await completeCardMutation.mutateAsync({ cardId: card._id, answers });
+      const uploads = Object.keys(uploadResponses).length > 0 ? uploadResponses : undefined;
+      await completeCardMutation.mutateAsync({ cardId: card._id, answers, uploads });
 
       const nextIndex = currentIndex + 1;
-      // Save current answers in case user comes back
+      // Save current answers and uploads in case user comes back
       if (Object.keys(quizAnswers).length > 0) {
         setSavedAnswers((prev) => ({ ...prev, [currentIndex]: quizAnswers }));
       }
+      if (Object.keys(uploadResponses).length > 0) {
+        setSavedUploads((prev) => ({ ...prev, [currentIndex]: uploadResponses }));
+      }
       setQuizAnswers(savedAnswers[nextIndex] || {});
+      setUploadResponses(savedUploads[nextIndex] || {});
       setCurrentIndex(nextIndex);
       setMaxReachedIndex((prev) => Math.max(prev, nextIndex));
     } catch {
@@ -151,8 +244,10 @@ const ModuleViewPage = () => {
     setIsSaving(true);
     try {
       const answers = Object.keys(quizAnswers).length > 0 ? quizAnswers : undefined;
-      await completeCardMutation.mutateAsync({ cardId: card._id, answers });
+      const uploads = Object.keys(uploadResponses).length > 0 ? uploadResponses : undefined;
+      await completeCardMutation.mutateAsync({ cardId: card._id, answers, uploads });
       setQuizAnswers({});
+      setUploadResponses({});
       // Wait for progress refetch so quizCorrect data is available for results
       await queryClient.refetchQueries({ queryKey: ['progress', courseId] });
       setShowResults(true);
@@ -237,12 +332,15 @@ const ModuleViewPage = () => {
             <div className="flex-1 flex items-stretch min-h-0 overflow-hidden w-full justify-center">
               <div className="w-full max-w-lg lg:max-w-4xl flex flex-col min-h-0">
                 <CardTransition transitionKey={currentCard._id}>
-                  <div className="card w-full flex-1 min-h-0 overflow-y-auto p-4">
+                  <div ref={scrollCallbackRef} className="card w-full flex-1 min-h-0 overflow-y-auto overscroll-contain p-4">
                     <div className="min-h-full flex flex-col justify-center">
                       <CardRenderer
                         card={currentCard}
                         quizAnswers={quizAnswers}
                         onQuizAnswer={handleQuizAnswer}
+                        uploadResponses={uploadResponses}
+                        onUploadImage={handleUploadImage}
+                        readOnly={alreadyCompleted}
                       />
                     </div>
                   </div>
@@ -274,7 +372,7 @@ const ModuleViewPage = () => {
               ) : (
                 <button
                   onClick={isLastCard ? handleFinalize : saveAndAdvance}
-                  disabled={isSaving}
+                  disabled={isSaving || !hasReachedBottom}
                   className="btn-primary w-full py-4 text-base font-semibold"
                 >
                   {isSaving

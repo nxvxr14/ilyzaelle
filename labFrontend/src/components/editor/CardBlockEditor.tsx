@@ -51,7 +51,7 @@ const CardBlockEditor = ({ block, index, totalBlocks, onUpdate, onRemove, onMove
               value={block.content}
               onChange={(e) => onUpdate({ ...block, content: e.target.value })}
               className="input-field min-h-[80px] resize-y"
-              placeholder="Escribe el contenido de texto..."
+              placeholder="Escribe el contenido en Markdown..."
             />
             <div className="flex flex-wrap gap-2">
               <select
@@ -63,18 +63,6 @@ const CardBlockEditor = ({ block, index, totalBlocks, onUpdate, onRemove, onMove
                   <option key={s} value={s}>{s}px</option>
                 ))}
               </select>
-              <button
-                onClick={() => onUpdate({ ...block, bold: !block.bold })}
-                className={`px-3 py-1 rounded text-xs font-bold ${block.bold ? 'bg-lab-primary text-white' : 'bg-lab-bg text-lab-text-muted'}`}
-              >
-                B
-              </button>
-              <button
-                onClick={() => onUpdate({ ...block, italic: !block.italic })}
-                className={`px-3 py-1 rounded text-xs italic ${block.italic ? 'bg-lab-primary text-white' : 'bg-lab-bg text-lab-text-muted'}`}
-              >
-                I
-              </button>
               <select
                 value={block.align}
                 onChange={(e) => onUpdate({ ...block, align: e.target.value as 'left' | 'center' | 'right' })}
@@ -282,6 +270,18 @@ const CardBlockEditor = ({ block, index, totalBlocks, onUpdate, onRemove, onMove
           </div>
         );
 
+      case 'upload':
+        return (
+          <div className="space-y-2">
+            <textarea
+              value={block.prompt}
+              onChange={(e) => onUpdate({ ...block, prompt: e.target.value })}
+              className="input-field text-sm min-h-[60px] resize-y"
+              placeholder="Instruccion para el estudiante (ej: Sube una captura de pantalla de tu resultado)"
+            />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -295,6 +295,7 @@ const CardBlockEditor = ({ block, index, totalBlocks, onUpdate, onRemove, onMove
     code: 'Codigo',
     download: 'Descarga',
     separator: 'Separador',
+    upload: 'Subida de foto',
   };
 
   return (

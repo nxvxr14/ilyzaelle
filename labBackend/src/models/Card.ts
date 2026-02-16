@@ -5,8 +5,6 @@ export interface ITextBlock {
   type: 'text';
   content: string;
   fontSize: number; // in px
-  bold: boolean;
-  italic: boolean;
   align: 'left' | 'center' | 'right';
 }
 
@@ -46,7 +44,16 @@ export interface IDownloadBlock {
   fileName: string;
 }
 
-export type CardBlock = ITextBlock | IImageBlock | IButtonBlock | IQuizBlock | ICodeBlock | IDownloadBlock;
+export interface ISeparatorBlock {
+  type: 'separator';
+}
+
+export interface IUploadBlock {
+  type: 'upload';
+  prompt: string;
+}
+
+export type CardBlock = ITextBlock | IImageBlock | IButtonBlock | IQuizBlock | ICodeBlock | IDownloadBlock | ISeparatorBlock | IUploadBlock;
 
 export interface ICard extends Document {
   title: string;

@@ -6,7 +6,7 @@ export interface ICourse extends Document {
   coverImage: string;
   isPublished: boolean;
   modules: mongoose.Types.ObjectId[];
-  completionBadge: mongoose.Types.ObjectId | null;
+  points: number;
   enrolledCount: number;
   createdAt: Date;
   updatedAt: Date;
@@ -37,10 +37,9 @@ const courseSchema = new Schema<ICourse>(
         ref: 'Module',
       },
     ],
-    completionBadge: {
-      type: Schema.Types.ObjectId,
-      ref: 'Badge',
-      default: null,
+    points: {
+      type: Number,
+      default: 10,
     },
     enrolledCount: {
       type: Number,

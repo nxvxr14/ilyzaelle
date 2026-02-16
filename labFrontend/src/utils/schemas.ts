@@ -48,6 +48,10 @@ export const editCourseSchema = z.object({
     .string()
     .min(1, 'La descripcion es obligatoria')
     .max(500, 'Maximo 500 caracteres'),
+  points: z
+    .number({ invalid_type_error: 'Debe ser un numero' })
+    .min(0, 'Minimo 0 puntos')
+    .max(10000, 'Maximo 10000 puntos'),
 });
 
 export type EditCourseFormData = z.infer<typeof editCourseSchema>;
@@ -67,6 +71,10 @@ export const createModuleSchema = z.object({
 });
 
 export type CreateModuleFormData = z.infer<typeof createModuleSchema>;
+
+export const editModuleSchema = createModuleSchema;
+
+export type EditModuleFormData = z.infer<typeof editModuleSchema>;
 
 export const createBadgeSchema = z.object({
   name: z

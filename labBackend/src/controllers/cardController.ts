@@ -107,6 +107,22 @@ export const uploadCardImage = async (req: Request, res: Response): Promise<void
   }
 };
 
+/** Student-facing upload for photo-upload blocks (authenticate only, no admin) */
+export const uploadStudentImage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No image file provided' });
+      return;
+    }
+
+    const imagePath = await processCardImage(req.file.buffer, req.file.originalname);
+    res.json({ url: imagePath });
+  } catch (error) {
+    console.error('Upload student image error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 export const reorderCards = async (req: Request, res: Response): Promise<void> => {
   try {
     const { cards } = req.body; // Array of { id, order }

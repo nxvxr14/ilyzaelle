@@ -7,6 +7,10 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-lab-bg text-lab-text antialiased;
     min-height: 100dvh;
@@ -32,7 +36,7 @@
 @layer components {
   .btn-primary {
     @apply bg-lab-primary hover:bg-lab-primary-light text-white font-semibold
-           px-6 py-3 rounded-xl transition-all duration-200
+           px-6 py-3 rounded-xl transition-colors duration-200
            active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 

@@ -22,7 +22,6 @@ export const getAllCourses = async (_req: Request, res: Response): Promise<void>
   try {
     const courses = await Course.find()
       .populate('modules')
-      .populate('completionBadge')
       .sort({ createdAt: -1 });
     res.json(courses);
   } catch (error) {
@@ -34,7 +33,6 @@ export const getAllCourses = async (_req: Request, res: Response): Promise<void>
 export const getPublishedCourses = async (_req: Request, res: Response): Promise<void> => {
   try {
     const courses = await Course.find({ isPublished: true })
-      .populate('completionBadge')
       .sort({ createdAt: -1 });
     res.json(courses);
   } catch (error) {
@@ -50,11 +48,9 @@ export const getCourseById = async (req: Request, res: Response): Promise<void> 
         path: 'modules',
         options: { sort: { order: 1 } },
         populate: [
-          { path: 'badge' },
           { path: 'cards', select: '_id order' },
         ],
-      })
-      .populate('completionBadge');
+      });
 
     if (!course) {
       res.status(404).json({ error: 'Course not found' });
@@ -70,18 +66,17 @@ export const getCourseById = async (req: Request, res: Response): Promise<void> 
 
 export const updateCourse = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, description, isPublished, completionBadge, coverImage } = req.body;
+    const { title, description, isPublished, points, coverImage } = req.body;
     const updates: Record<string, unknown> = {};
 
     if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
     if (isPublished !== undefined) updates.isPublished = isPublished;
-    if (completionBadge !== undefined) updates.completionBadge = completionBadge;
+    if (points !== undefined) updates.points = points;
     if (coverImage !== undefined) updates.coverImage = coverImage;
 
     const course = await Course.findByIdAndUpdate(req.params.id, updates, { new: true })
-      .populate('modules')
-      .populate('completionBadge');
+      .populate('modules');
 
     if (!course) {
       res.status(404).json({ error: 'Course not found' });
