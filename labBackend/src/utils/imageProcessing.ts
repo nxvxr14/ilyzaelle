@@ -84,11 +84,10 @@ export const processCardImage = async (buffer: Buffer, filename: string): Promis
 };
 
 export const processCourseImage = async (buffer: Buffer, filename: string): Promise<string> => {
-  // 16:9 ratio, width 800px -> height 450px
+  // Keep original resolution from the frontend crop (already 16:9)
+  // Only convert to WebP with high quality — no resize
   return processImage(buffer, filename, {
-    width: 800,
-    height: 450,
-    quality: 80,
+    quality: 92,
     subdir: 'modules', // reuse modules folder for course covers too
   });
 };

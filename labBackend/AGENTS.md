@@ -71,7 +71,7 @@ Course > Module > Card (with blocks)
 `TextBlock | ImageBlock | ButtonBlock | QuizBlock | CodeBlock | DownloadBlock | SeparatorBlock`
 
 ### Image Processing Dimensions
-- Course covers: 800x450 (16:9) WebP
+- Course covers: original resolution (no resize, WebP quality 92). Frontend crops to 16:9 aspect ratio
 - Module covers: 400x711 (9:16) WebP
 - Profile images: 200x200 WebP
 - Badge images: 40x40 WebP
