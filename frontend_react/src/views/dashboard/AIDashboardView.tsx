@@ -300,13 +300,30 @@ INSTRUCCIONES IMPORTANTES:
   `;
   };
 
-  const getLast5Messages = (): { role: string; content: string }[] => {
-    const systemMessage = { role: 'system', content: getSystemPrompt() };
-    const lastMessages = chatMessages.slice(-5).map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
-    return [systemMessage, ...lastMessages];
+  // Misma estrategia que CukiChat (board): system + ultimo par user/assistant + nuevo mensaje
+  const buildContext = (userContent: string): { role: string; content: string }[] => {
+    const context: { role: string; content: string }[] = [
+      { role: 'system', content: getSystemPrompt() },
+    ];
+
+    // Recorre el historial al revés buscando el último assistant y el user anterior a ese
+    let lastAssistant: AIChatMessage | null = null;
+    let prevUser: AIChatMessage | null = null;
+
+    for (let i = chatMessages.length - 1; i >= 0; i--) {
+      if (!lastAssistant && chatMessages[i].role === 'assistant') {
+        lastAssistant = chatMessages[i];
+      } else if (lastAssistant && !prevUser && chatMessages[i].role === 'user') {
+        prevUser = chatMessages[i];
+        break;
+      }
+    }
+
+    if (prevUser) context.push({ role: 'user', content: prevUser.content });
+    if (lastAssistant) context.push({ role: 'assistant', content: lastAssistant.content });
+    context.push({ role: 'user', content: userContent });
+
+    return context;
   };
 
   const estimateTokens = (text: string): number => {
@@ -339,8 +356,7 @@ INSTRUCCIONES IMPORTANTES:
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setChatMessages(prev => [...prev, userMessage]);
 
-    const contextMessages = getLast5Messages();
-    contextMessages.push({ role: 'user', content: currentPrompt });
+    const contextMessages = buildContext(currentPrompt);
 
     const totalInputTokens = calculateTotalTokens(contextMessages);
     console.group('%c[Cuki] Enviando mensaje a la API', 'color: #9333ea; font-weight: bold; font-size: 14px;');

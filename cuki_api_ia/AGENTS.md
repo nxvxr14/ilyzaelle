@@ -22,6 +22,7 @@ Minimal **Service-based architecture** with interface abstraction:
 - **`IAService` Interface**: Both providers implement `{ name: string, chat(): AsyncGenerator }`, making them interchangeable.
 
 Total source files: **4** (index.ts, types.ts, services/groq.ts, services/cerebras.ts).
+`services/cerebras_old.ts` — archived previous Cerebras config (model `zai-glm-4.7`, removed from Cerebras free tier).
 
 ---
 
@@ -41,7 +42,7 @@ Total source files: **4** (index.ts, types.ts, services/groq.ts, services/cerebr
 | Provider | Model | Temperature | Max Tokens |
 |---|---|---|---|
 | Groq | `moonshotai/kimi-k2-instruct-0905` | 0.6 | 4,096 |
-| Cerebras | `zai-glm-4.7` | 1.0 | 65,000 |
+| Cerebras | `gpt-oss-120b` | 1.0 | 32,768 |
 
 These are cloud-hosted LLM inference APIs — no local model files or ML frameworks are involved.
 
@@ -133,4 +134,3 @@ Accepts a JSON body with an array of chat messages and returns a streaming SSE r
 - **Do not replace Bun with Node.js** — the project uses `Bun.serve()` and Bun-specific APIs. Running with `node` will not work.
 - **Maintain the round-robin pattern** — if adding new AI providers, implement the `IAService` interface and add them to the services array in `index.ts`.
 - **Do not break the SSE streaming format** — the frontend expects `text/event-stream` responses. Switching to JSON or buffered responses will break the AI chat UI.
-- **Known TODO**: `cerebras.ts` has `any` types for `chunk` and `messages` parameters that need proper typing (noted in a Spanish comment in the source code).

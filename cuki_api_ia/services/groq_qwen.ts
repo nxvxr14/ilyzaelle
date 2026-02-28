@@ -3,18 +3,19 @@ import type { ChatMessage, IAService } from "../types";
 
 const groq = new Groq();
 
-export const groqService: IAService = {
-  name: "Groq",
+export const groqQwenService: IAService = {
+  name: "Groq Qwen",
   async chat(messages: ChatMessage[]) {
     const chatCompletion = await groq.chat.completions.create({
       messages,
-      model: "moonshotai/kimi-k2-instruct-0905",
-      temperature: 1.05,
-  max_completion_tokens: 14041,
-      top_p: 1,
+      model: "qwen/qwen3-32b",
+      temperature: 0.6,
+      max_completion_tokens: 30000,
+      top_p: 0.95,
       stream: true,
+      reasoning_effort: "default",
       stop: null,
-    });
+    } as Parameters<typeof groq.chat.completions.create>[0]);
 
     // el yield permite devolver una respuesta conforme va llegando para no dejar esperando al usuario
     // se envuelve el yield en una funcion asyncrona generadora function*, se llama generadora porque cada vez que tiene un trozo de la respuesta va realizadando el return, como un streaming de datos

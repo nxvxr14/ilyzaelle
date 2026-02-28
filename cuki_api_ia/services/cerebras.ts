@@ -6,22 +6,20 @@ const cerebras = new Cerebras();
 export const cerebrasService: IAService = {
   name: "Cerebras",
   async chat(messages: ChatMessage[]) {
-    const chatCompletion= await cerebras.chat.completions.create({
-        messages: messages as any,
-        model: 'zai-glm-4.7',
-        stream: true,
-        max_completion_tokens: 65000,
-        temperature: 1,
-        top_p: 0.95
-    });
-
-    // debo arreglar el type de chunk y de messages para que no sean any
+    const stream = await cerebras.chat.completions.create({
+      messages,
+      model: 'gpt-oss-120b',
+      stream: true,
+      max_completion_tokens: 32768,
+      temperature: 1,
+      top_p: 1,
+      reasoning_effort: "high",
+    } as Parameters<typeof cerebras.chat.completions.create>[0]);
 
     return (async function* () {
-    for await (const chunk of chatCompletion) {
-      yield (chunk as any).choices[0]?.delta?.content || "";
-    }
-  }());
-
-    } 
-}; 
+      for await (const chunk of stream) {
+        yield chunk.choices[0]?.delta?.content || '';
+      }
+    }());
+  },
+};
